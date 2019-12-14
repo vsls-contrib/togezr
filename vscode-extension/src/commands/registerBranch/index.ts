@@ -6,6 +6,7 @@ import {
   isBranchExist,
   switchToTheBranch,
 } from '../../git';
+import { startLiveShareSession } from '../../liveshare';
 import { Branch } from '../../typings/git';
 import { randomInt } from '../../utils/randomInt';
 import {
@@ -47,7 +48,12 @@ const getBranchName = (branch: Branch): [string, [number, number]] => {
 const registerTheBranchAndAskToSwitch = async (branchName: string) => {
   await registerBranch({ branchName });
 
-  const startButton = 'Switch & Start Broadcasting';
+  const currentBranch = getCurrentBranch();
+
+  const buttonPrefix =
+    !currentBranch || currentBranch.name !== branchName ? 'Switch & ' : '';
+
+  const startButton = `${buttonPrefix}Start Broadcasting`;
 
   const answer = await vscode.window.showInformationMessage(
     `The *${branchName}* was successfully registered for broadcast.`,
@@ -56,6 +62,7 @@ const registerTheBranchAndAskToSwitch = async (branchName: string) => {
 
   if (answer === startButton) {
     await switchToTheBranch(branchName);
+    await startLiveShareSession();
   }
 };
 
@@ -93,18 +100,16 @@ export const registerBranchCommand = async (
       return;
     }
 
-    await unregisterBranch({
-      branchName: featureBranch,
-    });
+    await unregisterBranch(featureBranch);
   }
 
   /**
    * If branch is `master` we need to conferm the user intention.
    */
   if (featureBranch === 'master') {
-    const yesButton = 'Broadcast the *master* branch';
+    const yesButton = 'Broadcast *master* branch';
     const answer = await vscode.window.showInformationMessage(
-      'Are you sure you want to broadcast `master`?',
+      'Are you sure you want to broadcast *master* branch?',
       yesButton
     );
 

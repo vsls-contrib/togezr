@@ -1,5 +1,12 @@
 import * as vscode from 'vscode';
+import {
+  getBranchRegistryRecord,
+  resetBranchExplicitelyStopped,
+  unregisterBranch,
+} from '../commands/registerBranch/branchRegistry';
+import { startLiveShareSession, stopLiveShareSession } from '../liveshare';
 import { API, GitExtension } from '../typings/git';
+import { onBranchChange } from './onBranchChange';
 
 export const getUserName = require('git-user-name') as () => string | undefined;
 
@@ -57,6 +64,10 @@ export const getCurrentBranch = () => {
 
   const repo = gitAPI.repositories[0];
 
+  if (!repo.state) {
+    return;
+  }
+
   return repo.state.HEAD;
 };
 
@@ -89,4 +100,53 @@ export const switchToTheBranch = async (branchName: string) => {
 
   const repo = gitAPI.repositories[0];
   await repo.checkout(branchName);
+};
+
+const startListenOnBranchChange = async () => {
+  if (!gitAPI) {
+    throw new Error('Initialize Git API first.');
+  }
+
+  onBranchChange(async ([prevBranch, currentBranch]) => {
+    if (prevBranch) {
+      await stopLiveShareSession();
+    }
+
+    if (!currentBranch) {
+      return;
+    }
+
+    const registryData = getBranchRegistryRecord(currentBranch);
+
+    if (registryData && !registryData.isExplicitellyStopped) {
+      return await startLiveShareSession();
+    }
+
+    if (registryData && registryData.isExplicitellyStopped) {
+      const resumeButton = 'Resume branch';
+      const unregisterButton = 'Unregister branch';
+      const answer = await vscode.window.showInformationMessage(
+        'This branch is registered for broadcast but explicitely paused. Do you want to resume?',
+        unregisterButton,
+        resumeButton
+      );
+
+      if (!answer) {
+        return;
+      }
+
+      if (answer === resumeButton) {
+        resetBranchExplicitelyStopped(currentBranch);
+        return await startLiveShareSession();
+      }
+
+      if (answer === unregisterButton) {
+        return unregisterBranch(currentBranch);
+      }
+    }
+  });
+};
+
+export const initializeGitListeners = async () => {
+  await startListenOnBranchChange();
 };
