@@ -1,7 +1,5 @@
-export const EXTENSION_ID = 'tgzr';
-
-export const EXTENSION_NAME = 'TGZR';
+export const EXTENSION_NAME = 'Togezr';
 
 export const CommandId = {
-  openGist: `${EXTENSION_ID}.registerFeatureBranch`,
+    registerBranchForBroadcast: `${EXTENSION_NAME}.registerFeatureBranchForBroadcast`,
 } as const;
