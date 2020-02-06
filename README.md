@@ -1,3 +1,3 @@
-# togezr
+# Togezr
 
 Better together.
