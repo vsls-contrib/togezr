@@ -1,12 +1,15 @@
 import { IRegistryData } from 'src/commands/registerBranch/branchRegistry';
+import { Repository } from 'src/typings/git';
 import { ISessionReporter } from '../interfaces/ISessionReporter';
 import { GithubSessionReporter } from './githubSessionReporter';
 
-export class SessionReporterRegistry {
+export class SessionReporterHub {
     private sessionReporters: ISessionReporter[] = [];
 
-    constructor(registryData: IRegistryData) {
-        this.sessionReporters.push(new GithubSessionReporter(registryData));
+    constructor(registryData: IRegistryData, repo: Repository) {
+        this.sessionReporters.push(
+            new GithubSessionReporter(registryData, repo)
+        );
     }
 
     public reportSessionStart = async () => {

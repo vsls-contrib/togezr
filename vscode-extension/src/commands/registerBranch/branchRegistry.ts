@@ -7,6 +7,8 @@ export interface IRegistryData {
     sessionId?: string;
     githubIssue: string;
     channel: IChannelRegistryData;
+    repoId: string;
+    branchName: string;
 }
 
 const defaultRegistryData: IRegistryData = {
@@ -17,19 +19,35 @@ const defaultRegistryData: IRegistryData = {
         name: '',
         url: '',
     },
+    repoId: '',
+    branchName: '',
+};
+
+interface IRegistryRecords {
+    [key: string]: IRegistryData;
+}
+
+const BRANCH_REGISTRY_KEY = 'togezr.broadcast.branches.registry';
+
+const BRANCH_REGISTRY_PREFIX = 'togezr.branch.registry.';
+
+const getBranchRecordName = (repoId: string, branchName: string) => {
+    return `${BRANCH_REGISTRY_PREFIX}${repoId}.${branchName}`;
 };
 
 export interface IBranchRegistrationOptions {
+    repoId: string;
     branchName: string;
     githubIssue: string;
     channel: IChannelRegistryData;
 }
 
 export const setLiveshareSessionForBranchRegitryRecord = (
+    repoId: string,
     branchName: string,
     sessionId: string
 ) => {
-    const record = getBranchRegistryRecord(branchName);
+    const record = getBranchRegistryRecord(repoId, branchName);
 
     if (!record) {
         return;
@@ -37,17 +55,17 @@ export const setLiveshareSessionForBranchRegitryRecord = (
 
     record.sessionId = sessionId;
 
-    memento.set(getBranchRecordName(branchName), record);
+    memento.set(getBranchRecordName(record.repoId, branchName), record);
 };
 
-// const BRANCH_REGISTRY_KEY = 'livehsare.branch.registry.known.branches';
-// const getKnownBranches = () => {
-// }
+const getRegistryRecords = (): IRegistryRecords => {
+    const data = memento.get<IRegistryRecords | undefined>(BRANCH_REGISTRY_KEY);
 
-// const setKnownBranches = () => {
-// }
+    return data || {};
+};
 
 export const getBranchRegistryRecord = (
+    repoId: string,
     branchName: string
 ): IRegistryData | undefined => {
     if (!memento) {
@@ -56,12 +74,13 @@ export const getBranchRegistryRecord = (
         );
     }
 
-    const registryData = memento.get<IRegistryData | undefined>(
-        getBranchRecordName(branchName)
-    );
+    const registryRecords = getRegistryRecords();
+
+    const registryData =
+        registryRecords[getBranchRecordName(repoId, branchName)];
 
     if (!registryData) {
-        return undefined;
+        return;
     }
 
     return {
@@ -70,57 +89,75 @@ export const getBranchRegistryRecord = (
     };
 };
 
-const BRANCH_REGISTRY_PREFIX = 'livehsare.branch.registry.';
+export const setBranchRegistryRecord = (
+    repoId: string,
+    branchName: string,
+    data: IRegistryData
+): void => {
+    if (!memento) {
+        throw new Error(
+            'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
+        );
+    }
 
-const getBranchRecordName = (branchName: string) => {
-    return `${BRANCH_REGISTRY_PREFIX}${branchName}`;
+    const registryRecords = getRegistryRecords();
+
+    registryRecords[getBranchRecordName(repoId, branchName)] = data;
+    memento.set(BRANCH_REGISTRY_KEY, registryRecords);
 };
+
 export const registerBranch = async (options: IBranchRegistrationOptions) => {
     if (!memento) {
         throw new Error(
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
         );
     }
-    const { branchName, githubIssue, channel } = options;
+    const { branchName, githubIssue, channel, repoId } = options;
 
-    const registryData = getBranchRegistryRecord(branchName);
-
-    if (registryData) {
-        return;
-    }
+    const registryData = getBranchRegistryRecord(repoId, branchName);
 
     const data: IRegistryData = {
         ...defaultRegistryData,
+        ...registryData,
+        repoId,
+        branchName,
         githubIssue,
         channel,
     };
 
-    memento.set(getBranchRecordName(branchName), data);
+    setBranchRegistryRecord(data.repoId, branchName, data);
 };
 
-export const unregisterBranch = async (branchName: string) => {
+export const unregisterBranch = async (repoId: string, branchName: string) => {
     if (!memento) {
         throw new Error(
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
         );
     }
 
-    memento.remove(getBranchRecordName(branchName));
+    const data = getRegistryRecords();
+
+    delete data[getBranchRecordName(repoId, branchName)];
+
+    memento.set(BRANCH_REGISTRY_KEY, data);
 };
 
-export const isBranchAlreadyRegistered = (branchName: string) => {
+export const isBranchAlreadyRegistered = (
+    repoId: string,
+    branchName: string
+) => {
     if (!memento) {
         throw new Error(
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
         );
     }
 
-    const registryData = getBranchRegistryRecord(branchName);
+    const registryData = getBranchRegistryRecord(repoId, branchName);
 
     return !!registryData;
 };
 
-export const setBranchRunning = (branchName: string) => {
+export const setBranchRunning = (repoId: string, branchName: string) => {
     if (!memento) {
         throw new Error(
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
@@ -129,14 +166,14 @@ export const setBranchRunning = (branchName: string) => {
 
     const registryData = {
         ...defaultRegistryData,
-        ...getBranchRegistryRecord(branchName),
+        ...getBranchRegistryRecord(repoId, branchName),
         isRunning: true,
     };
 
-    memento.set(getBranchRecordName(branchName), registryData);
+    setBranchRegistryRecord(registryData.repoId, branchName, registryData);
 };
 
-export const setBranchStopped = (branchName: string) => {
+export const setBranchStopped = (repoId: string, branchName: string) => {
     if (!memento) {
         throw new Error(
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
@@ -145,14 +182,17 @@ export const setBranchStopped = (branchName: string) => {
 
     const registryData = {
         ...defaultRegistryData,
-        ...getBranchRegistryRecord(branchName),
+        ...getBranchRegistryRecord(repoId, branchName),
         isRunning: false,
     };
 
-    memento.set(getBranchRecordName(branchName), registryData);
+    setBranchRegistryRecord(registryData.repoId, branchName, registryData);
 };
 
-export const setBranchExplicitelyStopped = (branchName: string) => {
+export const setBranchExplicitelyStopped = (
+    repoId: string,
+    branchName: string
+) => {
     if (!memento) {
         throw new Error(
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
@@ -161,14 +201,17 @@ export const setBranchExplicitelyStopped = (branchName: string) => {
 
     const registryData = {
         ...defaultRegistryData,
-        ...getBranchRegistryRecord(branchName),
+        ...getBranchRegistryRecord(repoId, branchName),
         isExplicitellyStopped: true,
     };
 
-    memento.set(getBranchRecordName(branchName), registryData);
+    setBranchRegistryRecord(registryData.repoId, branchName, registryData);
 };
 
-export const resetBranchExplicitelyStopped = (branchName: string) => {
+export const resetBranchExplicitelyStopped = (
+    repoId: string,
+    branchName: string
+) => {
     if (!memento) {
         throw new Error(
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
@@ -177,21 +220,24 @@ export const resetBranchExplicitelyStopped = (branchName: string) => {
 
     const registryData = {
         ...defaultRegistryData,
-        ...getBranchRegistryRecord(branchName),
+        ...getBranchRegistryRecord(repoId, branchName),
         isExplicitellyStopped: false,
     };
 
-    memento.set(getBranchRecordName(branchName), registryData);
+    setBranchRegistryRecord(registryData.repoId, branchName, registryData);
 };
 
-export const isBranchExplicitellyStopped = (branchName: string) => {
+export const isBranchExplicitellyStopped = (
+    repoId: string,
+    branchName: string
+) => {
     if (!memento) {
         throw new Error(
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
         );
     }
 
-    const registryData = getBranchRegistryRecord(branchName);
+    const registryData = getBranchRegistryRecord(repoId, branchName);
 
     return !!(registryData && registryData.isExplicitellyStopped);
 };

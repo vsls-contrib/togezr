@@ -2,12 +2,13 @@ import * as vscode from 'vscode';
 import {
     createBranch,
     getCurrentBranch,
+    getCurrentRepoId,
     isBranchExist,
 } from '../../branchBroadcast/git';
 import { CommandId } from '../../constants';
 import { getBranchRegistryRecord, unregisterBranch } from './branchRegistry';
 import { getBranchName } from './getBranchName';
-import { startRegiteringTheBranch } from './registerTheBranchAndAskToSwitch';
+import { startRegisteringTheBranch } from './registerTheBranchAndAskToSwitch';
 
 class CancellationError extends Error {}
 
@@ -37,7 +38,10 @@ export const registerBranchCommand = async (
 
     const featureBranch = branch.trim().toLowerCase();
 
-    const existingBranchBroadcast = getBranchRegistryRecord(featureBranch);
+    const existingBranchBroadcast = getBranchRegistryRecord(
+        getCurrentRepoId(),
+        featureBranch
+    );
     if (existingBranchBroadcast) {
         const yesButton = 'Register again';
         const answer = await vscode.window.showInformationMessage(
@@ -48,7 +52,7 @@ export const registerBranchCommand = async (
             return;
         }
 
-        await unregisterBranch(featureBranch);
+        await unregisterBranch(getCurrentRepoId(), featureBranch);
     }
 
     /**
@@ -73,7 +77,10 @@ export const registerBranchCommand = async (
      */
     const isBranchPresent = await isBranchExist(featureBranch);
     if (isBranchPresent) {
-        return await startRegiteringTheBranch(featureBranch);
+        return await startRegisteringTheBranch(
+            getCurrentRepoId(),
+            featureBranch
+        );
     }
 
     /**
@@ -107,5 +114,5 @@ export const registerBranchCommand = async (
         fromBranch
     );
 
-    return await startRegiteringTheBranch(featureBranch);
+    return await startRegisteringTheBranch(getCurrentRepoId(), featureBranch);
 };

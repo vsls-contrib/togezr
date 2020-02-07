@@ -11,11 +11,18 @@ import {
 class CancellationError extends Error {}
 
 export const registerTheBranchAndAskToSwitch = async (
+    repoId: string,
     branchName: string,
     githubIssue: string,
     channel: IChannelRegistryData
 ) => {
-    await registerBranch({ branchName, githubIssue, channel });
+    await registerBranch({
+        branchName,
+        githubIssue,
+        channel,
+        repoId,
+    });
+
     const currentBranch = getCurrentBranch();
     const buttonPrefix =
         !currentBranch || currentBranch.name !== branchName ? 'Switch & ' : '';
@@ -84,7 +91,10 @@ const askForChannel = async (): Promise<string> => {
     return channel.url;
 };
 
-export const startRegiteringTheBranch = async (branchName: string) => {
+export const startRegisteringTheBranch = async (
+    repoId: string,
+    branchName: string
+) => {
     const issue = await vscode.window.showInputBox({
         prompt: 'Add GitHub issue',
         ignoreFocusOut: true,
@@ -112,5 +122,10 @@ export const startRegiteringTheBranch = async (branchName: string) => {
         name: '',
     };
 
-    await registerTheBranchAndAskToSwitch(branchName, issue, channelRecord);
+    await registerTheBranchAndAskToSwitch(
+        repoId,
+        branchName,
+        issue,
+        channelRecord
+    );
 };

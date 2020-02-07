@@ -4,29 +4,13 @@ import {
     resetBranchExplicitelyStopped,
     unregisterBranch,
 } from '../../commands/registerBranch/branchRegistry';
+import { API, GitExtension, Repository } from '../../typings/git';
 import { startLiveShareSession, stopLiveShareSession } from '../liveshare';
-import { API, GitExtension } from '../typings/git';
 import { onBranchChange } from './onBranchChange';
 
 export const getUserName = require('git-user-name') as () => string | undefined;
 
 let gitAPI: API | null = null;
-
-export const isBranchExist = async (branchName: string) => {
-    if (!gitAPI) {
-        throw new Error('Initialize Git API first.');
-    }
-
-    try {
-        const repo = gitAPI.repositories[0];
-
-        const branch = await repo.getBranch(branchName);
-
-        return !!branch;
-    } catch {
-        return false;
-    }
-};
 
 export const initGit = () => {
     let gitExtension = vscode.extensions.getExtension<GitExtension>(
@@ -40,12 +24,30 @@ export const initGit = () => {
     gitAPI = gitExtension.exports.getAPI(1) as API;
 };
 
+export const getRepoOrigin = (repo: Repository): string => {
+    const origin = repo.state.remotes.find((remote) => {
+        return remote.name === 'origin';
+    });
+
+    return origin!.pushUrl!;
+};
+
 export const getRepos = () => {
     if (!gitAPI) {
         throw new Error('Initialize Git API first.');
     }
 
     return gitAPI.repositories;
+};
+
+export const getCurrentRepo = (): Repository | undefined => {
+    if (!gitAPI) {
+        throw new Error('Initialize Git API first.');
+    }
+
+    const repo = gitAPI.repositories[0];
+
+    return repo;
 };
 
 export const getCurrentBranch = () => {
@@ -107,7 +109,10 @@ export const startListenOnBranchChange = async () => {
             return;
         }
 
-        const registryData = getBranchRegistryRecord(currentBranch);
+        const registryData = getBranchRegistryRecord(
+            getCurrentRepoId(),
+            currentBranch
+        );
 
         if (!registryData) {
             return;
@@ -131,13 +136,46 @@ export const startListenOnBranchChange = async () => {
             }
 
             if (answer === resumeButton) {
-                resetBranchExplicitelyStopped(currentBranch);
+                resetBranchExplicitelyStopped(
+                    getCurrentRepoId(),
+                    currentBranch
+                );
                 return await startLiveShareSession(currentBranch);
             }
 
             if (answer === unregisterButton) {
-                return unregisterBranch(currentBranch);
+                return unregisterBranch(getCurrentRepoId(), currentBranch);
             }
         }
     });
+};
+
+export const getCurrentRepoId = () => {
+    if (!gitAPI) {
+        throw new Error('Initialize Git API first.');
+    }
+
+    const repo = gitAPI.repositories[0];
+
+    if (!repo.state) {
+        throw new Error('Please open a repo');
+    }
+
+    return repo.rootUri.toString();
+};
+
+export const isBranchExist = async (branchName: string) => {
+    if (!gitAPI) {
+        throw new Error('Initialize Git API first.');
+    }
+
+    try {
+        const repo = gitAPI.repositories[0];
+
+        const branch = await repo.getBranch(branchName);
+
+        return !!branch;
+    } catch {
+        return false;
+    }
 };

@@ -3,8 +3,11 @@ import * as vsls from 'vsls';
 import { getApi as getVslsApi } from 'vsls';
 import {
     getBranchRegistryRecord,
+    resetBranchExplicitelyStopped,
+    setBranchExplicitelyStopped,
     setLiveshareSessionForBranchRegitryRecord,
 } from '../commands/registerBranch/branchRegistry';
+import { getCurrentBranch, getCurrentRepoId } from './git';
 import { startSession } from './slack/session';
 
 // const extractSessionId = (liveshareUrl?: string): string | undefined => {
@@ -28,6 +31,39 @@ export const initializeLiveShare = async () => {
     if (!vslsApi) {
         throw new Error('No LiveShare API found.');
     }
+
+    vslsApi.onDidChangeSession((e) => {
+        const currentRepoId = getCurrentRepoId();
+        const currentBranch = getCurrentBranch();
+
+        if (!currentBranch || !currentBranch.name || !currentRepoId) {
+            return;
+        }
+
+        const registryRecord = getBranchRegistryRecord(
+            currentRepoId,
+            currentBranch.name
+        );
+
+        if (!registryRecord) {
+            return;
+        }
+
+        // session ended
+        if (!e.session.id) {
+            setBranchExplicitelyStopped(getCurrentRepoId(), currentBranch.name);
+
+            return;
+        }
+
+        // session started
+        if (registryRecord.isExplicitellyStopped) {
+            resetBranchExplicitelyStopped(
+                getCurrentRepoId(),
+                currentBranch.name
+            );
+        }
+    });
 };
 
 export const startLiveShareSession = async (branchName: string) => {
@@ -36,7 +72,10 @@ export const startLiveShareSession = async (branchName: string) => {
             'No LiveShare API found, call `initializeLiveShare` first.'
         );
     }
-    const registryData = getBranchRegistryRecord(branchName);
+    const registryData = getBranchRegistryRecord(
+        getCurrentRepoId(),
+        branchName
+    );
 
     if (!registryData) {
         throw new Error('No branch record found.');
@@ -53,13 +92,14 @@ export const startLiveShareSession = async (branchName: string) => {
 
     if (!registryData.sessionId) {
         setLiveshareSessionForBranchRegitryRecord(
+            getCurrentRepoId(),
             branchName,
             sharedSessionUrl.query
         );
     }
 
     const session = startSession(registryData);
-    await session.sendMesage();
+    await session.reportSessionStart();
 
     return sharedSessionUrl;
 };

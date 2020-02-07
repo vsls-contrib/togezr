@@ -1,6 +1,6 @@
 import { getUserName } from '../../branchBroadcast/git';
-import { Branch } from '../../branchBroadcast/typings/git';
 import { randomInt } from '../../branchBroadcast/utils/randomInt';
+import { Branch } from '../../typings/git';
 
 export const getBranchName = (branch: Branch): [string, [number, number]] => {
     const { name } = branch;
