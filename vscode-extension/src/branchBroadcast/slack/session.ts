@@ -15,14 +15,14 @@ export interface IMessageRessponeData {
 }
 
 let currentSession: SessionReporterHub | undefined;
-export const startSession = (registryData: IRegistryData) => {
+export const startSession = (repoId: string, branchName: string) => {
     const repo = getCurrentRepo();
 
     if (!repo) {
         throw new Error('Cannot start session, repo not found.');
     }
 
-    currentSession = new SessionReporterHub(registryData, repo);
+    currentSession = new SessionReporterHub(repoId, branchName, repo);
 
     return currentSession;
 };

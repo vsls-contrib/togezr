@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as vsls from 'vsls';
 import { getApi as getVslsApi } from 'vsls';
 import {
+    addBranchBroadcastGuest,
     getBranchRegistryRecord,
     resetBranchExplicitelyStopped,
     setBranchExplicitelyStopped,
@@ -98,7 +99,44 @@ export const startLiveShareSession = async (branchName: string) => {
         );
     }
 
-    const session = startSession(registryData);
+    // removeAllBranchBroadcastGuests(getCurrentRepoId(), branchName);
+
+    const host = vslsApi.session.user;
+    if (!host || !host.id || !host.emailAddress) {
+        throw new Error('No host found in the session.');
+    }
+
+    addBranchBroadcastGuest(getCurrentRepoId(), branchName, {
+        id: host.id!,
+        email: host.emailAddress || '',
+        name: host.displayName,
+        githubUsername: host.userName || '',
+    });
+
+    const session = startSession(getCurrentRepoId(), branchName);
+
+    vslsApi.onDidChangePeers(async (e) => {
+        if (e.removed.length) {
+            return;
+        }
+
+        const userAdded = e.added[0];
+        const { user } = userAdded;
+
+        if (!user || !user.id) {
+            throw new Error('User not found or joined without id.');
+        }
+
+        addBranchBroadcastGuest(getCurrentRepoId(), branchName, {
+            id: user.id,
+            email: user.emailAddress || '',
+            name: host.displayName,
+            githubUsername: user.userName || '',
+        });
+
+        await session.reportSessionStart();
+    });
+
     await session.reportSessionStart();
 
     return sharedSessionUrl;

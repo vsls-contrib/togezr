@@ -5,7 +5,7 @@ import {
     getCurrentRepoId,
     isBranchExist,
 } from '../../branchBroadcast/git';
-import { CommandId } from '../../constants';
+import { CommandId } from '../registerCommand';
 import { getBranchRegistryRecord, unregisterBranch } from './branchRegistry';
 import { getBranchName } from './getBranchName';
 import { startRegisteringTheBranch } from './registerTheBranchAndAskToSwitch';

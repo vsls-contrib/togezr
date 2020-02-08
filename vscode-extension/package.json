@@ -30,6 +30,11 @@
                 "command": "togezr.registerFeatureBranchForBroadcast",
                 "title": "Register Feature Branch for Broadcast",
                 "category": "Togezr"
+            },
+            {
+                "command": "togezr.setGitHubToken",
+                "title": "Set GitHub API token",
+                "category": "Togezr"
             }
         ],
         "views": {

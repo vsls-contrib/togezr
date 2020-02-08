@@ -1,4 +1,3 @@
-import { IRegistryData } from 'src/commands/registerBranch/branchRegistry';
 import { Repository } from 'src/typings/git';
 import { ISessionReporter } from '../interfaces/ISessionReporter';
 import { GithubSessionReporter } from './githubSessionReporter';
@@ -6,9 +5,9 @@ import { GithubSessionReporter } from './githubSessionReporter';
 export class SessionReporterHub {
     private sessionReporters: ISessionReporter[] = [];
 
-    constructor(registryData: IRegistryData, repo: Repository) {
+    constructor(repoId: string, branchName: string, repo: Repository) {
         this.sessionReporters.push(
-            new GithubSessionReporter(registryData, repo)
+            new GithubSessionReporter(repoId, branchName, repo)
         );
     }
 

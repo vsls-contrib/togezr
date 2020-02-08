@@ -1,6 +1,11 @@
 import * as memento from '../../memento';
 import { IChannelRegistryData } from './channelsRegistry';
 
+export interface IGuestWithSessions {
+    sessionCount: number;
+    data: IGuest;
+}
+
 export interface IRegistryData {
     isRunning: boolean;
     isExplicitellyStopped: boolean;
@@ -9,6 +14,7 @@ export interface IRegistryData {
     channel: IChannelRegistryData;
     repoId: string;
     branchName: string;
+    guests: IGuestWithSessions[];
 }
 
 const defaultRegistryData: IRegistryData = {
@@ -21,6 +27,7 @@ const defaultRegistryData: IRegistryData = {
     },
     repoId: '',
     branchName: '',
+    guests: [],
 };
 
 interface IRegistryRecords {
@@ -53,9 +60,10 @@ export const setLiveshareSessionForBranchRegitryRecord = (
         return;
     }
 
-    record.sessionId = sessionId;
-
-    memento.set(getBranchRecordName(record.repoId, branchName), record);
+    setBranchRegistryRecord(record.repoId, branchName, {
+        ...record,
+        sessionId,
+    });
 };
 
 const getRegistryRecords = (): IRegistryRecords => {
@@ -240,4 +248,79 @@ export const isBranchExplicitellyStopped = (
     const registryData = getBranchRegistryRecord(repoId, branchName);
 
     return !!(registryData && registryData.isExplicitellyStopped);
+};
+
+export const addBranchBroadcastGuest = (
+    repoId: string,
+    branchName: string,
+    guest: IGuest
+) => {
+    if (!memento) {
+        throw new Error(
+            'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
+        );
+    }
+
+    const currentRecord = getBranchRegistryRecord(repoId, branchName);
+
+    const registryData = {
+        ...defaultRegistryData,
+        ...currentRecord,
+    };
+
+    if (!currentRecord) {
+        const data = {
+            ...registryData,
+            guests: [{ sessionCount: 1, data: guest }],
+        };
+
+        return setBranchRegistryRecord(registryData.repoId, branchName, data);
+    }
+
+    const { guests = [] } = currentRecord;
+    const guestRecord = guests.find((g) => {
+        return g.data.id === guest.id || g.data.email === guest.email;
+    });
+
+    if (!guestRecord) {
+        currentRecord.guests.push({ sessionCount: 1, data: guest });
+    } else {
+        const host = guests[0];
+
+        guestRecord.sessionCount =
+            host === guestRecord
+                ? guestRecord.sessionCount + 1
+                : Math.min(host.sessionCount, guestRecord.sessionCount + 1);
+    }
+
+    setBranchRegistryRecord(
+        currentRecord.repoId,
+        currentRecord.branchName,
+        currentRecord
+    );
+};
+
+export const removeAllBranchBroadcastGuests = (
+    repoId: string,
+    branchName: string
+) => {
+    if (!memento) {
+        throw new Error(
+            'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
+        );
+    }
+
+    const currentRecord = getBranchRegistryRecord(repoId, branchName);
+
+    const registryData = {
+        ...defaultRegistryData,
+        ...currentRecord,
+        guests: [],
+    };
+
+    setBranchRegistryRecord(
+        registryData.repoId,
+        registryData.branchName,
+        registryData
+    );
 };
