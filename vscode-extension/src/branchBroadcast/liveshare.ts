@@ -113,7 +113,7 @@ export const startLiveShareSession = async (branchName: string) => {
         githubUsername: host.userName || '',
     });
 
-    const session = startSession(getCurrentRepoId(), branchName);
+    await startSession(vslsApi, getCurrentRepoId(), branchName);
 
     vslsApi.onDidChangePeers(async (e) => {
         if (e.removed.length) {
@@ -130,14 +130,14 @@ export const startLiveShareSession = async (branchName: string) => {
         addBranchBroadcastGuest(getCurrentRepoId(), branchName, {
             id: user.id,
             email: user.emailAddress || '',
-            name: host.displayName,
+            name: user.displayName,
             githubUsername: user.userName || '',
         });
 
-        await session.reportSessionStart();
+        // await session.reportSessionStart();
     });
 
-    await session.reportSessionStart();
+    // await session.reportSessionStart();
 
     return sharedSessionUrl;
 };

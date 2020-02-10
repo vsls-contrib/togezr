@@ -1,5 +1,6 @@
 import * as memento from '../../memento';
 import { IChannelRegistryData } from './channelsRegistry';
+// import * as vsls from 'vsls';
 
 export interface IGuestWithSessions {
     sessionCount: number;

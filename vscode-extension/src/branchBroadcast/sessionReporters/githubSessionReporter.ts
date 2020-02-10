@@ -1,24 +1,17 @@
 import fetch from 'node-fetch';
-import {
-    getBranchRegistryRecord,
-    IGuestWithSessions,
-    IRegistryData,
-} from '../../commands/registerBranch/branchRegistry';
+import * as vsls from 'vsls';
+import { getBranchRegistryRecord } from '../../commands/registerBranch/branchRegistry';
 import { EXTENSION_NAME_LOWERCASE } from '../../constants';
 import * as keytar from '../../keytar';
 import { Repository } from '../../typings/git';
-import { getRepoOrigin } from '../git';
 import { ISessionReporter } from '../interfaces/ISessionReporter';
-import { randomInt } from '../utils/randomInt';
-import {
-    DEFAULT_GITHUB_AVATAR,
-    ISSUE_SESSION_DETAILS_FOOTER,
-    ISSUE_SESSION_DETAILS_HEADER,
-} from './constants';
 import { getIssueId } from './getIssueId';
 import { getIssueOwner } from './getIssueOwner';
 import { getIssueRepo } from './getIssueRepo';
+import { getIssueTextWithDetailsGithub } from './getIssueTextWithDetailsGithub';
 import { githubAvatarRepository } from './githubAvatarsRepository';
+import { renderGuestsGithub } from './renderGuestsGithub';
+const time = require('pretty-time');
 
 const getAuthToken = async () => {
     const token = await keytar.get('githubSecret');
@@ -30,86 +23,12 @@ const getAuthToken = async () => {
     return token;
 };
 
-const getIssueTextWithDetails = async (
-    description: string,
-    data: IRegistryData,
-    repo: Repository
-) => {
-    const descriptionRegex = /(\!\[togezr\sseparator\]\(https:\/\/aka\.ms\/togezr-issue-separator-image\)[\s\S]+\#\#\#\#\#\# powered by \[Togezr\]\(https\:\/\/aka\.ms\/togezr-issue-website-link\))/gm;
-
-    const isPresent = !!description.match(descriptionRegex);
-
-    const issueDetails = await getIssueSessionDetails(data, repo);
-
-    if (isPresent) {
-        return description.replace(descriptionRegex, issueDetails);
-    }
-
-    return `${description}\n\n${issueDetails}`;
-};
-
-const getIssueSessionDetails = async (
-    data: IRegistryData,
-    repo: Repository
-) => {
-    return [
-        ISSUE_SESSION_DETAILS_HEADER,
-        getIssueDetailsGit(data, repo),
-        await renderGuests(data.guests),
-        getIssueDetailsLiveShare(data),
-        ISSUE_SESSION_DETAILS_FOOTER,
-    ].join('\n\n');
-};
-
-const getGithubUsername = (guest: IGuest): string | null => {
+export const getGithubUsername = (guest: IGuest): string | null => {
     return guest.githubUsername || null;
 };
 
-const getGithubAvatar = async (username: string) => {
+export const getGithubAvatar = async (username: string) => {
     return await githubAvatarRepository.getAvatarFor(username);
-};
-
-const isEmail = (thing: string) => {
-    if (!thing) {
-        return false;
-    }
-
-    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(String(thing).toLowerCase());
-};
-
-const renderGuests = async (guests: IGuestWithSessions[]) => {
-    const resultPromises = guests.map(async (guest) => {
-        const username = getGithubUsername(guest.data);
-
-        if (!username || isEmail(username)) {
-            return `<img src="${DEFAULT_GITHUB_AVATAR}" width="40" alt="${guest.data.email}" title="${guest.data.name} (${guest.data.email}) ${guest.sessionCount} sessions" />`;
-        }
-
-        const avatarUrl = await getGithubAvatar(username);
-        const image = `<img src="${avatarUrl}" width="40" alt="${username}" title="${guest.data.name} (@${username}) ${guest.sessionCount} sessions" />`;
-
-        return `[${image}](https://github.com/${username})`;
-    });
-
-    const result = await Promise.all(resultPromises);
-
-    return result.join(' ');
-};
-
-const getIssueDetailsGit = (data: IRegistryData, repo: Repository) => {
-    const { branchName } = data;
-
-    const repoUrl = getRepoOrigin(repo).replace(/\.git$/i, '');
-
-    const result = `**⎇** [${branchName}](${repoUrl}/tree/${branchName}) [ [⇄ master](${repoUrl}/compare/${branchName}) ]`;
-    return result;
-};
-
-const getIssueDetailsLiveShare = (data: IRegistryData) => {
-    const { sessionId } = data;
-
-    return `[![Live Share](https://togezr-vsls-session-badge.azurewebsites.net/api/vsls-badge?sessionId=${sessionId}&v=${randomInt()})](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId})`;
 };
 
 interface IGitHubIssueLabel {
@@ -123,7 +42,11 @@ interface IGitHubIssueLabel {
 }
 
 export class GithubSessionReporter implements ISessionReporter {
-    private guests: IGuest[] = [];
+    private sessionCommentUrl: string | undefined;
+
+    private guests: vsls.UserInfo[] = [];
+
+    private sessionStartTimestamp: number;
 
     get registryData() {
         const result = getBranchRegistryRecord(this.repoId, this.branchName);
@@ -138,12 +61,44 @@ export class GithubSessionReporter implements ISessionReporter {
     }
 
     constructor(
+        private vslsAPI: vsls.LiveShare,
         private repoId: string,
         private branchName: string,
         private repo: Repository
-    ) {}
+    ) {
+        this.sessionStartTimestamp = Date.now();
 
-    private ensureIssueSessionDetails = async () => {
+        this.vslsAPI.onDidChangePeers(async (e: vsls.PeersChangeEvent) => {
+            if (e.removed.length) {
+                return;
+            }
+
+            const userAdded = e.added[0];
+            const { user } = userAdded;
+
+            if (!user || !user.id) {
+                throw new Error('User not found or joined without id.');
+            }
+
+            setTimeout(async () => {
+                await this.renderSessionDetails();
+                await this.reportGuestJoined(user);
+            }, 10);
+        });
+    }
+
+    public async init() {
+        await Promise.all([
+            this.renderSessionDetails(),
+            this.reportSessionStartMessage(),
+        ]);
+
+        return this;
+    }
+
+    public async dispose() {}
+
+    private renderSessionDetails = async () => {
         const { githubIssue } = this.registryData;
 
         const url = `https://api.github.com/repos/${getIssueOwner(
@@ -183,7 +138,7 @@ export class GithubSessionReporter implements ISessionReporter {
             },
             body: JSON.stringify(
                 {
-                    body: await getIssueTextWithDetails(
+                    body: await getIssueTextWithDetailsGithub(
                         body,
                         this.registryData,
                         this.repo
@@ -200,12 +155,23 @@ export class GithubSessionReporter implements ISessionReporter {
     };
 
     private reportSessionStartMessage = async () => {
-        // vscode://vs-msliveshare.vsliveshare/join?${this.registryData.sessionId}
-        const ghBody = {
-            body: `[Oleg Solomka](https://github.com/legomushroom) started a [Live Share session](https://github.com/legomushroom).`,
-        };
+        const { githubIssue, sessionId, guests } = this.registryData;
 
-        const { githubIssue } = this.registryData;
+        const host = guests[0];
+
+        if (!host) {
+            throw new Error('No host found.');
+        }
+
+        const { githubUsername } = host.data;
+
+        // vscode://vs-msliveshare.vsliveshare/join?${sessionId}
+        const ghBody = {
+            body: `${await renderGuestsGithub([
+                host,
+                ...this.guests,
+            ])}\n![togezr separator](https://aka.ms/togezr-issue-separator-image)\n🧑‍💻 @${githubUsername} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}).`,
+        };
 
         const ghResult = await fetch(
             `https://api.github.com/repos/${getIssueOwner(
@@ -223,17 +189,77 @@ export class GithubSessionReporter implements ISessionReporter {
             }
         );
 
-        console.log(ghResult);
+        const res = await ghResult.json();
+
+        this.sessionCommentUrl = res.url;
+
+        if (!this.sessionCommentUrl) {
+            throw new Error('No session comment created.');
+        }
+
+        console.log(res);
     };
 
-    public async reportSessionStart() {
-        await Promise.all([
-            this.ensureIssueSessionDetails(),
-            this.reportSessionStartMessage(),
-        ]);
-    }
+    private reportGuestJoined = async (guest: vsls.UserInfo) => {
+        const isGuestInSession = this.guests.find((g) => {
+            return g.id === guest.id;
+        });
 
-    public async reportSessionGuest(guest: IGuest) {
+        if (isGuestInSession) {
+            return;
+        }
+
         this.guests.push(guest);
-    }
+
+        // const { githubIssue } = this.registryData;
+
+        const { userName } = guest;
+        // const { userName, displayName, emailAddress } = guest;
+
+        if (!userName) {
+            throw new Error('No GitHub username found.');
+        }
+
+        if (!this.sessionCommentUrl) {
+            throw new Error(
+                'No session comment created, create session comment first.'
+            );
+        }
+
+        const issueResponse = await fetch(this.sessionCommentUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `token ${await getAuthToken()}`,
+            },
+        });
+
+        const issue = await issueResponse.json();
+
+        const { body = '' } = issue;
+
+        console.log(body);
+
+        if (!body) {
+            throw new Error('No session comment contents found.');
+        }
+
+        const timeDelta = Date.now() - this.sessionStartTimestamp;
+        const prettyTimeDelta = time([timeDelta], 's');
+
+        const ghBody = {
+            body: `${body} \n - 🤝 @${userName} joined the session. (+${prettyTimeDelta})`,
+        };
+
+        const ghResult = await fetch(this.sessionCommentUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `token ${await getAuthToken()}`,
+            },
+            body: JSON.stringify(ghBody, null, 2),
+        });
+
+        console.log(ghResult);
+    };
 }
