@@ -3,6 +3,8 @@ import { getBranchRegistryRecord } from '../../commands/registerBranch/branchReg
 import { EXTENSION_NAME_LOWERCASE } from '../../constants';
 import * as keytar from '../../keytar';
 import { Repository } from '../../typings/git';
+import { clampString } from '../../utils/clampString';
+import { onCommitPushToRemote } from '../git/onCommit';
 import { ISessionReporter } from '../interfaces/ISessionReporter';
 import { getIssueId } from './getIssueId';
 import { getIssueOwner } from './getIssueOwner';
@@ -63,6 +65,8 @@ interface ISessionUserJoinEvent extends ISessionEventBase {
 interface ISessionCommitPushEvent extends ISessionEventBase {
     type: 'commit-push';
     commitId: string;
+    commitMessage: string;
+    repoUrl: string;
 }
 
 type ISessionEvent =
@@ -70,10 +74,15 @@ type ISessionEvent =
     | ISessionCommitPushEvent
     | ISessionStartEvent;
 
+const getCleanCommitMessage = (commitMessage: string) => {
+    const split = commitMessage.split(/Co\-authored\-by\:\s+.+\s+\<.+.\>/gim);
+    const result = split[0];
+
+    return result.replace(/\n/gim, ' ');
+};
+
 export class GithubSessionReporter implements ISessionReporter {
     private sessionCommentUrl: string | undefined;
-
-    // private guests: IUserInfoWithTiming[] = [];
 
     private events: ISessionEvent[] = [];
 
@@ -99,6 +108,18 @@ export class GithubSessionReporter implements ISessionReporter {
     ) {
         this.sessionStartTimestamp = Date.now();
 
+        onCommitPushToRemote(async ([commit, repoUrl]) => {
+            this.events.push({
+                type: 'commit-push',
+                commitId: commit.hash,
+                commitMessage: commit.message,
+                timestamp: Date.now(),
+                repoUrl,
+            });
+
+            await this.renderSessionComment();
+        });
+
         this.vslsAPI.onDidChangePeers(async (e: vsls.PeersChangeEvent) => {
             if (e.removed.length) {
                 return;
@@ -121,7 +142,7 @@ export class GithubSessionReporter implements ISessionReporter {
     public async init() {
         await Promise.all([
             this.renderSessionDetails(),
-            this.reportSessionStartMessage(),
+            this.renderSessionComment(),
         ]);
 
         return this;
@@ -163,7 +184,7 @@ export class GithubSessionReporter implements ISessionReporter {
         });
     };
 
-    private reportSessionStartMessage = async () => {
+    private renderSessionComment = async () => {
         const { githubIssue, sessionId } = this.registryData;
 
         const host = this.vslsAPI.session.user;
@@ -185,16 +206,32 @@ export class GithubSessionReporter implements ISessionReporter {
             };
         });
 
-        const joinedGuests = guests.map((g) => {
+        const events = this.events.map((g) => {
             const timeDelta = g.timestamp - this.sessionStartTimestamp;
             const prettyTimeDelta = time(timeDelta);
 
-            return `- 🤝 @${g.user.userName} joined the session. *(+${prettyTimeDelta})*`;
+            if (g.type === 'guest-join') {
+                return `- 🤝 @${g.user.userName} joined the session. *(+${prettyTimeDelta})*`;
+            }
+
+            if (g.type === 'commit-push') {
+                const guestsUsers = guests.map((g, i) => {
+                    return i === guests.length - 1
+                        ? `and @${g.user.userName}`
+                        : `@${g.user.userName}`;
+                });
+
+                const guestsUsersString = guestsUsers.length
+                    ? ' ' + guestsUsers.join(', ')
+                    : '';
+
+                const commitMessage = getCleanCommitMessage(g.commitMessage);
+                const truncatedCommitMessage = clampString(commitMessage, 30);
+                return `- 📌 @${this.vslsAPI.session.user?.userName}${guestsUsersString} pushed [1 commit: ${truncatedCommitMessage}](${g.repoUrl}/commit/${g.commitId}) *(+${prettyTimeDelta})*`;
+            }
         });
 
-        const joinedGuestsString = joinedGuests.length
-            ? `\n ${joinedGuests.join('\n')}`
-            : '';
+        const eventsString = events.length ? `\n ${events.join('\n')}` : '';
 
         // vscode://vs-msliveshare.vsliveshare/join?${sessionId}
         const ghBody = {
@@ -204,7 +241,7 @@ export class GithubSessionReporter implements ISessionReporter {
                     sessionCount: -1,
                 },
                 ...gs,
-            ])}\n![togezr separator](https://aka.ms/togezr-issue-separator-image)\n🧑‍💻 @${userName} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}).${joinedGuestsString}`,
+            ])}\n![togezr separator](https://aka.ms/togezr-issue-separator-image)\n🧑‍💻 @${userName} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}).${eventsString}`,
         };
 
         if (!this.sessionCommentUrl) {
@@ -245,11 +282,6 @@ export class GithubSessionReporter implements ISessionReporter {
             timestamp: Date.now(),
         });
 
-        // this.guests.push({
-        //     user: guest,
-        //     joinTimestamp: Date.now(),
-        // });
-
-        await this.reportSessionStartMessage();
+        await this.renderSessionComment();
     };
 }

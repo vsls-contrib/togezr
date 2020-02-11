@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { registerBranchBroadcastingExperiment } from './branchBroadcast';
+import { startListenToOriginPush } from './branchBroadcast/git/onCommit';
 import { initializeLiveShare } from './branchBroadcast/liveshare';
 import { registerCommands } from './commands';
 import { CommandId } from './commands/registerCommand';
@@ -36,6 +37,8 @@ export const activate = async (context: vscode.ExtensionContext) => {
 
         await initializeLiveShare();
         await registerBranchBroadcastingExperiment();
+
+        startListenToOriginPush();
     } catch (e) {
         log.error(e);
         vscode.window.showErrorMessage(e.message);
