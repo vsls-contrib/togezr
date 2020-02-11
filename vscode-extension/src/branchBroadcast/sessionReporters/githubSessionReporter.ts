@@ -11,7 +11,7 @@ import { getIssueRepo } from './getIssueRepo';
 import { getIssueTextWithDetailsGithub } from './getIssueTextWithDetailsGithub';
 import { githubAvatarRepository } from './githubAvatarsRepository';
 import { renderGuestsGithub } from './renderGuestsGithub';
-const time = require('pretty-time');
+const time = require('pretty-ms');
 
 const getAuthToken = async () => {
     const token = await keytar.get('githubSecret');
@@ -23,8 +23,8 @@ const getAuthToken = async () => {
     return token;
 };
 
-export const getGithubUsername = (guest: IGuest): string | null => {
-    return guest.githubUsername || null;
+export const getGithubUsername = (guest: vsls.UserInfo): string | null => {
+    return guest.userName || null;
 };
 
 export const getGithubAvatar = async (username: string) => {
@@ -41,10 +41,15 @@ interface IGitHubIssueLabel {
     url?: string;
 }
 
+interface IUserInfoWithTiming {
+    user: vsls.UserInfo;
+    joinTimestamp: number;
+}
+
 export class GithubSessionReporter implements ISessionReporter {
     private sessionCommentUrl: string | undefined;
 
-    private guests: vsls.UserInfo[] = [];
+    private guests: IUserInfoWithTiming[] = [];
 
     private sessionStartTimestamp: number;
 
@@ -155,111 +160,95 @@ export class GithubSessionReporter implements ISessionReporter {
     };
 
     private reportSessionStartMessage = async () => {
-        const { githubIssue, sessionId, guests } = this.registryData;
+        const { githubIssue, sessionId } = this.registryData;
 
-        const host = guests[0];
+        const host = this.vslsAPI.session.user;
 
         if (!host) {
             throw new Error('No host found.');
         }
 
-        const { githubUsername } = host.data;
+        const { userName } = host;
+
+        const gs = this.guests.map((g) => {
+            return {
+                data: g.user,
+                sessionCount: -1,
+            };
+        });
+
+        const joinedGuests = this.guests.map((g) => {
+            const timeDelta = g.joinTimestamp - this.sessionStartTimestamp;
+            const prettyTimeDelta = time(timeDelta);
+
+            return `- 🤝 @${g.user.userName} joined the session. *(+${prettyTimeDelta})*`;
+        });
+
+        const joinedGuestsString = joinedGuests.length
+            ? `\n ${joinedGuests.join('\n')}`
+            : '';
 
         // vscode://vs-msliveshare.vsliveshare/join?${sessionId}
         const ghBody = {
             body: `${await renderGuestsGithub([
-                host,
-                ...this.guests,
-            ])}\n![togezr separator](https://aka.ms/togezr-issue-separator-image)\n🧑‍💻 @${githubUsername} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}).`,
+                {
+                    data: host,
+                    sessionCount: -1,
+                },
+                ...gs,
+            ])}\n![togezr separator](https://aka.ms/togezr-issue-separator-image)\n🧑‍💻 @${userName} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}).${joinedGuestsString}`,
         };
 
-        const ghResult = await fetch(
-            `https://api.github.com/repos/${getIssueOwner(
-                githubIssue
-            )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(
-                githubIssue
-            )}/comments`,
-            {
-                method: 'POST',
+        if (!this.sessionCommentUrl) {
+            const ghResult = await fetch(
+                `https://api.github.com/repos/${getIssueOwner(
+                    githubIssue
+                )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(
+                    githubIssue
+                )}/comments`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `token ${await getAuthToken()}`,
+                    },
+                    body: JSON.stringify(ghBody, null, 2),
+                }
+            );
+
+            const res = await ghResult.json();
+
+            this.sessionCommentUrl = res.url;
+
+            if (!this.sessionCommentUrl) {
+                throw new Error('No session comment created.');
+            }
+        } else {
+            await fetch(this.sessionCommentUrl, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `token ${await getAuthToken()}`,
                 },
                 body: JSON.stringify(ghBody, null, 2),
-            }
-        );
-
-        const res = await ghResult.json();
-
-        this.sessionCommentUrl = res.url;
-
-        if (!this.sessionCommentUrl) {
-            throw new Error('No session comment created.');
+            });
         }
-
-        console.log(res);
     };
 
     private reportGuestJoined = async (guest: vsls.UserInfo) => {
         const isGuestInSession = this.guests.find((g) => {
-            return g.id === guest.id;
+            return g.user.id === guest.id;
         });
 
         if (isGuestInSession) {
             return;
         }
 
-        this.guests.push(guest);
-
-        // const { githubIssue } = this.registryData;
-
-        const { userName } = guest;
-        // const { userName, displayName, emailAddress } = guest;
-
-        if (!userName) {
-            throw new Error('No GitHub username found.');
-        }
-
-        if (!this.sessionCommentUrl) {
-            throw new Error(
-                'No session comment created, create session comment first.'
-            );
-        }
-
-        const issueResponse = await fetch(this.sessionCommentUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `token ${await getAuthToken()}`,
-            },
+        this.guests.push({
+            user: guest,
+            joinTimestamp: Date.now(),
         });
 
-        const issue = await issueResponse.json();
-
-        const { body = '' } = issue;
-
-        console.log(body);
-
-        if (!body) {
-            throw new Error('No session comment contents found.');
-        }
-
-        const timeDelta = Date.now() - this.sessionStartTimestamp;
-        const prettyTimeDelta = time([timeDelta], 's');
-
-        const ghBody = {
-            body: `${body} \n - 🤝 @${userName} joined the session. (+${prettyTimeDelta})`,
-        };
-
-        const ghResult = await fetch(this.sessionCommentUrl, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `token ${await getAuthToken()}`,
-            },
-            body: JSON.stringify(ghBody, null, 2),
-        });
-
-        console.log(ghResult);
+        await this.reportSessionStartMessage();
     };
 }

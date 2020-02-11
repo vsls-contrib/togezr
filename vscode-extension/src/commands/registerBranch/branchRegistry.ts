@@ -1,10 +1,10 @@
+import * as vsls from 'vsls';
 import * as memento from '../../memento';
 import { IChannelRegistryData } from './channelsRegistry';
-// import * as vsls from 'vsls';
 
 export interface IGuestWithSessions {
     sessionCount: number;
-    data: IGuest;
+    data: vsls.UserInfo;
 }
 
 export interface IRegistryData {
@@ -254,7 +254,7 @@ export const isBranchExplicitellyStopped = (
 export const addBranchBroadcastGuest = (
     repoId: string,
     branchName: string,
-    guest: IGuest
+    guest: vsls.UserInfo
 ) => {
     if (!memento) {
         throw new Error(
@@ -280,7 +280,9 @@ export const addBranchBroadcastGuest = (
 
     const { guests = [] } = currentRecord;
     const guestRecord = guests.find((g) => {
-        return g.data.id === guest.id || g.data.email === guest.email;
+        return (
+            g.data.id === guest.id || g.data.emailAddress === guest.emailAddress
+        );
     });
 
     if (!guestRecord) {

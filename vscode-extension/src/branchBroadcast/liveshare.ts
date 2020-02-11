@@ -106,12 +106,7 @@ export const startLiveShareSession = async (branchName: string) => {
         throw new Error('No host found in the session.');
     }
 
-    addBranchBroadcastGuest(getCurrentRepoId(), branchName, {
-        id: host.id!,
-        email: host.emailAddress || '',
-        name: host.displayName,
-        githubUsername: host.userName || '',
-    });
+    addBranchBroadcastGuest(getCurrentRepoId(), branchName, host);
 
     await startSession(vslsApi, getCurrentRepoId(), branchName);
 
@@ -127,12 +122,7 @@ export const startLiveShareSession = async (branchName: string) => {
             throw new Error('User not found or joined without id.');
         }
 
-        addBranchBroadcastGuest(getCurrentRepoId(), branchName, {
-            id: user.id,
-            email: user.emailAddress || '',
-            name: user.displayName,
-            githubUsername: user.userName || '',
-        });
+        addBranchBroadcastGuest(getCurrentRepoId(), branchName, user);
 
         // await session.reportSessionStart();
     });
