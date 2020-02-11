@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import * as vsls from 'vsls';
 import { getBranchRegistryRecord } from '../../commands/registerBranch/branchRegistry';
 import { EXTENSION_NAME_LOWERCASE } from '../../constants';
@@ -11,9 +10,10 @@ import { getIssueRepo } from './getIssueRepo';
 import { getIssueTextWithDetailsGithub } from './getIssueTextWithDetailsGithub';
 import { githubAvatarRepository } from './githubAvatarsRepository';
 import { renderGuestsGithub } from './renderGuestsGithub';
+import { sendGithubRequest } from './sendGithubRequest';
 const time = require('pretty-ms');
 
-const getAuthToken = async () => {
+export const getAuthToken = async () => {
     const token = await keytar.get('githubSecret');
 
     if (!token) {
@@ -41,15 +41,41 @@ interface IGitHubIssueLabel {
     url?: string;
 }
 
-interface IUserInfoWithTiming {
-    user: vsls.UserInfo;
-    joinTimestamp: number;
+// interface IUserInfoWithTiming {
+//     user: vsls.UserInfo;
+//     joinTimestamp: number;
+// }
+
+interface ISessionEventBase {
+    type: 'start-session' | 'guest-join' | 'commit-push';
+    timestamp: number;
 }
+
+interface ISessionStartEvent extends ISessionEventBase {
+    type: 'start-session';
+}
+
+interface ISessionUserJoinEvent extends ISessionEventBase {
+    type: 'guest-join';
+    user: vsls.UserInfo;
+}
+
+interface ISessionCommitPushEvent extends ISessionEventBase {
+    type: 'commit-push';
+    commitId: string;
+}
+
+type ISessionEvent =
+    | ISessionUserJoinEvent
+    | ISessionCommitPushEvent
+    | ISessionStartEvent;
 
 export class GithubSessionReporter implements ISessionReporter {
     private sessionCommentUrl: string | undefined;
 
-    private guests: IUserInfoWithTiming[] = [];
+    // private guests: IUserInfoWithTiming[] = [];
+
+    private events: ISessionEvent[] = [];
 
     private sessionStartTimestamp: number;
 
@@ -110,17 +136,9 @@ export class GithubSessionReporter implements ISessionReporter {
             githubIssue
         )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(githubIssue)}`;
 
-        const issueResponse = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `token ${await getAuthToken()}`,
-            },
-        });
+        const issue = await sendGithubRequest(url, 'GET');
 
-        const issue = await issueResponse.json();
-
-        const { body = [] } = issue;
+        const { body = '' } = issue;
         const labels: IGitHubIssueLabel[] = issue.labels;
 
         const togezrLabel = labels.find((label) => {
@@ -135,28 +153,14 @@ export class GithubSessionReporter implements ISessionReporter {
             githubIssue
         )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(githubIssue)}`;
 
-        const issueDetailsResponse = await fetch(issueDetailsUpdateUrl, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `token ${await getAuthToken()}`,
-            },
-            body: JSON.stringify(
-                {
-                    body: await getIssueTextWithDetailsGithub(
-                        body,
-                        this.registryData,
-                        this.repo
-                    ),
-                    labels,
-                },
-                null,
-                2
+        await sendGithubRequest(issueDetailsUpdateUrl, 'PATCH', {
+            body: await getIssueTextWithDetailsGithub(
+                body,
+                this.registryData,
+                this.repo
             ),
+            labels,
         });
-
-        const jsonRes = await issueDetailsResponse.json();
-        console.log(jsonRes);
     };
 
     private reportSessionStartMessage = async () => {
@@ -170,15 +174,19 @@ export class GithubSessionReporter implements ISessionReporter {
 
         const { userName } = host;
 
-        const gs = this.guests.map((g) => {
+        const guests = this.events.filter((e) => {
+            return e.type === 'guest-join';
+        }) as ISessionUserJoinEvent[];
+
+        const gs = guests.map((g) => {
             return {
                 data: g.user,
                 sessionCount: -1,
             };
         });
 
-        const joinedGuests = this.guests.map((g) => {
-            const timeDelta = g.joinTimestamp - this.sessionStartTimestamp;
+        const joinedGuests = guests.map((g) => {
+            const timeDelta = g.timestamp - this.sessionStartTimestamp;
             const prettyTimeDelta = time(timeDelta);
 
             return `- 🤝 @${g.user.userName} joined the session. *(+${prettyTimeDelta})*`;
@@ -200,23 +208,13 @@ export class GithubSessionReporter implements ISessionReporter {
         };
 
         if (!this.sessionCommentUrl) {
-            const ghResult = await fetch(
-                `https://api.github.com/repos/${getIssueOwner(
-                    githubIssue
-                )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(
-                    githubIssue
-                )}/comments`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `token ${await getAuthToken()}`,
-                    },
-                    body: JSON.stringify(ghBody, null, 2),
-                }
-            );
+            const url = `https://api.github.com/repos/${getIssueOwner(
+                githubIssue
+            )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(
+                githubIssue
+            )}/comments`;
 
-            const res = await ghResult.json();
+            const res = await sendGithubRequest(url, 'POST', ghBody);
 
             this.sessionCommentUrl = res.url;
 
@@ -224,30 +222,33 @@ export class GithubSessionReporter implements ISessionReporter {
                 throw new Error('No session comment created.');
             }
         } else {
-            await fetch(this.sessionCommentUrl, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `token ${await getAuthToken()}`,
-                },
-                body: JSON.stringify(ghBody, null, 2),
-            });
+            await sendGithubRequest(this.sessionCommentUrl, 'PATCH', ghBody);
         }
     };
 
     private reportGuestJoined = async (guest: vsls.UserInfo) => {
-        const isGuestInSession = this.guests.find((g) => {
-            return g.user.id === guest.id;
+        const isGuestInSession = this.events.find((event) => {
+            if (event.type !== 'guest-join') {
+                return;
+            }
+
+            return event.user.id === guest.id;
         });
 
         if (isGuestInSession) {
             return;
         }
 
-        this.guests.push({
+        this.events.push({
+            type: 'guest-join',
             user: guest,
-            joinTimestamp: Date.now(),
+            timestamp: Date.now(),
         });
+
+        // this.guests.push({
+        //     user: guest,
+        //     joinTimestamp: Date.now(),
+        // });
 
         await this.reportSessionStartMessage();
     };
