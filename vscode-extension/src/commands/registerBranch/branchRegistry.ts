@@ -327,3 +327,13 @@ export const removeAllBranchBroadcastGuests = (
         registryData
     );
 };
+
+export const removeAllBranchBroadcasts = () => {
+    if (!memento) {
+        throw new Error(
+            'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
+        );
+    }
+
+    memento.set(BRANCH_REGISTRY_KEY, {});
+};

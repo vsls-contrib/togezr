@@ -15,11 +15,16 @@ export const getIssueTextWithDetailsGithub = async (
 ) => {
     const descriptionRegex = /(\!\[togezr\sseparator\]\(https:\/\/aka\.ms\/togezr-issue-separator-image\)[\s\S]+\#\#\#\#\#\# powered by \[Togezr\]\(https\:\/\/aka\.ms\/togezr-issue-website-link\))/gm;
     const isPresent = !!description.match(descriptionRegex);
+
+    const guestsWithBranchInfo = [
+        await renderGuestsGithub(data.guests),
+        getIssueDetailsGit(data, repo),
+    ].join('\n');
+
     const issueDetails = [
         ISSUE_SESSION_DETAILS_HEADER,
-        getIssueDetailsGit(data, repo),
-        await renderGuestsGithub(data.guests),
         getIssueDetailsLiveShare(data),
+        guestsWithBranchInfo,
         ISSUE_SESSION_DETAILS_FOOTER,
     ].join('\n\n');
     if (isPresent) {

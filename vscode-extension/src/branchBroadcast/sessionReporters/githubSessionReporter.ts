@@ -48,6 +48,8 @@ export class GithubSessionReporter implements ISessionReporter {
     private events: ISessionEvent[] = [];
     private renderer: GithubCommentRenderer;
 
+    private isDisposed = false;
+
     private sessionStartTimestamp: number;
 
     get registryData() {
@@ -84,6 +86,10 @@ export class GithubSessionReporter implements ISessionReporter {
         });
 
         onCommitPushToRemote(async ([commit, repoUrl]) => {
+            if (this.isDisposed) {
+                return;
+            }
+
             this.events.push({
                 type: 'commit-push',
                 commitId: commit.hash,
@@ -96,6 +102,10 @@ export class GithubSessionReporter implements ISessionReporter {
         });
 
         this.vslsAPI.onDidChangePeers(async (e: vsls.PeersChangeEvent) => {
+            if (this.isDisposed) {
+                return;
+            }
+
             if (e.removed.length) {
                 return;
             }
@@ -126,12 +136,17 @@ export class GithubSessionReporter implements ISessionReporter {
     }
 
     public async dispose() {
+        this.isDisposed = true;
+
         this.events.push({
             type: 'end-session',
             timestamp: Date.now(),
         });
 
-        await this.renderSessionComment();
+        await Promise.all([
+            this.renderSessionComment(),
+            this.renderSessionDetails(),
+        ]);
     }
 
     private renderSessionDetails = async () => {

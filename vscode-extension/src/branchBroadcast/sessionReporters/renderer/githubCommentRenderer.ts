@@ -8,6 +8,7 @@ import {
     ISessionStartEvent,
     ISessionUserJoinEvent,
 } from './events';
+import { renderLiveShareCompactBadge } from './renderLiveShareCompactBadge';
 
 const getCleanCommitMessage = (commitMessage: string) => {
     const split = commitMessage.split(/Co\-authored\-by\:\s+.+\s+\<.+.\>/gim);
@@ -43,7 +44,13 @@ export class GithubCommentRenderer {
             const prettyTimeDelta = time(timeDelta);
 
             if (g.type === 'start-session') {
-                return `🧑‍💻 @${g.user.userName} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${g.sessionId}).`;
+                const { user, sessionId } = g;
+
+                return `🧑‍💻 @${
+                    user.userName
+                } started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) ${renderLiveShareCompactBadge(
+                    sessionId
+                )}`;
             }
 
             if (g.type === 'guest-join') {
@@ -67,7 +74,7 @@ export class GithubCommentRenderer {
                     ', '
                 )} pushed [1 commit: ${truncatedCommitMessage}](${
                     g.repoUrl
-                }/commit/${g.commitId}) *(+${prettyTimeDelta})*`;
+                }/commit/${g.commitId}) (+${prettyTimeDelta})`;
             }
         });
 

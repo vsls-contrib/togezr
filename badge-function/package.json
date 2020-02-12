@@ -6,6 +6,8 @@
     "start": "func start",
     "test": "echo \"No tests yet...\""
   },
-  "dependencies": {},
+  "dependencies": {
+    "pretty-ms": "^5.1.0"
+  },
   "devDependencies": {}
 }
