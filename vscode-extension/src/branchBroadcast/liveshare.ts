@@ -9,7 +9,7 @@ import {
     setLiveshareSessionForBranchRegitryRecord,
 } from '../commands/registerBranch/branchRegistry';
 import { getCurrentBranch, getCurrentRepoId } from './git';
-import { startSession } from './slack/session';
+import { getCurrentSession, startSession } from './slack/session';
 
 // const extractSessionId = (liveshareUrl?: string): string | undefined => {
 //     if (typeof liveshareUrl !== 'string' || !liveshareUrl) {
@@ -140,6 +140,13 @@ export const stopLiveShareSession = async () => {
     }
 
     if (vslsApi.session.id) {
-        await vslsApi.end();
+        const promises = [vslsApi.end()];
+        const currentSession = getCurrentSession();
+
+        if (currentSession) {
+            promises.push(currentSession.dispose());
+        }
+
+        await Promise.all(promises);
     }
 };
