@@ -27,8 +27,8 @@
     "contributes": {
         "commands": [
             {
-                "command": "togezr.registerFeatureBranchForBroadcast",
-                "title": "Register Feature Branch for Broadcast",
+                "command": "togezr.connectBranch",
+                "title": "Connect a branch",
                 "category": "Togezr"
             },
             {

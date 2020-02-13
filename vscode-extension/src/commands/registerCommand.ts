@@ -5,7 +5,7 @@ import { IRegisterBranchOptions } from './registerBranch';
 export const CommandId = {
     addReporter: 'togezr.addReporter',
     setGitHubToken: 'togezr.setGitHubToken',
-    registerBranchForBroadcast: 'togezr.registerFeatureBranchForBroadcast',
+    connectBranch: 'togezr.connectBranch',
 } as const;
 
 export async function registerCommand(
@@ -17,7 +17,7 @@ export async function registerCommand(
     command: () => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(
-    name: typeof CommandId.registerBranchForBroadcast,
+    name: typeof CommandId.connectBranch,
     command: (options?: IRegisterBranchOptions) => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(name: any, command: any) {

@@ -37,6 +37,7 @@ const GITHUB_SECRET_KEY = 'githubSecret';
 
 const CACHE: { [key: string]: string } = Object.create(null);
 
+export async function get(key: string): Promise<string | null>;
 export async function get(
     key: typeof GITHUB_SECRET_KEY
 ): Promise<string | null>;

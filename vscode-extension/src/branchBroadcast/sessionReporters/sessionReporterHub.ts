@@ -1,7 +1,8 @@
 import { Repository } from 'src/typings/git';
 import * as vsls from 'vsls';
+import { getReporter } from '../../commands/addReporterCommand';
+import { getBranchRegistryRecord } from '../../commands/registerBranch/branchRegistry';
 import { ISessionReporter } from '../interfaces/ISessionReporter';
-import { GithubSessionReporter } from './githubSessionReporter';
 
 export class SessionReporterHub {
     private sessionReporters: ISessionReporter[] = [];
@@ -12,9 +13,20 @@ export class SessionReporterHub {
         branchName: string,
         repo: Repository
     ) {
-        this.sessionReporters.push(
-            new GithubSessionReporter(vslsApi, repoId, branchName, repo)
-        );
+        const registryData = getBranchRegistryRecord(repoId, branchName);
+        if (!registryData) {
+            throw new Error('No registry data found.');
+        }
+
+        const { reportersData } = registryData;
+
+        for (let reporter of reportersData) {
+            const ReporterClass = getReporter(reporter.type);
+
+            this.sessionReporters.push(
+                new ReporterClass(vslsApi, repoId, branchName, repo, reporter)
+            );
+        }
     }
 
     public async init() {

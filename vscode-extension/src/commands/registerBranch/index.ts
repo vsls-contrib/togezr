@@ -42,6 +42,7 @@ export const registerBranchCommand = async (
         getCurrentRepoId(),
         featureBranch
     );
+
     if (existingBranchBroadcast) {
         const yesButton = 'Register again';
         const answer = await vscode.window.showInformationMessage(
@@ -67,7 +68,7 @@ export const registerBranchCommand = async (
 
         if (!answer) {
             return await vscode.commands.executeCommand(
-                CommandId.registerBranchForBroadcast
+                CommandId.connectBranch
             );
         }
     }

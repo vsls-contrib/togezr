@@ -40,7 +40,7 @@ export class ReporterRepository {
         this.reporters = [...this.reporters, reporter];
     }
 
-    public addGitHubReporter(
+    public async addGitHubReporter(
         name: string,
         githubRepoUrl: string,
         token: string
@@ -59,7 +59,7 @@ export class ReporterRepository {
             },
         ];
 
-        keytar.set(accessTokenKeytarKey, token);
+        await keytar.set(accessTokenKeytarKey, token);
     }
 
     public removeReporter(id: string) {
@@ -75,6 +75,14 @@ export class ReporterRepository {
             await keytar.set(reporter.accessTokenKeytarKey, undefined);
         }
     }
+
+    public getReporter = (id: string) => {
+        const reporter = this.reporters.find((r) => {
+            return r.id === id;
+        });
+
+        return reporter;
+    };
 
     public getReporters() {
         return [...this.reporters];

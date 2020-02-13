@@ -1,76 +1,76 @@
-import * as memento from '../../memento';
+// import * as memento from '../../memento';
 
-export interface IChannelRegistryData {
-    url: string;
-    name: string;
-}
+// export interface IChannelRegistryData {
+//     url: string;
+//     name: string;
+// }
 
-interface IChannelsRegistryData {
-    channels: IChannelRegistryData[];
-}
+// interface IChannelsRegistryData {
+//     channels: IChannelRegistryData[];
+// }
 
-const defaultChannelsRegistryData: IChannelsRegistryData = {
-    channels: [],
-};
+// const defaultChannelsRegistryData: IChannelsRegistryData = {
+//     channels: [],
+// };
 
-const CHANNELS_MEMENTO_KEY = 'livehsare.branch.channels.registry';
+// const CHANNELS_MEMENTO_KEY = 'livehsare.branch.channels.registry';
 
-export const getChannels = (): IChannelsRegistryData => {
-    const data = (memento.get(CHANNELS_MEMENTO_KEY) ||
-        defaultChannelsRegistryData) as IChannelsRegistryData;
-    return { ...data, channels: [...data.channels] };
-};
+// export const getChannels = (): IChannelsRegistryData => {
+//     const data = (memento.get(CHANNELS_MEMENTO_KEY) ||
+//         defaultChannelsRegistryData) as IChannelsRegistryData;
+//     return { ...data, channels: [...data.channels] };
+// };
 
-export const setChannels = (channels: IChannelsRegistryData) => {
-    if (!memento) {
-        throw new Error('initialize memento first.');
-    }
+// export const setChannels = (channels: IChannelsRegistryData) => {
+//     if (!memento) {
+//         throw new Error('initialize memento first.');
+//     }
 
-    return memento.set(CHANNELS_MEMENTO_KEY, channels);
-};
+//     return memento.set(CHANNELS_MEMENTO_KEY, channels);
+// };
 
-export const getChannel = (name: string): IChannelRegistryData | undefined => {
-    const channelsData = getChannels();
+// export const getChannel = (name: string): IChannelRegistryData | undefined => {
+//     const channelsData = getChannels();
 
-    const channel = channelsData.channels.find((ch) => {
-        return ch.name === name;
-    });
+//     const channel = channelsData.channels.find((ch) => {
+//         return ch.name === name;
+//     });
 
-    return channel;
-};
+//     return channel;
+// };
 
-export const getChannelByUrl = (
-    url: string
-): IChannelRegistryData | undefined => {
-    const channelsData = getChannels();
+// export const getChannelByUrl = (
+//     url: string
+// ): IChannelRegistryData | undefined => {
+//     const channelsData = getChannels();
 
-    const channel = channelsData.channels.find((ch) => {
-        return ch.url === url;
-    });
+//     const channel = channelsData.channels.find((ch) => {
+//         return ch.url === url;
+//     });
 
-    return channel;
-};
+//     return channel;
+// };
 
-export const removeChannel = (name: string) => {
-    const channelsData = getChannels();
+// export const removeChannel = (name: string) => {
+//     const channelsData = getChannels();
 
-    const newChannels = channelsData.channels.filter((ch) => {
-        return ch.name !== name;
-    });
+//     const newChannels = channelsData.channels.filter((ch) => {
+//         return ch.name !== name;
+//     });
 
-    channelsData.channels = newChannels;
+//     channelsData.channels = newChannels;
 
-    setChannels(channelsData);
-};
+//     setChannels(channelsData);
+// };
 
-export const addChannel = (name: string, url: string) => {
-    const channel = getChannel(name);
+// export const addChannel = (name: string, url: string) => {
+//     const channel = getChannel(name);
 
-    if (channel) {
-        removeChannel(name);
-    }
+//     if (channel) {
+//         removeChannel(name);
+//     }
 
-    const channelsData = getChannels();
-    channelsData.channels.push({ name, url });
-    setChannels(channelsData);
-};
+//     const channelsData = getChannels();
+//     channelsData.channels.push({ name, url });
+//     setChannels(channelsData);
+// };

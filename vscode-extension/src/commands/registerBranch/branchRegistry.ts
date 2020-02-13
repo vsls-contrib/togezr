@@ -1,6 +1,6 @@
 import * as vsls from 'vsls';
+import { IReportersData } from '../../interfaces/IReportersData';
 import * as memento from '../../memento';
-import { IChannelRegistryData } from './channelsRegistry';
 
 export interface IGuestWithSessions {
     sessionCount: number;
@@ -11,24 +11,19 @@ export interface IRegistryData {
     isRunning: boolean;
     isExplicitellyStopped: boolean;
     sessionId?: string;
-    githubIssue: string;
-    channel: IChannelRegistryData;
     repoId: string;
     branchName: string;
     guests: IGuestWithSessions[];
+    reportersData: IReportersData;
 }
 
 const defaultRegistryData: IRegistryData = {
     isRunning: false,
     isExplicitellyStopped: false,
-    githubIssue: '',
-    channel: {
-        name: '',
-        url: '',
-    },
     repoId: '',
     branchName: '',
     guests: [],
+    reportersData: [],
 };
 
 interface IRegistryRecords {
@@ -46,8 +41,7 @@ const getBranchRecordName = (repoId: string, branchName: string) => {
 export interface IBranchRegistrationOptions {
     repoId: string;
     branchName: string;
-    githubIssue: string;
-    channel: IChannelRegistryData;
+    reportersData: IReportersData;
 }
 
 export const setLiveshareSessionForBranchRegitryRecord = (
@@ -121,7 +115,7 @@ export const registerBranch = async (options: IBranchRegistrationOptions) => {
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
         );
     }
-    const { branchName, githubIssue, channel, repoId } = options;
+    const { branchName, repoId, reportersData } = options;
 
     const registryData = getBranchRegistryRecord(repoId, branchName);
 
@@ -130,8 +124,7 @@ export const registerBranch = async (options: IBranchRegistrationOptions) => {
         ...registryData,
         repoId,
         branchName,
-        githubIssue,
-        channel,
+        reportersData,
     };
 
     setBranchRegistryRecord(data.repoId, branchName, data);

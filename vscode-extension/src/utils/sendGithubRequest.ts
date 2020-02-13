@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
-import { getAuthToken } from './githubSessionReporter';
 
-export const sendGithubRequest = async (
+export const sendGithubRequest = async <T>(
+    token: string,
     url: string,
     method: 'GET' | 'POST' | 'PATCH',
     body?: object
@@ -10,7 +10,7 @@ export const sendGithubRequest = async (
         method: method,
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `token ${await getAuthToken()}`,
+            Authorization: `token ${token}`,
         },
     };
     if (body) {
@@ -18,5 +18,6 @@ export const sendGithubRequest = async (
     }
     const response = await fetch(url, options);
     const result = await response.json();
-    return result;
+
+    return result as T;
 };
