@@ -54,10 +54,7 @@ export async function get(key: any) {
     return await keytar.getPassword(EXTENSION_NAME, key);
 }
 
-export async function set(
-    key: string,
-    value: string | undefined
-): Promise<void>;
+export async function set(key: string, value: string): Promise<void>;
 export async function set(
     key: typeof GITHUB_SECRET_KEY,
     value: string
@@ -70,4 +67,14 @@ export async function set(key: any, value: any) {
     CACHE[key] = value;
 
     return await keytar.setPassword(EXTENSION_NAME, key, value);
+}
+
+export async function remove(key: string) {
+    if (!keytar) {
+        throw new Error('Call `initializeKeytar` first.');
+    }
+
+    delete CACHE[key];
+
+    return await keytar.deletePassword(EXTENSION_NAME, key);
 }

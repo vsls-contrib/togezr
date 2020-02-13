@@ -38,7 +38,7 @@ export const startRegisteringTheBranch = async (
     const registeredReporters = reporterRepository.getReporters();
     if (!registeredReporters.length) {
         throw new Error(
-            'No reporters found, register one first. (`> Togezr: add reporter` command)'
+            'No reporters found, register one first by running `Togezr: Add reporter` command in command palette.'
         );
     }
 

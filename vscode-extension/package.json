@@ -28,12 +28,12 @@
         "commands": [
             {
                 "command": "togezr.connectBranch",
-                "title": "Connect a branch",
+                "title": "Connect branch",
                 "category": "Togezr"
             },
             {
                 "command": "togezr.addReporter",
-                "title": "Add a reporter",
+                "title": "Add reporter",
                 "category": "Togezr"
             },
             {

@@ -72,7 +72,9 @@ export class ReporterRepository {
 
     public async removeAllReporters() {
         for (let reporter of this.reporters) {
-            await keytar.set(reporter.accessTokenKeytarKey, undefined);
+            await keytar.remove(reporter.accessTokenKeytarKey);
+
+            this.removeReporter(reporter.id);
         }
     }
 

@@ -8,7 +8,7 @@ export const createCommand = (command: Function) => {
         } catch (e) {
             log.error(e);
 
-            await vscode.window.showErrorMessage(e);
+            await vscode.window.showErrorMessage(e.message);
         }
     };
 };
