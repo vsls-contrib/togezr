@@ -32,6 +32,11 @@
                 "category": "Togezr"
             },
             {
+                "command": "togezr.addReporter",
+                "title": "Add a reporter",
+                "category": "Togezr"
+            },
+            {
                 "command": "togezr.setGitHubToken",
                 "title": "Set GitHub API token",
                 "category": "Togezr"
@@ -66,9 +71,11 @@
         "webpack-merge": "^4.2.2"
     },
     "dependencies": {
+        "@types/uuid": "^3.4.7",
         "git-user-name": "^2.0.0",
         "node-fetch": "^2.6.0",
         "pretty-ms": "^5.1.0",
+        "uuid": "^3.4.0",
         "vsls": "^1.0.1526"
     },
     "extensionDependencies": [

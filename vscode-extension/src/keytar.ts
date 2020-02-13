@@ -54,6 +54,10 @@ export async function get(key: any) {
 }
 
 export async function set(
+    key: string,
+    value: string | undefined
+): Promise<void>;
+export async function set(
     key: typeof GITHUB_SECRET_KEY,
     value: string
 ): Promise<void>;
