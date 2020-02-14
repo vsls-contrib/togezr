@@ -3,17 +3,13 @@ import { createCommand } from './createCommand';
 import { IRegisterBranchOptions } from './registerBranch';
 
 export const CommandId = {
-    addReporter: 'togezr.addReporter',
+    addConnector: 'togezr.addConnector',
     setGitHubToken: 'togezr.setGitHubToken',
     connectBranch: 'togezr.connectBranch',
 } as const;
 
 export async function registerCommand(
-    name: typeof CommandId.addReporter,
-    command: () => Promise<unknown>
-): Promise<void>;
-export async function registerCommand(
-    name: typeof CommandId.setGitHubToken,
+    name: typeof CommandId.addConnector,
     command: () => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(

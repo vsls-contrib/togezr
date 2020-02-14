@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import * as memento from '../../memento';
+import * as memento from '../memento';
 import { DEFAULT_GITHUB_AVATAR } from './constants';
 
 const GITHUB_AVATARS_CACHE_PREFIX = 'togezr.github.avatars.cache';

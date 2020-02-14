@@ -1,7 +1,7 @@
 import * as vsls from 'vsls';
 import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
+import { SessionConnectorHub } from '../../sessionConnectors/sessionConnectorHub';
 import { getCurrentRepo } from '../git';
-import { SessionReporterHub } from '../sessionReporters/sessionReporterHub';
 
 export interface IGuest {
     name: string;
@@ -15,7 +15,7 @@ export interface IMessageRessponeData {
     ts: string;
 }
 
-let currentSession: SessionReporterHub | undefined;
+let currentSession: SessionConnectorHub | undefined;
 export const startSession = async (
     vslsApi: vsls.LiveShare,
     repoId: string,
@@ -27,7 +27,7 @@ export const startSession = async (
         throw new Error('Cannot start session, repo not found.');
     }
 
-    currentSession = new SessionReporterHub(vslsApi, repoId, branchName, repo);
+    currentSession = new SessionConnectorHub(vslsApi, repoId, branchName, repo);
 
     await currentSession.init();
 

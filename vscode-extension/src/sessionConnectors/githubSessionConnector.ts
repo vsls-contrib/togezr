@@ -1,13 +1,13 @@
 import fetch from 'node-fetch';
 import * as vsls from 'vsls';
-import { getBranchRegistryRecord } from '../../commands/registerBranch/branchRegistry';
-import { EXTENSION_NAME_LOWERCASE } from '../../constants';
-import { IReporterData } from '../../interfaces/IReportersData';
-import * as keytar from '../../keytar';
-import { reporterRepository } from '../../reporterRepository/reporterRepository';
-import { Repository } from '../../typings/git';
-import { onCommitPushToRemote } from '../git/onCommit';
-import { ISessionReporter } from '../interfaces/ISessionReporter';
+import { onCommitPushToRemote } from '../branchBroadcast/git/onCommit';
+import { ISessionConnector } from '../branchBroadcast/interfaces/ISessionConnector';
+import { getBranchRegistryRecord } from '../commands/registerBranch/branchRegistry';
+import { connectorRepository } from '../connectorRepository/connectorRepository';
+import { EXTENSION_NAME_LOWERCASE } from '../constants';
+import { IConnectorData } from '../interfaces/IConnectorData';
+import * as keytar from '../keytar';
+import { Repository } from '../typings/git';
 import { getIssueId } from './getIssueId';
 import { getIssueOwner } from './getIssueOwner';
 import { getIssueRepo } from './getIssueRepo';
@@ -34,7 +34,7 @@ interface IGitHubIssueLabel {
     url?: string;
 }
 
-export class GithubSessionReporter implements ISessionReporter {
+export class GithubSessionConnector implements ISessionConnector {
     private sessionCommentUrl: string | undefined;
 
     private events: ISessionEvent[] = [];
@@ -61,7 +61,7 @@ export class GithubSessionReporter implements ISessionReporter {
         private repoId: string,
         private branchName: string,
         private repo: Repository,
-        private reporterData: IReporterData
+        private connectorData: IConnectorData
     ) {
         this.sessionStartTimestamp = Date.now();
         this.renderer = new GithubCommentRenderer(this.sessionStartTimestamp);
@@ -143,14 +143,14 @@ export class GithubSessionReporter implements ISessionReporter {
     }
 
     getAuthToken = async (): Promise<string | null> => {
-        const id = this.reporterData.id;
-        const reporter = reporterRepository.getReporter(id);
+        const id = this.connectorData.id;
+        const connector = connectorRepository.getConnector(id);
 
-        if (!reporter) {
-            throw new Error(`No reporter found.`);
+        if (!connector) {
+            throw new Error(`No connector found.`);
         }
 
-        return await keytar.get(reporter.accessTokenKeytarKey);
+        return await keytar.get(connector.accessTokenKeytarKey);
     };
 
     private sendGithubRequest = async (
@@ -174,7 +174,7 @@ export class GithubSessionReporter implements ISessionReporter {
     };
 
     private renderSessionDetails = async () => {
-        const { githubIssue } = this.reporterData.data;
+        const { githubIssue } = this.connectorData.data;
 
         const url = `https://api.github.com/repos/${getIssueOwner(
             githubIssue
@@ -208,7 +208,7 @@ export class GithubSessionReporter implements ISessionReporter {
     };
 
     private renderSessionComment = async () => {
-        const { githubIssue } = this.reporterData.data;
+        const { githubIssue } = this.connectorData.data;
 
         // vscode://vs-msliveshare.vsliveshare/join?${sessionId}
         const ghBody = {

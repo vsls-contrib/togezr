@@ -32,13 +32,8 @@
                 "category": "Togezr"
             },
             {
-                "command": "togezr.addReporter",
-                "title": "Add reporter",
-                "category": "Togezr"
-            },
-            {
-                "command": "togezr.setGitHubToken",
-                "title": "Set GitHub API token",
+                "command": "togezr.addConnector",
+                "title": "Add connector",
                 "category": "Togezr"
             }
         ],

@@ -5,12 +5,12 @@ import { initializeLiveShare } from './branchBroadcast/liveshare';
 import { registerCommands } from './commands';
 import { removeAllBranchBroadcasts } from './commands/registerBranch/branchRegistry';
 import { CommandId } from './commands/registerCommand';
+import { connectorRepository } from './connectorRepository/connectorRepository';
 import { EXTENSION_NAME } from './constants';
 import * as keytar from './keytar';
 import { initializeKeytar } from './keytar';
 import { log } from './logger';
 import { initializeMemento } from './memento';
-import { reporterRepository } from './reporterRepository/reporterRepository';
 
 const checkGitHubAuthToken = async () => {
     const token = await keytar.get('githubSecret');
@@ -43,7 +43,7 @@ export const activate = async (context: vscode.ExtensionContext) => {
         startListenToOriginPush();
 
         removeAllBranchBroadcasts();
-        await reporterRepository.removeAllReporters();
+        await connectorRepository.removeAllConnectors();
     } catch (e) {
         log.error(e);
         vscode.window.showErrorMessage(e.message);

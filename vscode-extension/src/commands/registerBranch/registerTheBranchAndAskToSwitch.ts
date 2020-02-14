@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
 import { getCurrentBranch, switchToTheBranch } from '../../branchBroadcast/git';
 import { startLiveShareSession } from '../../branchBroadcast/liveshare';
-import { IReportersData } from '../../interfaces/IReportersData';
-import { reporterRepository } from '../../reporterRepository/reporterRepository';
-import { getReporterRegistrationInitializer } from '../addReporterCommand';
+import { connectorRepository } from '../../connectorRepository/connectorRepository';
+import { IConnectorData } from '../../interfaces/IConnectorData';
+import { getConnectorRegistrationInitializer } from '../../sessionConnectors/registrationInitializers';
 import { registerBranch } from './branchRegistry';
 
 export const registerTheBranchAndAskToSwitch = async (
     repoId: string,
     branchName: string,
-    reportersData: IReportersData
+    connectorsData: IConnectorData[]
 ) => {
     await registerBranch({
         repoId,
         branchName,
-        reportersData,
+        connectorsData,
     });
 
     const currentBranch = getCurrentBranch();
@@ -35,14 +35,14 @@ export const startRegisteringTheBranch = async (
     repoId: string,
     branchName: string
 ) => {
-    const registeredReporters = reporterRepository.getReporters();
-    if (!registeredReporters.length) {
+    const registeredConnectors = connectorRepository.getConnectors();
+    if (!registeredConnectors.length) {
         throw new Error(
-            'No reporters found, register one first by running `Togezr: Add reporter` command in command palette.'
+            'No connectors found, register one first by running `Togezr: Add connector` command in command palette.'
         );
     }
 
-    const reportersOptions = registeredReporters.map((r) => {
+    const connectorsOptions = registeredConnectors.map((r) => {
         return {
             label: `${r.type}: ${r.name}`,
             id: r.id,
@@ -50,29 +50,29 @@ export const startRegisteringTheBranch = async (
         };
     });
 
-    const reporters = await vscode.window.showQuickPick(reportersOptions, {
+    const connectors = await vscode.window.showQuickPick(connectorsOptions, {
         canPickMany: true,
         ignoreFocusOut: true,
     });
 
-    if (!reporters) {
-        throw new Error('Please select at least one reporter.');
+    if (!connectors) {
+        throw new Error('Please select at least one connector.');
     }
 
-    const reportersData: IReportersData = [];
+    const connectorsData: IConnectorData[] = [];
 
-    for (let { id, type } of reporters) {
-        const init = getReporterRegistrationInitializer(type);
+    for (let { id, type } of connectors) {
+        const init = getConnectorRegistrationInitializer(type);
 
         if (!init) {
-            reportersData.push({ id, type });
+            connectorsData.push({ id, type });
             continue;
         }
 
         const data = await init.getData(id);
 
-        reportersData.push({ id, data, type });
+        connectorsData.push({ id, data, type });
     }
 
-    await registerTheBranchAndAskToSwitch(repoId, branchName, reportersData);
+    await registerTheBranchAndAskToSwitch(repoId, branchName, connectorsData);
 };

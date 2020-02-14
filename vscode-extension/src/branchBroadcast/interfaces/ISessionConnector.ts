@@ -1,5 +1,5 @@
-export interface ISessionReporter {
-    init: () => Promise<ISessionReporter>;
+export interface ISessionConnector {
+    init: () => Promise<ISessionConnector>;
     dispose: () => Promise<void>;
     // reportSessionStart: () => Promise<void>;
     // reportSessionGuest: (guest: IGuest) => Promise<void>;

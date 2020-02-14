@@ -1,12 +1,8 @@
-import { addReporterCommand } from './addReporterCommand';
+import { addConnectorCommand } from './addConnectorCommand';
 import { registerBranchCommand } from './registerBranch';
 import { registerCommand } from './registerCommand';
-import { setGithubTokenCommand } from './setGithubTokenCOmmand';
 
 export const registerCommands = () => {
     registerCommand('togezr.connectBranch', registerBranchCommand);
-
-    registerCommand('togezr.setGitHubToken', setGithubTokenCommand);
-
-    registerCommand('togezr.addReporter', addReporterCommand);
+    registerCommand('togezr.addConnector', addConnectorCommand);
 };

@@ -1,5 +1,5 @@
-import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
-import { Repository } from '../../typings/git';
+import { IRegistryData } from '../commands/registerBranch/branchRegistry';
+import { Repository } from '../typings/git';
 import {
     ISSUE_SESSION_DETAILS_FOOTER,
     ISSUE_SESSION_DETAILS_HEADER,

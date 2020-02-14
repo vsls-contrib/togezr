@@ -1,7 +1,7 @@
-import { IGuestWithSessions } from '../../commands/registerBranch/branchRegistry';
-import { isEmail } from '../../utils/isEmail';
+import { IGuestWithSessions } from '../commands/registerBranch/branchRegistry';
+import { isEmail } from '../utils/isEmail';
 import { DEFAULT_GITHUB_AVATAR } from './constants';
-import { getGithubAvatar, getGithubUsername } from './githubSessionReporter';
+import { getGithubAvatar, getGithubUsername } from './githubSessionConnector';
 
 export const renderGuestsGithub = async (guests: IGuestWithSessions[]) => {
     const resultPromises = guests.map(async (guest) => {
