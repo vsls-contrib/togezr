@@ -14,7 +14,7 @@ interface IConnectorBase {
     accessTokenKeytarKey: string;
 }
 
-interface IGitHubConnector extends IConnectorBase {
+export interface IGitHubConnector extends IConnectorBase {
     type: typeof GITHUB_CONNECTOR_TYPE;
     githubRepoUrl: string;
 }

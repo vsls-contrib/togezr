@@ -61,7 +61,7 @@ export const setLiveshareSessionForBranchRegitryRecord = (
     });
 };
 
-const getRegistryRecords = (): IRegistryRecords => {
+export const getRegistryRecords = (): IRegistryRecords => {
     const data = memento.get<IRegistryRecords | undefined>(BRANCH_REGISTRY_KEY);
 
     return data || {};

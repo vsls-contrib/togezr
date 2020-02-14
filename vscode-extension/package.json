@@ -37,11 +37,24 @@
                 "category": "Togezr"
             }
         ],
-        "views": {
-            "explorer": []
+        "configuration": {},
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "togezr",
+                    "title": "Togezr",
+                    "icon": "images/icon-activity-bar.svg"
+                }
+            ]
         },
-        "viewsContainers": {},
-        "configuration": {}
+        "views": {
+            "togezr": [
+                {
+                    "id": "togezr.activitybar",
+                    "name": "Togezr"
+                }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run build:webpack",

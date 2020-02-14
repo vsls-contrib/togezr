@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
+import { registerActivityBar } from './activityBar/activityBar';
 import { registerBranchBroadcastingExperiment } from './branchBroadcast';
 import { startListenToOriginPush } from './branchBroadcast/git/onCommit';
 import { initializeLiveShare } from './branchBroadcast/liveshare';
 import { registerCommands } from './commands';
-import { removeAllBranchBroadcasts } from './commands/registerBranch/branchRegistry';
 import { CommandId } from './commands/registerCommand';
-import { connectorRepository } from './connectorRepository/connectorRepository';
-import { EXTENSION_NAME } from './constants';
+import { EXTENSION_NAME, setExtensionPath } from './constants';
 import * as keytar from './keytar';
 import { initializeKeytar } from './keytar';
 import { log } from './logger';
@@ -30,6 +29,8 @@ export const activate = async (context: vscode.ExtensionContext) => {
             vscode.window.createOutputChannel(EXTENSION_NAME)
         );
 
+        setExtensionPath(context.extensionPath);
+
         initializeKeytar();
         initializeMemento(context);
 
@@ -42,8 +43,10 @@ export const activate = async (context: vscode.ExtensionContext) => {
 
         startListenToOriginPush();
 
-        removeAllBranchBroadcasts();
-        await connectorRepository.removeAllConnectors();
+        registerActivityBar();
+
+        // removeAllBranchBroadcasts();
+        // await connectorRepository.removeAllConnectors();
     } catch (e) {
         log.error(e);
         vscode.window.showErrorMessage(e.message);
