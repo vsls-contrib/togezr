@@ -4,11 +4,9 @@ import { getApi as getVslsApi } from 'vsls';
 import {
     addBranchBroadcastGuest,
     getBranchRegistryRecord,
-    resetBranchExplicitelyStopped,
-    setBranchExplicitelyStopped,
     setLiveshareSessionForBranchRegitryRecord,
 } from '../commands/registerBranch/branchRegistry';
-import { getCurrentBranch, getCurrentRepoId } from './git';
+import { getCurrentRepoId } from './git';
 import { getCurrentSession, startSession } from './slack/session';
 
 // const extractSessionId = (liveshareUrl?: string): string | undefined => {
@@ -34,36 +32,30 @@ export const initializeLiveShare = async () => {
     }
 
     vslsApi.onDidChangeSession((e) => {
-        const currentRepoId = getCurrentRepoId();
-        const currentBranch = getCurrentBranch();
-
-        if (!currentBranch || !currentBranch.name || !currentRepoId) {
-            return;
-        }
-
-        const registryRecord = getBranchRegistryRecord(
-            currentRepoId,
-            currentBranch.name
-        );
-
-        if (!registryRecord) {
-            return;
-        }
-
-        // session ended
-        if (!e.session.id) {
-            setBranchExplicitelyStopped(getCurrentRepoId(), currentBranch.name);
-
-            return;
-        }
-
-        // session started
-        if (registryRecord.isExplicitellyStopped) {
-            resetBranchExplicitelyStopped(
-                getCurrentRepoId(),
-                currentBranch.name
-            );
-        }
+        // const currentRepoId = getCurrentRepoId();
+        // const currentBranch = getCurrentBranch();
+        // if (!currentBranch || !currentBranch.name || !currentRepoId) {
+        //     return;
+        // }
+        // const registryRecord = getBranchRegistryRecord(
+        //     currentRepoId,
+        //     currentBranch.name
+        // );
+        // if (!registryRecord) {
+        //     return;
+        // }
+        // // session ended
+        // if (!e.session.id) {
+        //     setBranchExplicitelyStopped(getCurrentRepoId(), currentBranch.name);
+        //     return;
+        // }
+        // // session started
+        // if (registryRecord.isExplicitellyStopped) {
+        //     resetBranchExplicitelyStopped(
+        //         getCurrentRepoId(),
+        //         currentBranch.name
+        //     );
+        // }
     });
 };
 

@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import {
     getBranchRegistryRecord,
-    resetBranchExplicitelyStopped,
     unregisterBranch,
 } from '../../commands/registerBranch/branchRegistry';
 import { API, GitExtension, Repository } from '../../typings/git';
@@ -67,7 +66,6 @@ export const getCurrentBranch = () => {
 export const createBranch = async (
     branchName: string,
     isSwitch: boolean,
-    currentBranch: string,
     fromBranch: string
 ) => {
     if (!gitAPI) {
@@ -75,6 +73,7 @@ export const createBranch = async (
     }
 
     const repo = gitAPI.repositories[0];
+    const currentBranch = getCurrentBranch();
 
     if (isSwitch) {
         await repo.checkout(fromBranch);
@@ -82,8 +81,10 @@ export const createBranch = async (
 
     await repo.createBranch(branchName, false);
 
-    // got back to the original branch
-    await repo.checkout(currentBranch);
+    if (currentBranch && currentBranch.name) {
+        // got back to the original branch
+        await repo.checkout(currentBranch.name);
+    }
 };
 
 export const switchToTheBranch = async (branchName: string) => {
@@ -123,10 +124,10 @@ export const startListenOnBranchChange = async () => {
         }
 
         if (registryData.isExplicitellyStopped) {
-            const resumeButton = 'Resume branch';
-            const unregisterButton = 'Unregister branch';
+            const resumeButton = 'Start session';
+            const unregisterButton = 'Disconnect the branch';
             const answer = await vscode.window.showInformationMessage(
-                'This branch is registered for broadcast but explicitely paused. Do you want to resume?',
+                `This branch is connected to ${registryData.connectorsData.length} channels, do you want to start session?`,
                 unregisterButton,
                 resumeButton
             );
@@ -136,10 +137,6 @@ export const startListenOnBranchChange = async () => {
             }
 
             if (answer === resumeButton) {
-                resetBranchExplicitelyStopped(
-                    getCurrentRepoId(),
-                    currentBranch
-                );
                 return await startLiveShareSession(currentBranch);
             }
 

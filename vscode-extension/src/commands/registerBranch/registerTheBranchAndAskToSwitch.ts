@@ -1,5 +1,10 @@
 import * as vscode from 'vscode';
-import { getCurrentBranch, switchToTheBranch } from '../../branchBroadcast/git';
+import {
+    createBranch,
+    getCurrentBranch,
+    getCurrentRepo,
+    switchToTheBranch,
+} from '../../branchBroadcast/git';
 import { startLiveShareSession } from '../../branchBroadcast/liveshare';
 import { connectorRepository } from '../../connectorRepository/connectorRepository';
 import { IConnectorData } from '../../interfaces/IConnectorData';
@@ -9,20 +14,34 @@ import { registerBranch } from './branchRegistry';
 export const registerTheBranchAndAskToSwitch = async (
     repoId: string,
     branchName: string,
-    connectorsData: IConnectorData[]
+    connectorsData: IConnectorData[],
+    isShouldSwitchBranch: boolean,
+    fromBranch?: string
 ) => {
-    await registerBranch({
+    if (fromBranch) {
+        await createBranch(branchName, isShouldSwitchBranch, fromBranch);
+    }
+
+    const registryData = await registerBranch({
         repoId,
         branchName,
         connectorsData,
     });
 
+    const repo = getCurrentRepo();
+
+    if (!repo) {
+        throw new Error('No repo openned.');
+    }
+
+    await repo.push('origin', branchName);
+
     const currentBranch = getCurrentBranch();
     const buttonPrefix =
         !currentBranch || currentBranch.name !== branchName ? 'Switch & ' : '';
-    const startButton = `${buttonPrefix}Start Broadcasting`;
+    const startButton = `${buttonPrefix}Start session`;
     const answer = await vscode.window.showInformationMessage(
-        `The "${branchName}" was successfully registered for broadcast.`,
+        `The "${branchName}" was successfully connected with ${registryData.connectorsData.length} channels. Start session now?`,
         startButton
     );
     if (answer === startButton) {
@@ -33,7 +52,9 @@ export const registerTheBranchAndAskToSwitch = async (
 
 export const startRegisteringTheBranch = async (
     repoId: string,
-    branchName: string
+    branchName: string,
+    fromBranch?: string,
+    isShouldSwitchBranch = false
 ) => {
     const registeredConnectors = connectorRepository.getConnectors();
     if (!registeredConnectors.length) {
@@ -74,5 +95,11 @@ export const startRegisteringTheBranch = async (
         connectorsData.push({ id, data, type });
     }
 
-    await registerTheBranchAndAskToSwitch(repoId, branchName, connectorsData);
+    await registerTheBranchAndAskToSwitch(
+        repoId,
+        branchName,
+        connectorsData,
+        isShouldSwitchBranch,
+        fromBranch
+    );
 };

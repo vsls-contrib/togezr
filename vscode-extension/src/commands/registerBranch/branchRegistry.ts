@@ -19,7 +19,7 @@ export interface IRegistryData {
 
 const defaultRegistryData: IRegistryData = {
     isRunning: false,
-    isExplicitellyStopped: false,
+    isExplicitellyStopped: true,
     repoId: '',
     branchName: '',
     guests: [],
@@ -128,6 +128,8 @@ export const registerBranch = async (options: IBranchRegistrationOptions) => {
     };
 
     setBranchRegistryRecord(data.repoId, branchName, data);
+
+    return data;
 };
 
 export const unregisterBranch = async (repoId: string, branchName: string) => {

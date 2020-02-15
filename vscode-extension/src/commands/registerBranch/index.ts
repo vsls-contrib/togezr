@@ -1,16 +1,14 @@
 import * as vscode from 'vscode';
 import {
-    createBranch,
     getCurrentBranch,
     getCurrentRepoId,
     isBranchExist,
 } from '../../branchBroadcast/git';
+import { CancellationError } from '../../errors/CancellationError';
 import { CommandId } from '../registerCommand';
 import { getBranchRegistryRecord, unregisterBranch } from './branchRegistry';
 import { getBranchName } from './getBranchName';
 import { startRegisteringTheBranch } from './registerTheBranchAndAskToSwitch';
-
-class CancellationError extends Error {}
 
 export interface IRegisterBranchOptions {}
 
@@ -46,7 +44,7 @@ export const registerBranchCommand = async (
     if (existingBranchBroadcast) {
         const yesButton = 'Register again';
         const answer = await vscode.window.showInformationMessage(
-            `The branch "${featureBranch}" is already registered for broadcast. Do you want to update the registration?`,
+            `The branch "${featureBranch}" is already connected to ${existingBranchBroadcast.connectorsData.length} channels. Do you want to connect it again?`,
             yesButton
         );
         if (answer !== yesButton) {
@@ -60,9 +58,9 @@ export const registerBranchCommand = async (
      * If branch is `master` we need to conferm the user intention.
      */
     if (featureBranch === 'master') {
-        const yesButton = 'Broadcast "master" branch';
+        const yesButton = 'Connect the "master" branch';
         const answer = await vscode.window.showInformationMessage(
-            'Are you sure you want to broadcast "master" branch?',
+            'Are you sure you want to connect "master" branch?',
             yesButton
         );
 
@@ -108,12 +106,11 @@ export const registerBranchCommand = async (
     }
 
     const isShouldSwitchBranch = currentBranchName !== fromBranch;
-    await createBranch(
-        featureBranch,
-        isShouldSwitchBranch,
-        currentBranchName,
-        fromBranch
-    );
 
-    return await startRegisteringTheBranch(getCurrentRepoId(), featureBranch);
+    return await startRegisteringTheBranch(
+        getCurrentRepoId(),
+        featureBranch,
+        fromBranch,
+        isShouldSwitchBranch
+    );
 };

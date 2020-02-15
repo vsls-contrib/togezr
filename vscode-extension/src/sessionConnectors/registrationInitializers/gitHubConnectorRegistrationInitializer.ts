@@ -73,9 +73,19 @@ export class GitHubConnectorRegistrationInitializer
                 }
             );
             selectedIssue.url = issue.html_url;
-            vscode.window.showInformationMessage(
-                `Issue#${issue.number} was created: ${selectedIssue.url}.`
-            );
+            const OPEN_ON_GITHUB_BUTTON = 'Open on GitHub';
+            vscode.window
+                .showInformationMessage(
+                    `Issue#${issue.number} was created: ${selectedIssue.url}`,
+                    OPEN_ON_GITHUB_BUTTON
+                )
+                .then((result) => {
+                    if (result === OPEN_ON_GITHUB_BUTTON) {
+                        vscode.env.openExternal(
+                            vscode.Uri.parse(selectedIssue.url)
+                        );
+                    }
+                });
         }
         return {
             githubIssue: selectedIssue.url,
