@@ -34,7 +34,21 @@ const CONNECTORS_ITEM = new TreeItem(
 );
 
 class BranchConnectionTreeItem extends TreeItem {
-    public registryData?: IRegistryData;
+    constructor(
+        label: string,
+        collapsibleState: TreeItemCollapsibleState,
+        public registryData: IRegistryData
+    ) {
+        super(label, collapsibleState);
+
+        const iconNameSuffix = registryData.isReadOnly ? 'readonly-' : '';
+
+        this.iconPath = getIconPack(`branch-inline-${iconNameSuffix}icon.svg`);
+
+        const tooltipSuffix = registryData.isReadOnly ? '(read-only)' : '';
+
+        this.tooltip = `${label} ${tooltipSuffix}`;
+    }
 }
 
 class BranchConnectionConnectorTreeItem extends TreeItem {
@@ -89,12 +103,11 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             const items = Object.entries(branchConnections).map(
                 ([name, registryData]) => {
                     const item = new BranchConnectionTreeItem(
-                        `⎇ ${registryData.branchName}`,
-                        TreeItemCollapsibleState.Collapsed
+                        `${registryData.branchName}`,
+                        TreeItemCollapsibleState.Collapsed,
+                        registryData
                     );
                     item.description = path.basename(registryData.repoId);
-
-                    item.registryData = registryData;
 
                     return item;
                 }

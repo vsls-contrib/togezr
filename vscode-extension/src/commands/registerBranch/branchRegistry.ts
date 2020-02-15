@@ -15,6 +15,7 @@ export interface IRegistryData {
     branchName: string;
     guests: IGuestWithSessions[];
     connectorsData: IConnectorData[];
+    isReadOnly: boolean;
 }
 
 const defaultRegistryData: IRegistryData = {
@@ -24,6 +25,7 @@ const defaultRegistryData: IRegistryData = {
     branchName: '',
     guests: [],
     connectorsData: [],
+    isReadOnly: false,
 };
 
 interface IRegistryRecords {
@@ -42,6 +44,7 @@ export interface IBranchRegistrationOptions {
     repoId: string;
     branchName: string;
     connectorsData: IConnectorData[];
+    isReadOnly: boolean;
 }
 
 export const setLiveshareSessionForBranchRegitryRecord = (
@@ -115,7 +118,7 @@ export const registerBranch = async (options: IBranchRegistrationOptions) => {
             'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
         );
     }
-    const { branchName, repoId, connectorsData } = options;
+    const { branchName, repoId, connectorsData, isReadOnly } = options;
 
     const registryData = getBranchRegistryRecord(repoId, branchName);
 
@@ -125,6 +128,7 @@ export const registerBranch = async (options: IBranchRegistrationOptions) => {
         repoId,
         branchName,
         connectorsData,
+        isReadOnly,
     };
 
     setBranchRegistryRecord(data.repoId, branchName, data);

@@ -3,6 +3,8 @@ import {
     getBranchRegistryRecord,
     unregisterBranch,
 } from '../../commands/registerBranch/branchRegistry';
+import { PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY } from '../../constants';
+import * as memento from '../../memento';
 import { API, GitExtension, Repository } from '../../typings/git';
 import { startLiveShareSession, stopLiveShareSession } from '../liveshare';
 import { onBranchChange } from './onBranchChange';
@@ -87,13 +89,22 @@ export const createBranch = async (
     }
 };
 
-export const switchToTheBranch = async (branchName: string) => {
+export const switchToTheBranch = async (
+    branchName: string,
+    isPreventMessage = false
+) => {
     if (!gitAPI) {
         throw new Error('Initialize Git API first.');
     }
 
     const repo = gitAPI.repositories[0];
-    await repo.checkout(branchName);
+
+    memento.set(PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY, branchName);
+    try {
+        await repo.checkout(branchName);
+    } catch (e) {
+        memento.remove(PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY);
+    }
 };
 
 export const startListenOnBranchChange = async () => {
@@ -123,7 +134,21 @@ export const startListenOnBranchChange = async () => {
             return await startLiveShareSession(currentBranch);
         }
 
-        if (registryData.isExplicitellyStopped) {
+        const branchWithoutNotification = memento.get(
+            PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY
+        );
+
+        const isPreventBranchSwitchNotification =
+            branchWithoutNotification === currentBranch;
+
+        if (isPreventBranchSwitchNotification) {
+            memento.remove(PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY);
+        }
+
+        if (
+            registryData.isExplicitellyStopped &&
+            !isPreventBranchSwitchNotification
+        ) {
             const resumeButton = 'Start session';
             const unregisterButton = 'Disconnect the branch';
             const answer = await vscode.window.showInformationMessage(

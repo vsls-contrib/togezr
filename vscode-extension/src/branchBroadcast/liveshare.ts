@@ -31,32 +31,32 @@ export const initializeLiveShare = async () => {
         throw new Error('No LiveShare API found.');
     }
 
-    vslsApi.onDidChangeSession((e) => {
-        // const currentRepoId = getCurrentRepoId();
-        // const currentBranch = getCurrentBranch();
-        // if (!currentBranch || !currentBranch.name || !currentRepoId) {
-        //     return;
-        // }
-        // const registryRecord = getBranchRegistryRecord(
-        //     currentRepoId,
-        //     currentBranch.name
-        // );
-        // if (!registryRecord) {
-        //     return;
-        // }
-        // // session ended
-        // if (!e.session.id) {
-        //     setBranchExplicitelyStopped(getCurrentRepoId(), currentBranch.name);
-        //     return;
-        // }
-        // // session started
-        // if (registryRecord.isExplicitellyStopped) {
-        //     resetBranchExplicitelyStopped(
-        //         getCurrentRepoId(),
-        //         currentBranch.name
-        //     );
-        // }
-    });
+    // vslsApi.onDidChangeSession((e) => {
+    //     const currentRepoId = getCurrentRepoId();
+    //     const currentBranch = getCurrentBranch();
+    //     if (!currentBranch || !currentBranch.name || !currentRepoId) {
+    //         return;
+    //     }
+    //     const registryRecord = getBranchRegistryRecord(
+    //         currentRepoId,
+    //         currentBranch.name
+    //     );
+    //     if (!registryRecord) {
+    //         return;
+    //     }
+    //     // session ended
+    //     if (!e.session.id) {
+    //         setBranchExplicitelyStopped(getCurrentRepoId(), currentBranch.name);
+    //         return;
+    //     }
+    //     // session started
+    //     if (registryRecord.isExplicitellyStopped) {
+    //         resetBranchExplicitelyStopped(
+    //             getCurrentRepoId(),
+    //             currentBranch.name
+    //         );
+    //     }
+    // });
 };
 
 export const startLiveShareSession = async (branchName: string) => {
@@ -77,6 +77,9 @@ export const startLiveShareSession = async (branchName: string) => {
     const sharedSessionUrl: vscode.Uri | null = await vslsApi.share({
         isPersistent: true,
         sessionId: registryData.sessionId,
+        access: registryData.isReadOnly
+            ? vsls.Access.ReadOnly
+            : vsls.Access.ReadWrite,
     });
 
     if (!sharedSessionUrl) {
@@ -90,8 +93,6 @@ export const startLiveShareSession = async (branchName: string) => {
             sharedSessionUrl.query
         );
     }
-
-    // removeAllBranchBroadcastGuests(getCurrentRepoId(), branchName);
 
     const host = vslsApi.session.user;
     if (!host || !host.id || !host.emailAddress) {
@@ -115,11 +116,7 @@ export const startLiveShareSession = async (branchName: string) => {
         }
 
         addBranchBroadcastGuest(getCurrentRepoId(), branchName, user);
-
-        // await session.reportSessionStart();
     });
-
-    // await session.reportSessionStart();
 
     return sharedSessionUrl;
 };

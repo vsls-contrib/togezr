@@ -7,6 +7,7 @@ import {
 } from '../../branchBroadcast/git';
 import { startLiveShareSession } from '../../branchBroadcast/liveshare';
 import { connectorRepository } from '../../connectorRepository/connectorRepository';
+import { CancellationError } from '../../errors/CancellationError';
 import { IConnectorData } from '../../interfaces/IConnectorData';
 import { getConnectorRegistrationInitializer } from '../../sessionConnectors/registrationInitializers';
 import { registerBranch } from './branchRegistry';
@@ -16,6 +17,7 @@ export const registerTheBranchAndAskToSwitch = async (
     branchName: string,
     connectorsData: IConnectorData[],
     isShouldSwitchBranch: boolean,
+    isReadOnly: boolean,
     fromBranch?: string
 ) => {
     if (fromBranch) {
@@ -26,6 +28,7 @@ export const registerTheBranchAndAskToSwitch = async (
         repoId,
         branchName,
         connectorsData,
+        isReadOnly,
     });
 
     const repo = getCurrentRepo();
@@ -44,8 +47,9 @@ export const registerTheBranchAndAskToSwitch = async (
         `The "${branchName}" was successfully connected with ${registryData.connectorsData.length} channels. Start session now?`,
         startButton
     );
+
     if (answer === startButton) {
-        await switchToTheBranch(branchName);
+        await switchToTheBranch(branchName, true);
         await startLiveShareSession(branchName);
     }
 };
@@ -56,6 +60,21 @@ export const startRegisteringTheBranch = async (
     fromBranch?: string,
     isShouldSwitchBranch = false
 ) => {
+    const READ_ONLY_BUTTON = 'Read-only session';
+    const answer = await vscode.window.showQuickPick(
+        ['Read/Write session', READ_ONLY_BUTTON],
+        {
+            placeHolder: 'Select session type by default',
+            ignoreFocusOut: true,
+        }
+    );
+
+    if (!answer) {
+        throw new CancellationError('No default session type selected.');
+    }
+
+    const isReadOnlySession = answer === READ_ONLY_BUTTON;
+
     const registeredConnectors = connectorRepository.getConnectors();
     if (!registeredConnectors.length) {
         throw new Error(
@@ -100,6 +119,7 @@ export const startRegisteringTheBranch = async (
         branchName,
         connectorsData,
         isShouldSwitchBranch,
+        isReadOnlySession,
         fromBranch
     );
 };
