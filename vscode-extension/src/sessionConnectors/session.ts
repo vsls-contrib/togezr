@@ -1,7 +1,7 @@
 import * as vsls from 'vsls';
-import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
-import { SessionConnectorHub } from '../../sessionConnectors/sessionConnectorHub';
-import { getCurrentRepo } from '../git';
+import { getCurrentRepo } from '../branchBroadcast/git';
+import { IRegistryData } from '../commands/registerBranch/branchRegistry';
+import { SessionConnectorHub } from './sessionConnectorHub';
 
 export interface IGuest {
     name: string;

@@ -2,7 +2,7 @@ const time = require('pretty-ms');
 
 import { clampString } from '../../utils/clampString';
 import { ISSUE_SESSION_DETAILS_HEADER } from '../constants';
-import { renderGuestsGithub } from '../renderGuestsGithub';
+import { renderGuestsGithub } from '../github/renderGuestsGithub';
 import {
     ISessionEvent,
     ISessionStartEvent,

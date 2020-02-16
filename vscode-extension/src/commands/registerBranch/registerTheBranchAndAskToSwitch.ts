@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { refreshActivityBar } from '../../activityBar/activityBar';
 import {
     createBranch,
     getCurrentBranch,
@@ -37,6 +38,7 @@ export const registerTheBranchAndAskToSwitch = async (
         throw new Error('No repo openned.');
     }
 
+    refreshActivityBar();
     await repo.push('origin', branchName);
 
     const currentBranch = getCurrentBranch();

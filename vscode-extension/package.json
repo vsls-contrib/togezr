@@ -32,11 +32,43 @@
                 "category": "Togezr"
             },
             {
+                "command": "togezr.disconnectBranch",
+                "title": "Disconnect branch",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/cross-icon.svg",
+                    "light": "images/light/cross-icon.svg"
+                }
+            },
+            {
                 "command": "togezr.addConnector",
                 "title": "Add connector",
                 "category": "Togezr"
+            },
+            {
+                "command": "togezr.removeConnector",
+                "title": "Remove connector",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/cross-icon.svg",
+                    "light": "images/light/cross-icon.svg"
+                }
             }
         ],
+        "menus": {
+            "view/item/context": [
+                {
+                    "command": "togezr.disconnectBranch",
+                    "when": "viewItem == togezr.branch.connection",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.removeConnector",
+                    "when": "viewItem == togezr.connector",
+                    "group": "inline@1"
+                }
+            ]
+        },
         "configuration": {},
         "viewsContainers": {
             "activitybar": [

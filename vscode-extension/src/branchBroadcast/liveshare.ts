@@ -6,8 +6,8 @@ import {
     getBranchRegistryRecord,
     setLiveshareSessionForBranchRegitryRecord,
 } from '../commands/registerBranch/branchRegistry';
+import { getCurrentSession, startSession } from '../sessionConnectors/session';
 import { getCurrentRepoId } from './git';
-import { getCurrentSession, startSession } from './slack/session';
 
 // const extractSessionId = (liveshareUrl?: string): string | undefined => {
 //     if (typeof liveshareUrl !== 'string' || !liveshareUrl) {

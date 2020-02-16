@@ -24,7 +24,14 @@ export class SessionConnectorHub {
             const ConnectorClass = getConnector(connector.type);
 
             this.sessionConnectors.push(
-                new ConnectorClass(vslsApi, repoId, branchName, repo, connector)
+                new ConnectorClass(
+                    vslsApi,
+                    repoId,
+                    branchName,
+                    repo,
+                    connector,
+                    connectorsData
+                )
             );
         }
     }

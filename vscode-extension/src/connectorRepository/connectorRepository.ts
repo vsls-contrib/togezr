@@ -1,11 +1,19 @@
 import * as uuid from 'uuid/v4';
+import { IGithubRepo } from '../interfaces/IGitHubRepo';
+import { ISlackTeamInfo } from '../interfaces/ISlackTeamInfo';
 import * as keytar from '../keytar';
 import * as memento from '../memento';
 
 const GITHUB_CONNECTOR_TYPE = 'GitHub';
+const SLACK_CONNECTOR_TYPE = 'Slack';
 
-export const KNOWN_CONNECTOR_TYPES: TKnowConnectors[] = [GITHUB_CONNECTOR_TYPE];
-export type TKnowConnectors = typeof GITHUB_CONNECTOR_TYPE;
+export const KNOWN_CONNECTOR_TYPES: TKnowConnectors[] = [
+    GITHUB_CONNECTOR_TYPE,
+    SLACK_CONNECTOR_TYPE,
+];
+export type TKnowConnectors =
+    | typeof GITHUB_CONNECTOR_TYPE
+    | typeof SLACK_CONNECTOR_TYPE;
 
 interface IConnectorBase {
     id: string;
@@ -16,10 +24,15 @@ interface IConnectorBase {
 
 export interface IGitHubConnector extends IConnectorBase {
     type: typeof GITHUB_CONNECTOR_TYPE;
-    githubRepoUrl: string;
+    repo: IGithubRepo;
 }
 
-type TConnectors = IGitHubConnector;
+export interface ISlackConnector extends IConnectorBase {
+    type: typeof SLACK_CONNECTOR_TYPE;
+    team: ISlackTeamInfo;
+}
+
+type TConnectors = IGitHubConnector | ISlackConnector;
 
 const CONNECTORS_MEMENTO_KEY = 'tgzr.connector-repository.connectors';
 
@@ -38,7 +51,7 @@ export class ConnectorRepository {
 
     public async addGitHubConnector(
         name: string,
-        githubRepoUrl: string,
+        repo: IGithubRepo,
         token: string
     ) {
         const id = uuid();
@@ -50,7 +63,29 @@ export class ConnectorRepository {
                 type: 'GitHub',
                 name,
                 id,
-                githubRepoUrl,
+                repo,
+                accessTokenKeytarKey,
+            },
+        ];
+
+        await keytar.set(accessTokenKeytarKey, token);
+    }
+
+    public async addSlackConnector(
+        name: string,
+        team: ISlackTeamInfo,
+        token: string
+    ) {
+        const id = uuid();
+        const accessTokenKeytarKey = `${CONNECTORS_MEMENTO_KEY}.${name}.${id}`;
+
+        this.connectors = [
+            ...this.connectors,
+            {
+                type: 'Slack',
+                name,
+                id,
+                team,
                 accessTokenKeytarKey,
             },
         ];

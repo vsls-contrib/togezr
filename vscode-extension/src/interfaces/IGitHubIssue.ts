@@ -1,3 +1,5 @@
+import { IGitHubUser } from './IGitHubUser';
+
 export interface IGitHubIssue {
     // "url": "https://api.github.com/repos/legomushroom/liveshare-teams/issues/1",
     // "repository_url": "https://api.github.com/repos/legomushroom/liveshare-teams",
@@ -108,4 +110,5 @@ export interface IGitHubIssue {
     state: 'open' | 'closed';
     locked: boolean;
     html_url: string;
+    user: IGitHubUser;
 }

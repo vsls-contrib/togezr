@@ -10,13 +10,6 @@
 //     registryData: IRegistryData;
 // }
 
-// export const getIssueNumber = (githubIssueUrl: string) => {
-//     const split = githubIssueUrl.split('/');
-//     const issueNumber = split[6];
-
-//     return issueNumber;
-// };
-
 // export interface ISessionGuest {
 //     name: string;
 //     imageUrl: string;

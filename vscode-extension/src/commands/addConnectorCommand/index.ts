@@ -5,11 +5,17 @@ import {
 } from '../../connectorRepository/connectorRepository';
 import { CancellationError } from '../../errors/CancellationError';
 import { GitHubConnectorCommandInitializer } from '../../sessionConnectors/commandInitializers/gitHubConnectorCommandInitializer';
-import { GithubSessionConnector } from '../../sessionConnectors/githubSessionConnector';
+import { SlackConnectorCommandInitializer } from '../../sessionConnectors/commandInitializers/slackConnectorCommandInitializer';
+import { GithubSessionConnector } from '../../sessionConnectors/github/githubSessionConnector';
+import { SlackSessionConnector } from '../../sessionConnectors/slack/slackSessionConnector';
 
 const getConnectorCommandInitializer = (connectorType: TKnowConnectors) => {
     if (connectorType === 'GitHub') {
         return new GitHubConnectorCommandInitializer();
+    }
+
+    if (connectorType === 'Slack') {
+        return new SlackConnectorCommandInitializer();
     }
 
     throw new Error(
@@ -21,6 +27,11 @@ export const getConnector = (connectorType: TKnowConnectors) => {
     if (connectorType === 'GitHub') {
         return GithubSessionConnector;
     }
+
+    if (connectorType === 'Slack') {
+        return SlackSessionConnector;
+    }
+
     throw new Error(`No connector for "${connectorType}" type found.`);
 };
 

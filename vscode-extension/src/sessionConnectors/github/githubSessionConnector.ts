@@ -1,20 +1,20 @@
 import fetch from 'node-fetch';
 import * as vsls from 'vsls';
-import { onCommitPushToRemote } from '../branchBroadcast/git/onCommit';
-import { ISessionConnector } from '../branchBroadcast/interfaces/ISessionConnector';
-import { getBranchRegistryRecord } from '../commands/registerBranch/branchRegistry';
-import { connectorRepository } from '../connectorRepository/connectorRepository';
-import { EXTENSION_NAME_LOWERCASE } from '../constants';
-import { IConnectorData } from '../interfaces/IConnectorData';
-import * as keytar from '../keytar';
-import { Repository } from '../typings/git';
-import { getIssueId } from './getIssueId';
+import { onCommitPushToRemote } from '../../branchBroadcast/git/onCommit';
+import { ISessionConnector } from '../../branchBroadcast/interfaces/ISessionConnector';
+import { getBranchRegistryRecord } from '../../commands/registerBranch/branchRegistry';
+import { connectorRepository } from '../../connectorRepository/connectorRepository';
+import { EXTENSION_NAME_LOWERCASE } from '../../constants';
+import { IConnectorData } from '../../interfaces/IConnectorData';
+import { IGitHubIssue } from '../../interfaces/IGitHubIssue';
+import * as keytar from '../../keytar';
+import { Repository } from '../../typings/git';
+import { ISessionEvent } from '../renderer/events';
+import { GithubCommentRenderer } from '../renderer/githubCommentRenderer';
 import { getIssueOwner } from './getIssueOwner';
 import { getIssueRepo } from './getIssueRepo';
 import { getIssueTextWithDetailsGithub } from './getIssueTextWithDetailsGithub';
 import { githubAvatarRepository } from './githubAvatarsRepository';
-import { ISessionEvent } from './renderer/events';
-import { GithubCommentRenderer } from './renderer/githubCommentRenderer';
 
 export const getGithubUsername = (guest: vsls.UserInfo): string | null => {
     return guest.userName || null;
@@ -61,7 +61,8 @@ export class GithubSessionConnector implements ISessionConnector {
         private repoId: string,
         private branchName: string,
         private repo: Repository,
-        private connectorData: IConnectorData
+        private connectorData: IConnectorData,
+        connectorsData: IConnectorData[]
     ) {
         this.sessionStartTimestamp = Date.now();
         this.renderer = new GithubCommentRenderer(this.sessionStartTimestamp);
@@ -142,7 +143,7 @@ export class GithubSessionConnector implements ISessionConnector {
         ]);
     }
 
-    getAuthToken = async (): Promise<string | null> => {
+    private getAuthToken = async (): Promise<string | null> => {
         const id = this.connectorData.id;
         const connector = connectorRepository.getConnector(id);
 
@@ -174,11 +175,11 @@ export class GithubSessionConnector implements ISessionConnector {
     };
 
     private renderSessionDetails = async () => {
-        const { githubIssue } = this.connectorData.data;
+        const githubIssue: IGitHubIssue = this.connectorData.data.githubIssue;
 
         const url = `https://api.github.com/repos/${getIssueOwner(
-            githubIssue
-        )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(githubIssue)}`;
+            githubIssue.html_url
+        )}/${getIssueRepo(githubIssue.html_url)}/issues/${githubIssue.number}`;
 
         const issue = await this.sendGithubRequest(url, 'GET');
 
@@ -193,11 +194,7 @@ export class GithubSessionConnector implements ISessionConnector {
             labels.push(EXTENSION_NAME_LOWERCASE as any);
         }
 
-        const issueDetailsUpdateUrl = `https://api.github.com/repos/${getIssueOwner(
-            githubIssue
-        )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(githubIssue)}`;
-
-        await this.sendGithubRequest(issueDetailsUpdateUrl, 'PATCH', {
+        await this.sendGithubRequest(url, 'PATCH', {
             body: await getIssueTextWithDetailsGithub(
                 body || '',
                 this.registryData,
@@ -208,7 +205,7 @@ export class GithubSessionConnector implements ISessionConnector {
     };
 
     private renderSessionComment = async () => {
-        const { githubIssue } = this.connectorData.data;
+        const githubIssue: IGitHubIssue = this.connectorData.data.githubIssue;
 
         // vscode://vs-msliveshare.vsliveshare/join?${sessionId}
         const ghBody = {
@@ -217,10 +214,10 @@ export class GithubSessionConnector implements ISessionConnector {
 
         if (!this.sessionCommentUrl) {
             const url = `https://api.github.com/repos/${getIssueOwner(
-                githubIssue
-            )}/${getIssueRepo(githubIssue)}/issues/${getIssueId(
-                githubIssue
-            )}/comments`;
+                githubIssue.html_url
+            )}/${getIssueRepo(githubIssue.html_url)}/issues/${
+                githubIssue.number
+            }}/comments`;
 
             const res = await this.sendGithubRequest(url, 'POST', ghBody);
 

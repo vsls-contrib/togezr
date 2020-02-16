@@ -4,8 +4,10 @@ import { IRegisterBranchOptions } from './registerBranch';
 
 export const CommandId = {
     addConnector: 'togezr.addConnector',
+    removeConnector: 'togezr.removeConnector',
     setGitHubToken: 'togezr.setGitHubToken',
     connectBranch: 'togezr.connectBranch',
+    disconnectBranch: 'togezr.disconnectBranch',
 } as const;
 
 export async function registerCommand(
@@ -13,8 +15,16 @@ export async function registerCommand(
     command: () => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(
+    name: typeof CommandId.removeConnector,
+    command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
     name: typeof CommandId.connectBranch,
     command: (options?: IRegisterBranchOptions) => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.disconnectBranch,
+    command: (branch: any) => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(name: any, command: any) {
     const wrappedCommand = createCommand(command);

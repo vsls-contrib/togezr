@@ -1,6 +1,6 @@
-import { getRepoOrigin } from '../branchBroadcast/git';
-import { IRegistryData } from '../commands/registerBranch/branchRegistry';
-import { Repository } from '../typings/git';
+import { getRepoOrigin } from '../../branchBroadcast/git';
+import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
+import { Repository } from '../../typings/git';
 
 export const getIssueDetailsGit = (data: IRegistryData, repo: Repository) => {
     const { branchName } = data;

@@ -1,69 +1,111 @@
 import * as vscode from 'vscode';
+import { refreshActivityBar } from '../../activityBar/activityBar';
 import { connectorRepository } from '../../connectorRepository/connectorRepository';
 import { CancellationError } from '../../errors/CancellationError';
 import { IConnectorCommandInitializer } from '../../interfaces/IConnectorCommandInitializer';
-import { getRepoName } from '../../utils/getRepoName';
-import { getRepoOwner } from '../../utils/getRepoOwner';
+import { IGitHubInstallation } from '../../interfaces/IGitHubInstallation';
+import { IGithubRepo } from '../../interfaces/IGitHubRepo';
 import { sendGithubRequest } from '../../utils/sendGithubRequest';
 
 export class GitHubConnectorCommandInitializer
     implements IConnectorCommandInitializer {
     public init = async () => {
-        const githubRepoUrl = await vscode.window.showInputBox({
-            prompt: 'Specify a GitHub repo',
-            ignoreFocusOut: true,
-        });
-        if (!githubRepoUrl) {
-            throw new CancellationError('No GitHub repo is specified.');
-        }
         const token = await vscode.window.showInputBox({
             prompt: 'Set a GitHub auth token',
             ignoreFocusOut: true,
         });
+
         if (!token) {
             throw new CancellationError('No GitHub token is specified.');
         }
-        const owner = getRepoOwner(githubRepoUrl);
-        const repoName = getRepoName(githubRepoUrl);
-        await vscode.window.withProgress(
+
+        const installationsResult = await sendGithubRequest<{
+            total_count: number;
+            installations: IGitHubInstallation[];
+        }>(
+            token,
+            'https://api.github.com/user/installations',
+            'GET',
+            undefined,
             {
-                title: 'Verifying permissions..',
-                location: vscode.ProgressLocation.Notification,
-            },
-            async () => {
-                try {
-                    const result = await sendGithubRequest(
-                        token,
-                        `https://api.github.com/repos/${owner}/${repoName}/issues`,
-                        'GET'
-                    );
-                    if ((result as any).message === 'Not Found') {
-                        throw new CancellationError("Can't get repo issues.");
-                    }
-                } catch (e) {
-                    if (e instanceof CancellationError) {
-                        throw e;
-                    }
-                }
+                Accept: 'application/vnd.github.machine-man-preview+json',
             }
         );
-        const value = `${owner}/${repoName}`;
-        const name = await vscode.window.showInputBox({
-            prompt: 'What is the name of this connector?',
-            ignoreFocusOut: true,
-            value,
-            valueSelection: [0, value.length],
-        });
-        if (!name) {
-            throw new CancellationError('No connector name specified.');
+
+        const { installations } = installationsResult;
+
+        if (!installations.length) {
+            throw new Error('No installations found for this token.');
         }
+
+        const installationOptions = installations.map((installation) => {
+            return {
+                label: installation.account.login,
+                installation,
+            };
+        });
+
+        const selectedInstallation = await vscode.window.showQuickPick(
+            installationOptions,
+            {
+                ignoreFocusOut: true,
+                canPickMany: false,
+            }
+        );
+
+        if (!selectedInstallation) {
+            throw new CancellationError('No GitHub repo owner is selected.');
+        }
+
+        const { installation } = selectedInstallation;
+
+        const reposResult = await sendGithubRequest<{
+            total_count: number;
+            repositories: IGithubRepo[];
+        }>(
+            token,
+            `https://api.github.com/user/installations/${installation.id}/repositories`,
+            'GET',
+            undefined,
+            {
+                Accept: 'application/vnd.github.machine-man-preview+json',
+            }
+        );
+
+        const { repositories } = reposResult;
+
+        const myRepos = repositories.filter((repo) => {
+            return repo.permissions.push;
+        });
+
+        const repoOptions = myRepos.map((repo) => {
+            return {
+                label: repo.full_name,
+                description: repo.description,
+                repo,
+            };
+        });
+
+        const selectedRepo = await vscode.window.showQuickPick(repoOptions, {
+            ignoreFocusOut: true,
+            canPickMany: false,
+            placeHolder: 'Please select a GitHub repo',
+        });
+
+        if (!selectedRepo) {
+            throw new CancellationError('No repo selected.');
+        }
+
         await connectorRepository.addGitHubConnector(
-            name,
-            githubRepoUrl,
+            selectedRepo.repo.full_name,
+            selectedRepo.repo,
             token
         );
+
+        refreshActivityBar();
+
         await vscode.window.showInformationMessage(
-            `The connector "${name}" successfully added.`
+            `The GitHub repo connector "${selectedRepo.repo.full_name}" added.`
         );
     };
 }
