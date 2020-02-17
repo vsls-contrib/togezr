@@ -6,7 +6,7 @@ import {
 } from '../../branchBroadcast/git';
 import { CancellationError } from '../../errors/CancellationError';
 import { CommandId } from '../registerCommand';
-import { getBranchRegistryRecord, unregisterBranch } from './branchRegistry';
+import { getBranchRegistryRecord } from './branchRegistry';
 import { getBranchName } from './getBranchName';
 import { startRegisteringTheBranch } from './registerTheBranchAndAskToSwitch';
 
@@ -42,16 +42,15 @@ export const registerBranchCommand = async (
     );
 
     if (existingBranchBroadcast) {
-        const yesButton = 'Register again';
+        const yesButton = 'Connect again';
         const answer = await vscode.window.showInformationMessage(
             `The branch "${featureBranch}" is already connected to ${existingBranchBroadcast.connectorsData.length} channels. Do you want to connect it again?`,
             yesButton
         );
+
         if (answer !== yesButton) {
             return;
         }
-
-        await unregisterBranch(getCurrentRepoId(), featureBranch);
     }
 
     /**

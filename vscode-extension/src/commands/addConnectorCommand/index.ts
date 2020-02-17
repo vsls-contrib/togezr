@@ -6,6 +6,7 @@ import {
 import { CancellationError } from '../../errors/CancellationError';
 import { GitHubConnectorCommandInitializer } from '../../sessionConnectors/commandInitializers/gitHubConnectorCommandInitializer';
 import { SlackConnectorCommandInitializer } from '../../sessionConnectors/commandInitializers/slackConnectorCommandInitializer';
+import { TeamsConnectorCommandInitializer } from '../../sessionConnectors/commandInitializers/teamsConnectorCommandInitializer';
 import { GithubSessionConnector } from '../../sessionConnectors/github/githubSessionConnector';
 import { SlackSessionConnector } from '../../sessionConnectors/slack/slackSessionConnector';
 
@@ -16,6 +17,10 @@ const getConnectorCommandInitializer = (connectorType: TKnowConnectors) => {
 
     if (connectorType === 'Slack') {
         return new SlackConnectorCommandInitializer();
+    }
+
+    if (connectorType === 'Teams') {
+        return new TeamsConnectorCommandInitializer();
     }
 
     throw new Error(
@@ -41,7 +46,7 @@ export const addConnectorCommand = async () => {
         pickedConnector = (await vscode.window.showQuickPick(
             KNOWN_CONNECTOR_TYPES,
             {
-                placeHolder: 'Pick connector type',
+                placeHolder: 'Pick a connector type',
             }
         )) as TKnowConnectors;
 

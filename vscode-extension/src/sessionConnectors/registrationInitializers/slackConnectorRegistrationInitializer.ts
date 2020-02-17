@@ -66,6 +66,7 @@ export class SlackConnectorRegistrationInitializer
             {
                 ignoreFocusOut: true,
                 canPickMany: false,
+                placeHolder: 'Pick a Slack channel',
             }
         );
 
@@ -75,7 +76,7 @@ export class SlackConnectorRegistrationInitializer
 
         const value = `${connector.name}#${selectedChannel.channelData.name}`;
         const name = await vscode.window.showInputBox({
-            prompt: 'What is the name of this Slack channel connection?',
+            prompt: '🤔 What is the name of this Slack channel connection?',
             ignoreFocusOut: true,
             value,
             valueSelection: [0, value.length],

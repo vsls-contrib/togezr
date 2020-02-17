@@ -313,6 +313,6 @@ export class SlackCommentRenderer {
             return await renderSessionEndEvent(event, events);
         }
 
-        throw new Error('Uknown event.');
+        throw new Error('Unknown event.');
     };
 }

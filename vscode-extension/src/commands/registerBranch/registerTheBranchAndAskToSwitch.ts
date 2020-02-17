@@ -46,7 +46,7 @@ export const registerTheBranchAndAskToSwitch = async (
         !currentBranch || currentBranch.name !== branchName ? 'Switch & ' : '';
     const startButton = `${buttonPrefix}Start session`;
     const answer = await vscode.window.showInformationMessage(
-        `The "${branchName}" was successfully connected with ${registryData.connectorsData.length} channels. Start session now?`,
+        `The "${branchName}" was connected with ${registryData.connectorsData.length} channels. Start session now?`,
         startButton
     );
 
@@ -95,6 +95,7 @@ export const startRegisteringTheBranch = async (
     const connectors = await vscode.window.showQuickPick(connectorsOptions, {
         canPickMany: true,
         ignoreFocusOut: true,
+        placeHolder: 'Pick connector(s)',
     });
 
     if (!connectors) {

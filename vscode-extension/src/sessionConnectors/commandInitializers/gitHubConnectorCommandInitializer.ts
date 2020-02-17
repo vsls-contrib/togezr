@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { refreshActivityBar } from '../../activityBar/activityBar';
+import { CommandId } from '../../commands/registerCommand';
 import { connectorRepository } from '../../connectorRepository/connectorRepository';
 import { CancellationError } from '../../errors/CancellationError';
 import { IConnectorCommandInitializer } from '../../interfaces/IConnectorCommandInitializer';
@@ -11,7 +12,7 @@ export class GitHubConnectorCommandInitializer
     implements IConnectorCommandInitializer {
     public init = async () => {
         const token = await vscode.window.showInputBox({
-            prompt: 'Set a GitHub auth token',
+            prompt: '🤔 What is your GitHub token?',
             ignoreFocusOut: true,
         });
 
@@ -50,6 +51,7 @@ export class GitHubConnectorCommandInitializer
             {
                 ignoreFocusOut: true,
                 canPickMany: false,
+                placeHolder: `Select an account`,
             }
         );
 
@@ -104,8 +106,14 @@ export class GitHubConnectorCommandInitializer
 
         refreshActivityBar();
 
-        await vscode.window.showInformationMessage(
-            `The GitHub repo connector "${selectedRepo.repo.full_name}" added.`
+        const USE_BUTTON = 'Connect a branch.';
+        const answer = await vscode.window.showInformationMessage(
+            `The GitHub repo connector "${selectedRepo.repo.full_name}" added. Start using it now!`,
+            USE_BUTTON
         );
+
+        if (answer === USE_BUTTON) {
+            await vscode.commands.executeCommand(CommandId.connectBranch);
+        }
     };
 }

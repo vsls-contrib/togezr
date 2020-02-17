@@ -1,6 +1,5 @@
 import * as vsls from 'vsls';
 import { getCurrentRepo } from '../branchBroadcast/git';
-import { IRegistryData } from '../commands/registerBranch/branchRegistry';
 import { SessionConnectorHub } from './sessionConnectorHub';
 
 export interface IGuest {
@@ -34,7 +33,7 @@ export const startSession = async (
     return currentSession;
 };
 
-export const stopSession = async (registryData: IRegistryData) => {
+export const disposeCurrentSessionIfPresent = async () => {
     if (!currentSession) {
         return;
     }

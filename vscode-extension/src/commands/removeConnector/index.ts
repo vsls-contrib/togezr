@@ -29,6 +29,7 @@ export const removeConnectorCommand = async (item?: ConnectorTreeItem) => {
 
     const answer = await vscode.window.showQuickPick(options, {
         ignoreFocusOut: true,
+        placeHolder: 'Select a connector to remove',
     });
 
     if (!answer) {

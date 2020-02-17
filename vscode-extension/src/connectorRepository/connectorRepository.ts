@@ -6,14 +6,17 @@ import * as memento from '../memento';
 
 const GITHUB_CONNECTOR_TYPE = 'GitHub';
 const SLACK_CONNECTOR_TYPE = 'Slack';
+const TEAMS_CONNECTOR_TYPE = 'Teams';
 
 export const KNOWN_CONNECTOR_TYPES: TKnowConnectors[] = [
     GITHUB_CONNECTOR_TYPE,
     SLACK_CONNECTOR_TYPE,
+    TEAMS_CONNECTOR_TYPE,
 ];
 export type TKnowConnectors =
     | typeof GITHUB_CONNECTOR_TYPE
-    | typeof SLACK_CONNECTOR_TYPE;
+    | typeof SLACK_CONNECTOR_TYPE
+    | typeof TEAMS_CONNECTOR_TYPE;
 
 interface IConnectorBase {
     id: string;
@@ -32,7 +35,12 @@ export interface ISlackConnector extends IConnectorBase {
     team: ISlackTeamInfo;
 }
 
-type TConnectors = IGitHubConnector | ISlackConnector;
+export interface ITeamsConnector extends IConnectorBase {
+    type: typeof TEAMS_CONNECTOR_TYPE;
+    webHookUrl: string;
+}
+
+export type TConnectors = IGitHubConnector | ISlackConnector | ITeamsConnector;
 
 const CONNECTORS_MEMENTO_KEY = 'tgzr.connector-repository.connectors';
 
@@ -91,6 +99,24 @@ export class ConnectorRepository {
         ];
 
         await keytar.set(accessTokenKeytarKey, token);
+    }
+
+    public async addTeamsConnector(webHookUrl: string, name: string) {
+        const id = uuid();
+        const accessTokenKeytarKey = `${CONNECTORS_MEMENTO_KEY}.${name}.${id}`;
+
+        this.connectors = [
+            ...this.connectors,
+            {
+                type: 'Teams',
+                name,
+                id,
+                webHookUrl,
+                accessTokenKeytarKey,
+            },
+        ];
+
+        // await keytar.set(accessTokenKeytarKey, '');
     }
 
     public removeConnector(id: string) {

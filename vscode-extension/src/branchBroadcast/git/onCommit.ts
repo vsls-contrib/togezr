@@ -2,7 +2,7 @@ import { EventEmitter } from 'vscode';
 import { getCurrentBranch, getCurrentRepo } from '.';
 import { Commit } from '../../typings/git';
 
-const POLL_INTERVAL = 1000;
+const POLL_INTERVAL = 3000;
 
 const onCommitEmitter = new EventEmitter<[Commit, string]>();
 export const onCommitPushToRemote = onCommitEmitter.event;

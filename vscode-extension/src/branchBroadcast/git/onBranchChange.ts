@@ -1,7 +1,7 @@
 import { EventEmitter } from 'vscode';
 import { getCurrentBranch } from '.';
 
-const POLL_INTERVAL = 1000;
+const POLL_INTERVAL = 3000;
 
 type branchNameType = string | undefined;
 

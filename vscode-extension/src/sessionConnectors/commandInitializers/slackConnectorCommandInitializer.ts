@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import * as vscode from 'vscode';
 import { refreshActivityBar } from '../../activityBar/activityBar';
+import { CommandId } from '../../commands/registerCommand';
 import { connectorRepository } from '../../connectorRepository/connectorRepository';
 import { CancellationError } from '../../errors/CancellationError';
 import { IConnectorCommandInitializer } from '../../interfaces/IConnectorCommandInitializer';
@@ -10,7 +11,7 @@ export class SlackConnectorCommandInitializer
     implements IConnectorCommandInitializer {
     public init = async () => {
         const token = await vscode.window.showInputBox({
-            prompt: 'Slack token for your workspace.',
+            prompt: '🤔 What is your Slack token?',
             ignoreFocusOut: true,
         });
 
@@ -35,7 +36,7 @@ export class SlackConnectorCommandInitializer
 
         const value = `${teamInfo.team.name}`;
         const name = await vscode.window.showInputBox({
-            prompt: 'What is the name of this Slack connector?',
+            prompt: '🤔 What is the name of this Slack connector?',
             ignoreFocusOut: true,
             value,
             valueSelection: [0, value.length],
@@ -49,8 +50,14 @@ export class SlackConnectorCommandInitializer
 
         refreshActivityBar();
 
-        await vscode.window.showInformationMessage(
-            `The Slack connector "${name}" successfully added.`
+        const USE_BUTTON = 'Connect a branch.';
+        const answer = await vscode.window.showInformationMessage(
+            `The Slack connector "${name}" added. Start using it now!`,
+            USE_BUTTON
         );
+
+        if (answer === USE_BUTTON) {
+            await vscode.commands.executeCommand(CommandId.connectBranch);
+        }
     };
 }

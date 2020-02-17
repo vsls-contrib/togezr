@@ -6,7 +6,10 @@ import {
     getBranchRegistryRecord,
     setLiveshareSessionForBranchRegitryRecord,
 } from '../commands/registerBranch/branchRegistry';
-import { getCurrentSession, startSession } from '../sessionConnectors/session';
+import {
+    disposeCurrentSessionIfPresent,
+    startSession,
+} from '../sessionConnectors/session';
 import { getCurrentRepoId } from './git';
 
 // const extractSessionId = (liveshareUrl?: string): string | undefined => {
@@ -31,32 +34,11 @@ export const initializeLiveShare = async () => {
         throw new Error('No LiveShare API found.');
     }
 
-    // vslsApi.onDidChangeSession((e) => {
-    //     const currentRepoId = getCurrentRepoId();
-    //     const currentBranch = getCurrentBranch();
-    //     if (!currentBranch || !currentBranch.name || !currentRepoId) {
-    //         return;
-    //     }
-    //     const registryRecord = getBranchRegistryRecord(
-    //         currentRepoId,
-    //         currentBranch.name
-    //     );
-    //     if (!registryRecord) {
-    //         return;
-    //     }
-    //     // session ended
-    //     if (!e.session.id) {
-    //         setBranchExplicitelyStopped(getCurrentRepoId(), currentBranch.name);
-    //         return;
-    //     }
-    //     // session started
-    //     if (registryRecord.isExplicitellyStopped) {
-    //         resetBranchExplicitelyStopped(
-    //             getCurrentRepoId(),
-    //             currentBranch.name
-    //         );
-    //     }
-    // });
+    vslsApi.onDidChangeSession(async (e) => {
+        if (!e.session.id) {
+            await disposeCurrentSessionIfPresent();
+        }
+    });
 };
 
 export const startLiveShareSession = async (branchName: string) => {
@@ -129,13 +111,6 @@ export const stopLiveShareSession = async () => {
     }
 
     if (vslsApi.session.id) {
-        const promises = [vslsApi.end()];
-        const currentSession = getCurrentSession();
-
-        if (currentSession) {
-            promises.push(currentSession.dispose());
-        }
-
-        await Promise.all(promises);
+        await Promise.all([vslsApi.end(), disposeCurrentSessionIfPresent()]);
     }
 };

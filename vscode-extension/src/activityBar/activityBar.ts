@@ -1,8 +1,23 @@
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, ProviderResult, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window } from 'vscode';
+import {
+    Disposable,
+    Event,
+    EventEmitter,
+    ProviderResult,
+    TreeDataProvider,
+    TreeItem,
+    TreeItemCollapsibleState,
+    window,
+} from 'vscode';
 // import { connectorRepository } from 'src/connectorRepository/connectorRepository';
-import { getRegistryRecords, IRegistryData } from '../commands/registerBranch/branchRegistry';
-import { connectorRepository, IGitHubConnector, ISlackConnector } from '../connectorRepository/connectorRepository';
+import {
+    getRegistryRecords,
+    IRegistryData,
+} from '../commands/registerBranch/branchRegistry';
+import {
+    connectorRepository,
+    TConnectors,
+} from '../connectorRepository/connectorRepository';
 import { EXTENSION_NAME_LOWERCASE } from '../constants';
 import { IConnectorData } from '../interfaces/IConnectorData';
 import { IGitHubIssue } from '../interfaces/IGitHubIssue';
@@ -83,27 +98,46 @@ class BranchSlackConnectionConnectorTreeItem extends TreeItem {
     }
 }
 
+class BranchTeamsConnectionConnectorTreeItem extends TreeItem {
+    constructor(connectorData: IConnectorData) {
+        const connector = connectorRepository.getConnector(connectorData.id);
+
+        if (!connector) {
+            throw new Error(
+                `No connector found for "${connectorData.type}" / "${connectorData.id}"`
+            );
+        }
+
+        const label = connector.name;
+        super(label);
+
+        this.iconPath = getIconPack('teams-connector-icon.svg');
+    }
+}
+
 export class ConnectorTreeItem extends TreeItem {
     public id: string;
 
     public contextValue: string = 'togezr.connector';
 
-    constructor(connector: IGitHubConnector | ISlackConnector) {
+    constructor(connector: TConnectors) {
         super(connector.name);
 
         this.id = connector.id;
         this.iconPath = getIconPack(this.getConnectorIconName(connector));
     }
 
-    private getConnectorIconName(
-        connector: IGitHubConnector | ISlackConnector
-    ) {
+    private getConnectorIconName(connector: TConnectors) {
         if (connector.type === 'GitHub') {
             return 'github-connector-icon.svg';
         }
 
         if (connector.type === 'Slack') {
             return 'slack-connector-icon.svg';
+        }
+
+        if (connector.type === 'Teams') {
+            return 'teams-connector-icon.svg';
         }
 
         throw new Error(
@@ -181,6 +215,14 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
 
                     if (connector.type === 'Slack') {
                         const item = new BranchSlackConnectionConnectorTreeItem(
+                            connector
+                        );
+
+                        return item;
+                    }
+
+                    if (connector.type === 'Teams') {
+                        const item = new BranchTeamsConnectionConnectorTreeItem(
                             connector
                         );
 
