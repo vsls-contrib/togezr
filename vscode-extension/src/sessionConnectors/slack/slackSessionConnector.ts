@@ -9,7 +9,12 @@ import { ISlackChannel } from '../../interfaces/ISlackChannel';
 import * as keytar from '../../keytar';
 import { SlackCommentRenderer } from '../../sessionConnectors/renderer/slackCommentRenderer';
 import { Repository } from '../../typings/git';
-import { ISessionEvent } from '../renderer/events';
+import {
+    ISessionCommitPushEvent,
+    ISessionEndEvent,
+    ISessionEvent,
+    ISessionUserJoinEvent,
+} from '../renderer/events';
 
 export class SlackSessionConnector implements ISessionConnector {
     private sessionStartTimestamp: number;
@@ -58,7 +63,6 @@ export class SlackSessionConnector implements ISessionConnector {
             return connectorData.type === 'GitHub';
         });
 
-        // TODO: get issue info
         this.renderer = new SlackCommentRenderer(githubConnector);
 
         const { session } = vslsAPI;
@@ -78,15 +82,19 @@ export class SlackSessionConnector implements ISessionConnector {
                 return;
             }
 
-            this.events.push({
+            const event: ISessionCommitPushEvent = {
                 type: 'commit-push',
-                commitId: commit.hash,
-                commitMessage: commit.message,
-                timestamp: Date.now(),
+                commit,
                 repoUrl,
-            });
+                timestamp: Date.now(),
+            };
 
-            await this.renderSessionComment();
+            this.events.push(event);
+
+            await Promise.all([
+                this.sendSlackEvent(event),
+                this.renderSessionComment(),
+            ]);
         });
 
         this.vslsAPI.onDidChangePeers(async (e: vsls.PeersChangeEvent) => {
@@ -106,19 +114,13 @@ export class SlackSessionConnector implements ISessionConnector {
             }
 
             setTimeout(async () => {
-                await Promise.all([
-                    // this.renderSessionDetails(),
-                    this.reportGuestJoined(user),
-                ]);
+                await this.reportGuestJoined(user);
             }, 10);
         });
     }
 
     public init = async () => {
-        await Promise.all([
-            // this.renderSessionDetails(),
-            this.renderSessionComment(),
-        ]);
+        await Promise.all([this.renderSessionComment()]);
 
         return this;
     };
@@ -126,15 +128,19 @@ export class SlackSessionConnector implements ISessionConnector {
     public dispose = async () => {
         this.isDisposed = true;
 
-        this.events.push({
+        const event: ISessionEndEvent = {
             type: 'end-session',
             timestamp: Date.now(),
-        });
+        };
+
+        this.events.push(event);
 
         await Promise.all([
+            this.sendSlackEvent(event),
             this.renderSessionComment(),
-            // this.renderSessionDetails(),
         ]);
+
+        await Promise.all([this.renderSessionComment()]);
     };
 
     private renderSessionComment = async () => {
@@ -143,37 +149,30 @@ export class SlackSessionConnector implements ISessionConnector {
             channelConnectionName: string;
         };
 
-        if (!this.sessionCommentUrl) {
-            const body = await this.renderer.render(
-                this.events,
-                channel,
-                this.sessionCommentUrl && (this.sessionCommentUrl as any).ts
-            );
+        const ts = this.sessionCommentUrl && (this.sessionCommentUrl as any).ts;
+        const body = await this.renderer.render(this.events, channel, ts);
 
-            const result = await fetch(
-                'https://slack.com/api/chat.postMessage',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${await this.getAuthToken()}`,
-                    },
-                    body,
-                }
-            );
+        const url = !ts
+            ? 'https://slack.com/api/chat.postMessage'
+            : 'https://slack.com/api/chat.update';
 
-            const bodyJSON = await result.json();
+        const result = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${await this.getAuthToken()}`,
+            },
+            body,
+        });
 
-            if (bodyJSON.ok === false) {
-                throw new Error('Slack request failed.');
-            }
-            // https://avatars1.githubusercontent.com/u/1478800?s=460&v=4
-            this.sessionCommentUrl = bodyJSON;
-        } else {
+        const bodyJSON = await result.json();
+
+        if (bodyJSON.ok === false) {
+            throw new Error('Slack request failed.');
         }
-    };
 
-    // private renderSessionDetails = async () => {};
+        this.sessionCommentUrl = bodyJSON;
+    };
 
     private reportGuestJoined = async (guest: vsls.UserInfo) => {
         const isGuestInSession = this.events.find((event) => {
@@ -188,64 +187,55 @@ export class SlackSessionConnector implements ISessionConnector {
             return;
         }
 
-        this.events.push({
+        const event: ISessionUserJoinEvent = {
             type: 'guest-join',
             user: guest,
             timestamp: Date.now(),
-        });
+        };
 
-        await this.renderSessionComment();
+        this.events.push(event);
+
+        await Promise.all([
+            this.sendSlackEvent(event),
+            this.renderSessionComment(),
+        ]);
     };
 
-    // private render(threadTs?: string) {
-    //     const guests: ISessionGuest[] = this.guests.map((guest) => {
-    //         return {
-    //             name: guest.name,
-    //             imageUrl:
-    //                 'https://avatars1.githubusercontent.com/u/1478800?s=460&v=4',
-    //         };
-    //     });
-    //     const result = template({
-    //         registryData: this.registryData,
-    //         // channelId: this.registryData.channel.url,
-    //         authorUserName: 'Oleg Solomka',
-    //         authorUserId: 'fakeLink.toUser.com',
-    //         // liveshareSessionId: this.registryData.sessionId,
-    //         guests,
-    //         threadTs,
-    //     });
-    //     return result;
-    // }
+    private sendSlackEvent = async (
+        event:
+            | ISessionUserJoinEvent
+            | ISessionCommitPushEvent
+            | ISessionEndEvent
+    ) => {
+        if (!this.sessionCommentUrl) {
+            throw new Error('Send the message first.');
+        }
 
-    // public async reportSessionStart() {
-    //     const payload = this.render();
-    //     const result = await fetch('https://slack.com/api/chat.postMessage', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //             Authorization: `Bearer ${SLACK_BEARER_TOKEN}`,
-    //         },
-    //         body: payload,
-    //     });
-    //     const body: IMessageRessponeData = await result.json();
-    //     this.messageData = body;
-    // }
+        const { channel } = this.connectorData.data as {
+            channel: ISlackChannel;
+            channelConnectionName: string;
+        };
 
-    // public async reportSessionGuest(guest: IGuest) {
-    //     if (!this.messageData) {
-    //         throw new Error('No send the message first!');
-    //     }
-    //     this.guests.push(guest);
-    //     const payload = this.render(this.messageData.ts);
-    //     const result = await fetch('https://slack.com/api/chat.update', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //             Authorization: `Bearer ${SLACK_BEARER_TOKEN}`,
-    //         },
-    //         body: payload,
-    //     });
-    //     const res = await result.json();
-    //     console.log(res);
-    // }
+        const result = await fetch('https://slack.com/api/chat.postMessage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${await this.getAuthToken()}`,
+            },
+            body: JSON.stringify(
+                {
+                    channel: channel.id,
+                    thread_ts: (this.sessionCommentUrl as any).ts,
+                    ...(await this.renderer.renderEvent(event, this.events)),
+                },
+                null,
+                4
+            ),
+        });
+
+        const res = await result.json();
+        if (!res.ok) {
+            throw new Error(`Slack API request failed.`);
+        }
+    };
 }

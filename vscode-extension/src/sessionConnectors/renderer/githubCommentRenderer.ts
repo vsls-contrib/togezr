@@ -1,6 +1,7 @@
 const time = require('pretty-ms');
 
 import { clampString } from '../../utils/clampString';
+import { getCleanCommitMessage } from '../../utils/getCleanCommitMessage';
 import { ISSUE_SESSION_DETAILS_HEADER } from '../constants';
 import { renderGuestsGithub } from '../github/renderGuestsGithub';
 import {
@@ -9,13 +10,6 @@ import {
     ISessionUserJoinEvent,
 } from './events';
 import { renderLiveShareCompactBadge } from './renderLiveShareCompactBadge';
-
-const getCleanCommitMessage = (commitMessage: string) => {
-    const split = commitMessage.split(/Co\-authored\-by\:\s+.+\s+\<.+.\>/gim);
-    const result = split[0];
-
-    return result.replace(/\n/gim, ' ');
-};
 
 export class GithubCommentRenderer {
     constructor(private sessionStartTimestamp: number) {}
@@ -68,13 +62,13 @@ export class GithubCommentRenderer {
                         : `@${g.user.userName}`;
                 });
 
-                const commitMessage = getCleanCommitMessage(g.commitMessage);
+                const commitMessage = getCleanCommitMessage(g.commit.message);
                 const truncatedCommitMessage = clampString(commitMessage, 30);
                 return `- 📌 ${guestsUsers.join(
                     ', '
                 )} pushed [1 commit: ${truncatedCommitMessage}](${
                     g.repoUrl
-                }/commit/${g.commitId}) (+${prettyTimeDelta})`;
+                }/commit/${g.commit.hash}) (+${prettyTimeDelta})`;
             }
         });
 

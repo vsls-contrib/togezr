@@ -1,30 +1,19 @@
-// const time = require('pretty-ms');
+const time = require('pretty-ms');
 
 import { IConnectorData } from '../../interfaces/IConnectorData';
 import { IGitHubIssue } from '../../interfaces/IGitHubIssue';
 import { ISlackChannel } from '../../interfaces/ISlackChannel';
+import { getCleanCommitMessage } from '../../utils/getCleanCommitMessage';
+import { getGuests } from '../../utils/getGuests';
 import { DEFAULT_GITHUB_AVATAR } from '../constants';
 import { githubAvatarRepository } from '../github/githubAvatarsRepository';
-// import { getIssueNumber } from '../slack/template';
 import {
+    ISessionCommitPushEvent,
+    ISessionEndEvent,
     ISessionEvent,
     ISessionStartEvent,
     ISessionUserJoinEvent,
 } from './events';
-
-// interface IGitHubIssueInfo {
-//     url: string;
-//     title: string;
-//     description: string;
-//     authorUsername: string;
-// }
-
-// const getCleanCommitMessage = (commitMessage: string) => {
-//     const split = commitMessage.split(/Co\-authored\-by\:\s+.+\s+\<.+.\>/gim);
-//     const result = split[0];
-
-//     return result.replace(/\n/gim, ' ');
-// };
 
 const renderDivider = () => {
     return `{ "type": "divider" }`;
@@ -38,13 +27,13 @@ const renderHostHeader = (events: ISessionEvent[]) => {
         return e.type === 'end-session';
     });
 
-    const statusText = endEvent ? '⚫ Offline' : '⚡ Live';
+    const statusText = endEvent ? 'Offline' : '⚡ Live';
 
     return `{
         "type": "section",
         "text": {
             "type": "mrkdwn",
-            "text": "<fakeLink.toUser.com|${user.displayName}> started <vscode://ms-vsliveshare.vsliveshare/join?${sessionId}|LiveShare session>."
+            "text": "<https://github.com/${user.userName}|${user.displayName}> started <vscode://ms-vsliveshare.vsliveshare/join?${sessionId}|LiveShare session>."
         },
         "accessory": {
             "type": "button",
@@ -127,9 +116,11 @@ const renderFooter = (events: ISessionEvent[]) => {
         return e.type === 'end-session';
     });
 
-    const text = endEvent
-        ? 'Session ended'
-        : `<vscode://ms-vsliveshare.vsliveshare/join?${sessionId}|Join in VSCode> `;
+    if (endEvent) {
+        return null;
+    }
+
+    const text = `<vscode://ms-vsliveshare.vsliveshare/join?${sessionId}|Join in VSCode> `;
 
     return `{
         "type": "section",
@@ -158,6 +149,112 @@ const renderNotificationTitle = (events: ISessionEvent[]) => {
     return `${user.displayName} (${user.emailAddress}) started LiveShare session`;
 };
 
+const renderGuestJoinEvent = async (
+    event: ISessionUserJoinEvent,
+    events: ISessionEvent[]
+) => {
+    const guest = event.user;
+
+    return {
+        text: `${guest.displayName} joined the session.`,
+        blocks: [
+            {
+                type: 'context',
+                elements: [
+                    {
+                        type: 'image',
+                        image_url: guest.userName
+                            ? await githubAvatarRepository.getAvatarFor(
+                                  guest.userName
+                              )
+                            : DEFAULT_GITHUB_AVATAR,
+                        alt_text: guest.displayName,
+                    },
+                    {
+                        type: 'mrkdwn',
+                        text: `<https://github.com/${guest.userName}|${guest.displayName}> joined the session.`,
+                    },
+                ],
+            },
+        ],
+    };
+};
+
+const renderCommitPushEvent = async (
+    event: ISessionCommitPushEvent,
+    events: ISessionEvent[]
+) => {
+    const guests = getGuests(events);
+
+    const guestsNames = guests
+        .map((guest) => {
+            return guest.user.displayName;
+        })
+        .join(', ');
+
+    const guestsNamesWithLink = guests
+        .map((guest) => {
+            return `<https://github.com/${guest.user.userName}|${guest.user.displayName}>`;
+        })
+        .join(', ');
+
+    const cleanCommitMessage = getCleanCommitMessage(event.commit.message);
+
+    const guestsAvatars = await Promise.all(
+        guests.map(async (guest) => {
+            return {
+                type: 'image',
+                image_url: guest.user.userName
+                    ? await githubAvatarRepository.getAvatarFor(
+                          guest.user.userName
+                      )
+                    : DEFAULT_GITHUB_AVATAR,
+                alt_text: guest.user.displayName,
+            };
+        })
+    );
+
+    return {
+        text: `${guestsNames} pushed 1 commit: ${cleanCommitMessage}`,
+        blocks: [
+            {
+                type: 'context',
+                elements: [
+                    ...guestsAvatars,
+                    {
+                        type: 'mrkdwn',
+                        text: `${guestsNamesWithLink} pushed <${event.repoUrl}/commit/${event.commit.hash}|1 commit: ${cleanCommitMessage}>`,
+                    },
+                ],
+            },
+        ],
+    };
+};
+
+const renderSessionEndEvent = async (
+    event: ISessionEndEvent,
+    events: ISessionEvent[]
+) => {
+    const sessionStartEvent = events[0] as ISessionStartEvent;
+
+    const timeDelta = event.timestamp - sessionStartEvent.timestamp;
+
+    return {
+        text: `LiveShare session ended.`,
+        blocks: [
+            {
+                type: 'context',
+                elements: [
+                    {
+                        type: 'mrkdwn',
+                        text: `🤗 Session ended. (${time(timeDelta)})`,
+                    },
+                ],
+            },
+        ],
+    };
+};
+
 export class SlackCommentRenderer {
     constructor(
         // private sessionStartTimestamp: number,
@@ -183,7 +280,11 @@ export class SlackCommentRenderer {
         }
 
         blocks.push(await renderGuests(events));
-        blocks.push(renderFooter(events));
+
+        const footer = renderFooter(events);
+        if (footer) {
+            blocks.push(footer);
+        }
 
         return `{
             "channel": "${channel.id}",
@@ -191,5 +292,27 @@ export class SlackCommentRenderer {
             ${renderThreadTs(threadTs)}
             "blocks": [ ${blocks.join(', ')} ]
         }`;
+    };
+
+    public renderEvent = async (
+        event:
+            | ISessionUserJoinEvent
+            | ISessionCommitPushEvent
+            | ISessionEndEvent,
+        events: ISessionEvent[]
+    ) => {
+        if (event.type === 'guest-join') {
+            return await renderGuestJoinEvent(event, events);
+        }
+
+        if (event.type === 'commit-push') {
+            return await renderCommitPushEvent(event, events);
+        }
+
+        if (event.type === 'end-session') {
+            return await renderSessionEndEvent(event, events);
+        }
+
+        throw new Error('Uknown event.');
     };
 }

@@ -1,4 +1,5 @@
 import * as vsls from 'vsls';
+import { Commit } from '../../typings/git';
 
 interface ISessionEventBase {
     type: 'start-session' | 'end-session' | 'guest-join' | 'commit-push';
@@ -11,7 +12,7 @@ export interface ISessionStartEvent extends ISessionEventBase {
     user: vsls.UserInfo;
 }
 
-interface ISessionEndEvent extends ISessionEventBase {
+export interface ISessionEndEvent extends ISessionEventBase {
     type: 'end-session';
 }
 
@@ -20,10 +21,9 @@ export interface ISessionUserJoinEvent extends ISessionEventBase {
     user: vsls.UserInfo;
 }
 
-interface ISessionCommitPushEvent extends ISessionEventBase {
+export interface ISessionCommitPushEvent extends ISessionEventBase {
     type: 'commit-push';
-    commitId: string;
-    commitMessage: string;
+    commit: Commit;
     repoUrl: string;
 }
 

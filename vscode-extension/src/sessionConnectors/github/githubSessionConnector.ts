@@ -86,8 +86,7 @@ export class GithubSessionConnector implements ISessionConnector {
 
             this.events.push({
                 type: 'commit-push',
-                commitId: commit.hash,
-                commitMessage: commit.message,
+                commit,
                 timestamp: Date.now(),
                 repoUrl,
             });
