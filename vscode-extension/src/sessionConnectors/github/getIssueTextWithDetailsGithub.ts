@@ -11,8 +11,12 @@ import { renderGuestsGithub } from './renderGuestsGithub';
 export const getIssueTextWithDetailsGithub = async (
     description: string,
     data: IRegistryData,
-    repo: Repository
+    repo?: Repository
 ) => {
+    if (!repo) {
+        throw new Error('Pleae open a repo to proceed.');
+    }
+
     const descriptionRegex = /(\!\[togezr\sseparator\]\(https:\/\/aka\.ms\/togezr-issue-separator-image\)[\s\S]+\#\#\#\#\#\# powered by \[Togezr\]\(https\:\/\/aka\.ms\/togezr-issue-website-link\))/gm;
     const isPresent = !!description.match(descriptionRegex);
 

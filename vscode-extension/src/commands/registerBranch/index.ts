@@ -41,7 +41,7 @@ export const registerBranchCommand = async (
         featureBranch
     );
 
-    if (existingBranchBroadcast) {
+    if (existingBranchBroadcast && !existingBranchBroadcast.isTemporary) {
         const yesButton = 'Connect again';
         const answer = await vscode.window.showInformationMessage(
             `The branch "${featureBranch}" is already connected to ${existingBranchBroadcast.connectorsData.length} channels. Do you want to connect it again?`,

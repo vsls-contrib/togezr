@@ -11,7 +11,7 @@ import * as keytar from '../../keytar';
 
 export class SlackConnectorRegistrationInitializer
     implements IConnectorRegistrationIitializer {
-    public getData = async (id: string) => {
+    public getData = async (id: string, isTemporary = false) => {
         const connector = connectorRepository.getConnector(
             id
         ) as ISlackConnector;
@@ -75,12 +75,15 @@ export class SlackConnectorRegistrationInitializer
         }
 
         const value = `${connector.name}#${selectedChannel.channelData.name}`;
-        const name = await vscode.window.showInputBox({
-            prompt: '🤔 What is the name of this Slack channel connection?',
-            ignoreFocusOut: true,
-            value,
-            valueSelection: [0, value.length],
-        });
+        const name = isTemporary
+            ? selectedChannel.channelData.name
+            : await vscode.window.showInputBox({
+                  prompt:
+                      '🤔 What is the name of this Slack channel connection?',
+                  ignoreFocusOut: true,
+                  value,
+                  valueSelection: [0, value.length],
+              });
 
         if (!name) {
             throw new CancellationError(

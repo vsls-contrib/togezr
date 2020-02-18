@@ -59,9 +59,9 @@ export class GithubSessionConnector implements ISessionConnector {
     constructor(
         private vslsAPI: vsls.LiveShare,
         private id: string,
-        private repo: Repository,
         private connectorData: IConnectorData,
-        connectorsData: IConnectorData[]
+        connectorsData: IConnectorData[],
+        private repo?: Repository
     ) {
         this.sessionStartTimestamp = Date.now();
         this.renderer = new GithubCommentRenderer(this.sessionStartTimestamp);

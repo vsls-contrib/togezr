@@ -34,9 +34,11 @@ export class User {
     };
 
     public getSlackUserLink = () => {
-        return this.user.userName
-            ? `<${this.linkPrefix}/${this.user.userName}|${this.user.displayName}`
+        const result = this.user.userName
+            ? `<${this.linkPrefix}/${this.user.userName}|${this.user.displayName}>`
             : this.user.displayName;
+
+        return result;
     };
 
     public getMarkdownUserLink = () => {

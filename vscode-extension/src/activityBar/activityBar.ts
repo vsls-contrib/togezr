@@ -35,21 +35,43 @@ const CONNECTORS_ITEM = new TreeItem(
 );
 
 export class BranchConnectionTreeItem extends TreeItem {
+    public registryData: IRegistryData;
+
     constructor(
-        label: string,
-        collapsibleState: TreeItemCollapsibleState,
-        public registryData: IRegistryData
+        registryData: IRegistryData,
+        collapsibleState: TreeItemCollapsibleState
     ) {
+        const label = registryData.branchName
+            ? registryData.branchName
+            : path.basename(registryData.repoRootPath);
+
+        collapsibleState = registryData.isRunning
+            ? TreeItemCollapsibleState.Expanded
+            : collapsibleState;
+
         super(label, collapsibleState);
 
-        const iconNameSuffix = registryData.isReadOnly ? 'readonly-' : '';
+        this.registryData = registryData;
 
-        this.iconPath = getIconPack(`branch-inline-${iconNameSuffix}icon.svg`);
+        const iconNamePrefix = registryData.isRunning
+            ? 'branch-running'
+            : 'branch-inline';
+        const iconNameSuffix = registryData.isReadOnly ? 'readonly-' : '';
+        this.iconPath = getIconPack(
+            `${iconNamePrefix}-${iconNameSuffix}icon.svg`
+        );
 
         const tooltipSuffix = registryData.isReadOnly ? '(read-only)' : '';
 
         this.tooltip = `${label} ${tooltipSuffix}`;
-        this.contextValue = 'togezr.branch.connection';
+
+        const contextValueSuffix = registryData.isTemporary ? '.temporary' : '';
+        this.contextValue = `togezr.branch.connection${contextValueSuffix}`;
+
+        this.description =
+            registryData.branchName && registryData.repoId
+                ? path.basename(registryData.repoId)
+                : '';
     }
 }
 
@@ -168,19 +190,19 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         }
 
         if (element === BRANCH_CONNECTIONS_ITEM) {
-            const branchConnections = getRegistryRecords();
-            const items = Object.entries(branchConnections).map(
-                ([name, registryData]) => {
+            const branchConnections = getRegistryRecords(true);
+            const items = Object.entries(branchConnections)
+                .filter(([name, registryData]) => {
+                    return !registryData.isTemporary || registryData.isRunning;
+                })
+                .map(([name, registryData]) => {
                     const item = new BranchConnectionTreeItem(
-                        `${registryData.branchName}`,
-                        TreeItemCollapsibleState.Collapsed,
-                        registryData
+                        registryData,
+                        TreeItemCollapsibleState.Collapsed
                     );
-                    item.description = path.basename(registryData.repoRootPath);
 
                     return item;
-                }
-            );
+                });
 
             return items;
         }

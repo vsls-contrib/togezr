@@ -66,10 +66,49 @@ export const setLiveshareSessionForBranchRegitryRecord = (
     });
 };
 
-export const getRegistryRecords = (): IRegistryRecords => {
-    const data = memento.get<IRegistryRecords | undefined>(BRANCH_REGISTRY_KEY);
+export const getRegistryRecords = (
+    isIncludeTemporary = false
+): IRegistryRecords => {
+    const data: IRegistryRecords = {
+        ...memento.get<IRegistryRecords | undefined>(BRANCH_REGISTRY_KEY),
+    };
 
-    return data || {};
+    if (!isIncludeTemporary) {
+        for (let [key, value] of Object.entries(data)) {
+            if (value.isTemporary) {
+                delete data[key];
+            }
+        }
+    }
+
+    return data;
+};
+
+export const setRegistryRecordRunning = (
+    id: string,
+    isRunning: boolean
+): void => {
+    const record = getBranchRegistryRecord(id);
+
+    if (!record) {
+        throw new Error('No record found.');
+    }
+
+    setBranchRegistryRecord(id, { ...record, isRunning });
+};
+
+export const removeAllTemporaryRegistryRecords = (): IRegistryRecords => {
+    const data: IRegistryRecords = {
+        ...memento.get<IRegistryRecords | undefined>(BRANCH_REGISTRY_KEY),
+    };
+
+    for (let [id, value] of Object.entries(data)) {
+        if (value.isTemporary) {
+            unregisterBranch(id);
+        }
+    }
+
+    return data;
 };
 
 export const getBranchRegistryRecord = (
@@ -81,7 +120,7 @@ export const getBranchRegistryRecord = (
         );
     }
 
-    const registryRecords = getRegistryRecords();
+    const registryRecords = getRegistryRecords(true);
 
     const registryData = registryRecords[id];
 
@@ -133,7 +172,7 @@ export const setBranchRegistryRecord = (
         );
     }
 
-    const registryRecords = getRegistryRecords();
+    const registryRecords = getRegistryRecords(true);
 
     registryRecords[id] = data;
     memento.set(BRANCH_REGISTRY_KEY, registryRecords);
@@ -155,7 +194,7 @@ export const registerBranch = async (options: IBranchRegistrationOptions) => {
     } = options;
 
     const registryData =
-        repoId && branchName
+        !isTemporary && repoId && branchName
             ? getBranchRegistryRecordByRepoAndBranch(repoId, branchName)
             : {};
 
@@ -183,29 +222,11 @@ export const unregisterBranch = async (id: string) => {
         );
     }
 
-    const data = getRegistryRecords();
+    const data = getRegistryRecords(true);
 
     delete data[id];
 
     memento.set(BRANCH_REGISTRY_KEY, data);
-};
-
-export const isBranchAlreadyRegistered = (
-    repoId: string,
-    branchName: string
-) => {
-    if (!memento) {
-        throw new Error(
-            'The memento storage is not initialized. Please call `initializeBranchRegistry()` first.'
-        );
-    }
-
-    const registryData = getBranchRegistryRecordByRepoAndBranch(
-        repoId,
-        branchName
-    );
-
-    return !!registryData;
 };
 
 export const setBranchExplicitelyStopped = (id: string) => {

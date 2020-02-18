@@ -5,6 +5,7 @@ import { connectorRepository } from '../../connectorRepository/connectorReposito
 import { CancellationError } from '../../errors/CancellationError';
 import { IConnectorData } from '../../interfaces/IConnectorData';
 import { getConnectorRegistrationInitializer } from '../../sessionConnectors/registrationInitializers';
+import { Branch, Repository } from '../../typings/git';
 import { registerBranch } from '../registerBranch/branchRegistry';
 
 export const shareIntoCommand = async () => {
@@ -58,17 +59,21 @@ export const shareIntoCommand = async () => {
             continue;
         }
 
-        const data = await init.getData(connector.id);
+        const data = await init.getData(connector.id, true);
 
         connectorsData.push({ ...connector, data });
     }
 
-    const repoId = getCurrentRepo();
-    const branchName = getCurrentBranch();
+    let repo: Repository | undefined;
+    let branch: Branch | undefined;
+    try {
+        repo = getCurrentRepo();
+        branch = getCurrentBranch();
+    } catch {}
 
     const registryData = await registerBranch({
-        repoId: repoId && repoId.rootUri.toString(),
-        branchName: branchName && branchName.name,
+        repoId: repo && repo.rootUri.toString(),
+        branchName: branch && branch.name,
         connectorsData,
         isReadOnly: isReadOnlySession,
         isTemporary: true,

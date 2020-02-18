@@ -42,9 +42,9 @@ export class SlackSessionConnector implements ISessionConnector {
     constructor(
         private vslsAPI: vsls.LiveShare,
         id: string,
-        repo: Repository,
         private connectorData: IConnectorData,
-        connectorsData: IConnectorData[]
+        connectorsData: IConnectorData[],
+        repo?: Repository
     ) {
         this.sessionStartTimestamp = Date.now();
 

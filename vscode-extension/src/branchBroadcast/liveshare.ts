@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
 import * as vsls from 'vsls';
 import { getApi as getVslsApi } from 'vsls';
+import { refreshActivityBar } from '../activityBar/activityBar';
 import {
     addBranchBroadcastGuest,
     getBranchRegistryRecord,
+    removeAllTemporaryRegistryRecords,
     setLiveshareSessionForBranchRegitryRecord,
+    setRegistryRecordRunning,
 } from '../commands/registerBranch/branchRegistry';
 import {
     disposeCurrentSessionIfPresent,
@@ -36,6 +39,8 @@ export const initializeLiveShare = async () => {
     vslsApi.onDidChangeSession(async (e) => {
         if (!e.session.id) {
             await disposeCurrentSessionIfPresent();
+            removeAllTemporaryRegistryRecords();
+            refreshActivityBar();
         }
     });
 };
@@ -59,6 +64,10 @@ export const startLiveShareSession = async (id: string) => {
             ? vsls.Access.ReadOnly
             : vsls.Access.ReadWrite,
     });
+
+    setRegistryRecordRunning(registryData.id, true);
+
+    refreshActivityBar();
 
     if (!sharedSessionUrl) {
         return;

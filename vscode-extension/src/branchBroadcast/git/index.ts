@@ -55,7 +55,7 @@ export const getCurrentBranch = () => {
 
     const repo = gitAPI.repositories[0];
 
-    if (!repo.state) {
+    if (!repo || !repo.state) {
         throw new Error('Please open a repo');
     }
 
