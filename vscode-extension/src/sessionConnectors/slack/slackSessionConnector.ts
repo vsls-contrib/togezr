@@ -2,8 +2,10 @@ import fetch from 'node-fetch';
 import * as vsls from 'vsls';
 import { onCommitPushToRemote } from '../../branchBroadcast/git/onCommit';
 import { ISessionConnector } from '../../branchBroadcast/interfaces/ISessionConnector';
-import { getBranchRegistryRecord } from '../../commands/registerBranch/branchRegistry';
-import { connectorRepository } from '../../connectorRepository/connectorRepository';
+import {
+    connectorRepository,
+    IGitHubConnector,
+} from '../../connectorRepository/connectorRepository';
 import { IConnectorData } from '../../interfaces/IConnectorData';
 import { ISlackChannel } from '../../interfaces/ISlackChannel';
 import * as keytar from '../../keytar';
@@ -37,22 +39,9 @@ export class SlackSessionConnector implements ISessionConnector {
         return await keytar.get(connector.accessTokenKeytarKey);
     };
 
-    get registryData() {
-        const result = getBranchRegistryRecord(this.repoId, this.branchName);
-
-        if (!result) {
-            throw new Error(
-                `No branch broadcast record found for "${this.repoId} / ${this.branchName}".`
-            );
-        }
-
-        return result;
-    }
-
     constructor(
         private vslsAPI: vsls.LiveShare,
-        private repoId: string,
-        private branchName: string,
+        id: string,
         repo: Repository,
         private connectorData: IConnectorData,
         connectorsData: IConnectorData[]
@@ -61,7 +50,7 @@ export class SlackSessionConnector implements ISessionConnector {
 
         const githubConnector = connectorsData.find((connectorData) => {
             return connectorData.type === 'GitHub';
-        });
+        }) as IGitHubConnector;
 
         this.renderer = new SlackCommentRenderer(githubConnector);
 

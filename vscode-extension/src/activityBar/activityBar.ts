@@ -176,7 +176,7 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
                         TreeItemCollapsibleState.Collapsed,
                         registryData
                     );
-                    item.description = path.basename(registryData.repoId);
+                    item.description = path.basename(registryData.repoRootPath);
 
                     return item;
                 }

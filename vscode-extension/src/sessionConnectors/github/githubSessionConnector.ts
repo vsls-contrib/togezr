@@ -45,11 +45,11 @@ export class GithubSessionConnector implements ISessionConnector {
     private sessionStartTimestamp: number;
 
     get registryData() {
-        const result = getBranchRegistryRecord(this.repoId, this.branchName);
+        const result = getBranchRegistryRecord(this.id);
 
         if (!result) {
             throw new Error(
-                `No branch broadcast record found for "${this.repoId} / ${this.branchName}".`
+                `No branch broadcast record found for "${this.id}".`
             );
         }
 
@@ -58,8 +58,7 @@ export class GithubSessionConnector implements ISessionConnector {
 
     constructor(
         private vslsAPI: vsls.LiveShare,
-        private repoId: string,
-        private branchName: string,
+        private id: string,
         private repo: Repository,
         private connectorData: IConnectorData,
         connectorsData: IConnectorData[]

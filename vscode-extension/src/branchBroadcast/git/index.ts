@@ -1,8 +1,5 @@
 import * as vscode from 'vscode';
-import {
-    getBranchRegistryRecord,
-    unregisterBranch,
-} from '../../commands/registerBranch/branchRegistry';
+import { getBranchRegistryRecordByRepoAndBranch } from '../../commands/registerBranch/branchRegistry';
 import { PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY } from '../../constants';
 import * as memento from '../../memento';
 import { API, GitExtension, Repository } from '../../typings/git';
@@ -121,7 +118,7 @@ export const startListenOnBranchChange = async () => {
             return;
         }
 
-        const registryData = getBranchRegistryRecord(
+        const registryData = getBranchRegistryRecordByRepoAndBranch(
             getCurrentRepoId(),
             currentBranch
         );
@@ -150,10 +147,8 @@ export const startListenOnBranchChange = async () => {
             !isPreventBranchSwitchNotification
         ) {
             const resumeButton = 'Start session';
-            const unregisterButton = 'Disconnect the branch';
             const answer = await vscode.window.showInformationMessage(
                 `This branch is connected to ${registryData.connectorsData.length} channels, do you want to start session?`,
-                unregisterButton,
                 resumeButton
             );
 
@@ -163,10 +158,6 @@ export const startListenOnBranchChange = async () => {
 
             if (answer === resumeButton) {
                 return await startLiveShareSession(currentBranch);
-            }
-
-            if (answer === unregisterButton) {
-                return unregisterBranch(getCurrentRepoId(), currentBranch);
             }
         }
     });

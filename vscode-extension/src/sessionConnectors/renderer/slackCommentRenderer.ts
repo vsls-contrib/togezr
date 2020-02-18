@@ -1,8 +1,9 @@
 const time = require('pretty-ms');
 
-import { IConnectorData } from '../../interfaces/IConnectorData';
-import { IGitHubIssue } from '../../interfaces/IGitHubIssue';
+import { IGitHubConnector } from '../../connectorRepository/connectorRepository';
 import { ISlackChannel } from '../../interfaces/ISlackChannel';
+import { User } from '../../user';
+import { cleanupGithubIssueDescription } from '../../utils/cleanupGithubIssueDescription';
 import { getCleanCommitMessage } from '../../utils/getCleanCommitMessage';
 import { getGuests } from '../../utils/getGuests';
 import { DEFAULT_GITHUB_AVATAR } from '../constants';
@@ -46,15 +47,14 @@ const renderHostHeader = (events: ISessionEvent[]) => {
     }`;
 };
 
-const renderGithubIssueDetails = async (githubConnector: IConnectorData) => {
-    const { githubIssue } = githubConnector.data as {
-        githubIssue: IGitHubIssue;
-    };
+const renderGithubIssueDetails = async (githubConnector: IGitHubConnector) => {
+    if (!githubConnector.data) {
+        throw new Error('No connector data set.');
+    }
 
-    const { body = '' } = githubIssue;
+    const { githubIssue } = githubConnector.data;
 
-    const descriptionRegex = /(\!\[togezr\sseparator\]\(https:\/\/aka\.ms\/togezr-issue-separator-image\)[\s\S]+\#\#\#\#\#\# powered by \[Togezr\]\(https\:\/\/aka\.ms\/togezr-issue-website-link\))/gm;
-    const cleanIssueBody = body.replace(descriptionRegex, '');
+    const cleanIssueBody = cleanupGithubIssueDescription(githubIssue.body);
 
     return `{
         "type": "section",
@@ -153,26 +153,22 @@ const renderGuestJoinEvent = async (
     event: ISessionUserJoinEvent,
     events: ISessionEvent[]
 ) => {
-    const guest = event.user;
+    const user = new User(event.user);
 
     return {
-        text: `${guest.displayName} joined the session.`,
+        text: `${user.displayName} joined the session.`,
         blocks: [
             {
                 type: 'context',
                 elements: [
                     {
                         type: 'image',
-                        image_url: guest.userName
-                            ? await githubAvatarRepository.getAvatarFor(
-                                  guest.userName
-                              )
-                            : DEFAULT_GITHUB_AVATAR,
-                        alt_text: guest.displayName,
+                        image_url: await user.getUserAvatarLink(),
+                        alt_text: user.displayName,
                     },
                     {
                         type: 'mrkdwn',
-                        text: `<https://github.com/${guest.userName}|${guest.displayName}> joined the session.`,
+                        text: `${user.getSlackUserLink()} joined the session.`,
                     },
                 ],
             },
@@ -194,7 +190,9 @@ const renderCommitPushEvent = async (
 
     const guestsNamesWithLink = guests
         .map((guest) => {
-            return `<https://github.com/${guest.user.userName}|${guest.user.displayName}>`;
+            const user = new User(guest.user);
+
+            return `${user.getSlackUserLink()}`;
         })
         .join(', ');
 
@@ -256,10 +254,7 @@ const renderSessionEndEvent = async (
 };
 
 export class SlackCommentRenderer {
-    constructor(
-        // private sessionStartTimestamp: number,
-        private githubConnector?: IConnectorData
-    ) {}
+    constructor(private githubConnector?: IGitHubConnector) {}
 
     public render = async (
         events: ISessionEvent[],

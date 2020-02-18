@@ -1,15 +1,72 @@
 // const time = require('pretty-ms');
-
-import { IConnectorData } from '../../interfaces/IConnectorData';
+import * as path from 'path';
+import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
+import { IGitHubConnector } from '../../connectorRepository/connectorRepository';
+import { User } from '../../user';
+import { cleanupGithubIssueDescription } from '../../utils/cleanupGithubIssueDescription';
+import { getRepoUrlFromIssueUrl } from '../github/getRepoUrlFromIssueUrl';
 import { ISessionEvent, ISessionStartEvent } from './events';
 
-export class SlackCommentRenderer {
-    constructor(private githubConnector?: IConnectorData) {}
+const renderText = (githubConnector?: IGitHubConnector) => {
+    if (!githubConnector) {
+        return '';
+    }
+
+    if (!githubConnector.data) {
+        throw new Error('No connector data set.');
+    }
+
+    const { githubIssue } = githubConnector.data;
+
+    const cleanBody = cleanupGithubIssueDescription(githubIssue.body);
+
+    return cleanBody;
+
+    return '';
+};
+
+const renderGithubRepoInfo = (
+    registryData: IRegistryData,
+    githubConnector?: IGitHubConnector
+) => {
+    const repoName = path.basename(registryData.repoRootPath);
+
+    if (githubConnector) {
+        if (!githubConnector.data) {
+            throw new Error('No GitHub connector data set.');
+        }
+
+        const { githubIssue } = githubConnector.data;
+        const { branchName } = registryData;
+
+        const repoUrl = getRepoUrlFromIssueUrl(githubIssue.html_url);
+
+        return `{
+            "name": "Repository:",
+            "value": "[${repoName}](${repoUrl}) [[⎇${branchName}](${repoUrl}/tree/${branchName})]"
+        }`;
+    }
+
+    return `{
+        "name": "Repository:",
+        "value": "${repoName} [⎇${registryData.branchName}]"
+    }`;
+};
+
+export class TeamsCommentRenderer {
+    constructor(
+        private registryData: IRegistryData,
+        private githubConnector?: IGitHubConnector
+    ) {}
 
     public render = async (events: ISessionEvent[]) => {
         const sessionStart = events[0] as ISessionStartEvent;
 
-        const { user: host } = sessionStart;
+        const { sessionId } = sessionStart;
+
+        const host = new User(sessionStart.user);
+
+        const lsSessionLink = `https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}`;
 
         return `{
             "@type": "MessageCard",
@@ -21,19 +78,19 @@ export class SlackCommentRenderer {
                     "activityTitle": "${host.displayName}",
                     "activitySubtitle": "${new Date(
                         sessionStart.timestamp
-                    ).toDateString()}",
-                    "activityImage": "https://avatars1.githubusercontent.com/u/1478800?s=460&v=4",
+                    ).toString()}",
+                    "activityImage": "${await host.getUserAvatarLink()}",
                     "facts": [
                         {
                             "name": "Session:",
-                            "value": "![](https://togezr-vsls-session-badge.azurewebsites.net/api/vsls-compact-badge?sessionId=B8B6033309174F05E5167DFF814EF6FF8036)"
+                            "value": "[${lsSessionLink}](${lsSessionLink}) [![](https://togezr-vsls-session-badge.azurewebsites.net/api/vsls-compact-badge?sessionId=${sessionId})](${lsSessionLink})"
                         },
-                        {
-                            "name": "Repository:",
-                            "value": "[mgarcia\\test](https://awesomedocument.com)"
-                        }
+                        ${renderGithubRepoInfo(
+                            this.registryData,
+                            this.githubConnector
+                        )}
                     ],
-                    "text": "Working on creating the branch broadcast experience for Live Share."
+                    "text": "${renderText(this.githubConnector)}"
                 }
             ],
             "potentialAction": [
@@ -43,17 +100,7 @@ export class SlackCommentRenderer {
                     "targets": [
                         {
                             "os": "default",
-                            "uri": "https://prod.liveshare.vsengsaas.visualstudio.com/join?B1A5D4B9A40317E0DE4D88CAB15BAC136FDE"
-                        }
-                    ]
-                },
-                {
-                    "@type": "OpenUri",
-                    "name": "Join in VSCode",
-                    "targets": [
-                        {
-                            "os": "default",
-                            "uri": "https://prod.liveshare.vsengsaas.visualstudio.com/join?B1A5D4B9A40317E0DE4D88CAB15BAC136FDE"
+                            "uri": "${lsSessionLink}"
                         }
                     ]
                 }

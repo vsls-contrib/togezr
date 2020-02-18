@@ -7,13 +7,8 @@ import { getBranchRegistryRecord } from '../commands/registerBranch/branchRegist
 export class SessionConnectorHub {
     private sessionConnectors: ISessionConnector[] = [];
 
-    constructor(
-        vslsApi: vsls.LiveShare,
-        repoId: string,
-        branchName: string,
-        repo: Repository
-    ) {
-        const registryData = getBranchRegistryRecord(repoId, branchName);
+    constructor(vslsApi: vsls.LiveShare, id: string, repo: Repository) {
+        const registryData = getBranchRegistryRecord(id);
         if (!registryData) {
             throw new Error('No registry data found.');
         }
@@ -24,14 +19,7 @@ export class SessionConnectorHub {
             const ConnectorClass = getConnector(connector.type);
 
             this.sessionConnectors.push(
-                new ConnectorClass(
-                    vslsApi,
-                    repoId,
-                    branchName,
-                    repo,
-                    connector,
-                    connectorsData
-                )
+                new ConnectorClass(vslsApi, id, repo, connector, connectorsData)
             );
         }
     }

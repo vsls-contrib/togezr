@@ -1,4 +1,5 @@
 import * as uuid from 'uuid/v4';
+import { IGithubConnectorData } from '../interfaces/IGithubConnectorData';
 import { IGithubRepo } from '../interfaces/IGitHubRepo';
 import { ISlackTeamInfo } from '../interfaces/ISlackTeamInfo';
 import * as keytar from '../keytar';
@@ -28,6 +29,7 @@ interface IConnectorBase {
 export interface IGitHubConnector extends IConnectorBase {
     type: typeof GITHUB_CONNECTOR_TYPE;
     repo: IGithubRepo;
+    data?: IGithubConnectorData;
 }
 
 export interface ISlackConnector extends IConnectorBase {

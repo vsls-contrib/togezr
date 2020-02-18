@@ -6,7 +6,7 @@ import {
 } from '../../branchBroadcast/git';
 import { CancellationError } from '../../errors/CancellationError';
 import { CommandId } from '../registerCommand';
-import { getBranchRegistryRecord } from './branchRegistry';
+import { getBranchRegistryRecordByRepoAndBranch } from './branchRegistry';
 import { getBranchName } from './getBranchName';
 import { startRegisteringTheBranch } from './registerTheBranchAndAskToSwitch';
 
@@ -36,7 +36,7 @@ export const registerBranchCommand = async (
 
     const featureBranch = branch.trim().toLowerCase();
 
-    const existingBranchBroadcast = getBranchRegistryRecord(
+    const existingBranchBroadcast = getBranchRegistryRecordByRepoAndBranch(
         getCurrentRepoId(),
         featureBranch
     );

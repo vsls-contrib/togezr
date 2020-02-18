@@ -53,6 +53,11 @@
                     "dark": "images/dark/cross-icon.svg",
                     "light": "images/light/cross-icon.svg"
                 }
+            },
+            {
+                "command": "togezr.shareInto",
+                "title": "Share into",
+                "category": "Togezr"
             }
         ],
         "menus": {

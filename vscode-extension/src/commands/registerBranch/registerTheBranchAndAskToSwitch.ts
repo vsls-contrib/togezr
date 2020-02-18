@@ -25,11 +25,16 @@ export const registerTheBranchAndAskToSwitch = async (
         await createBranch(branchName, isShouldSwitchBranch, fromBranch);
     }
 
+    if (!vscode.workspace.rootPath) {
+        throw new Error('No project openned.');
+    }
+
     const registryData = await registerBranch({
         repoId,
         branchName,
         connectorsData,
         isReadOnly,
+        repoRootPath: vscode.workspace.rootPath.toString(),
     });
 
     const repo = getCurrentRepo();

@@ -11,9 +11,9 @@ import {
 } from '../registerBranch/branchRegistry';
 
 const removeBranchConnection = async (registryData: IRegistryData) => {
-    const { repoId, branchName } = registryData;
+    const { id, branchName } = registryData;
 
-    await unregisterBranch(repoId, branchName);
+    await unregisterBranch(id);
     refreshActivityBar();
 
     await vscode.window.showInformationMessage(
@@ -31,17 +31,23 @@ export const disconnectBranchCommand = async (
 
     const branchConnections = getRegistryRecords();
 
-    const connections = Object.entries(branchConnections);
+    const connections = Object.entries(branchConnections).filter(
+        ([key, value]) => {
+            return !!value.branchName && !!value.repoId;
+        }
+    );
+
     if (!connections.length) {
         vscode.window.showInformationMessage('No connected branches found.');
         return;
     }
 
     const options = connections.map(([name, connection]) => {
-        const { branchName, repoId } = connection;
+        const { branchName, repoRootPath } = connection;
+
         return {
-            label: branchName,
-            description: path.basename(repoId),
+            label: branchName!,
+            description: path.basename(repoRootPath),
             data: connection,
         };
     });

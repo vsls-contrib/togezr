@@ -10,7 +10,6 @@ import {
     disposeCurrentSessionIfPresent,
     startSession,
 } from '../sessionConnectors/session';
-import { getCurrentRepoId } from './git';
 
 // const extractSessionId = (liveshareUrl?: string): string | undefined => {
 //     if (typeof liveshareUrl !== 'string' || !liveshareUrl) {
@@ -41,16 +40,13 @@ export const initializeLiveShare = async () => {
     });
 };
 
-export const startLiveShareSession = async (branchName: string) => {
+export const startLiveShareSession = async (id: string) => {
     if (!vslsApi) {
         throw new Error(
             'No LiveShare API found, call `initializeLiveShare` first.'
         );
     }
-    const registryData = getBranchRegistryRecord(
-        getCurrentRepoId(),
-        branchName
-    );
+    const registryData = getBranchRegistryRecord(id);
 
     if (!registryData) {
         throw new Error('No branch record found.');
@@ -69,11 +65,7 @@ export const startLiveShareSession = async (branchName: string) => {
     }
 
     if (!registryData.sessionId) {
-        setLiveshareSessionForBranchRegitryRecord(
-            getCurrentRepoId(),
-            branchName,
-            sharedSessionUrl.query
-        );
+        setLiveshareSessionForBranchRegitryRecord(id, sharedSessionUrl.query);
     }
 
     const host = vslsApi.session.user;
@@ -81,9 +73,9 @@ export const startLiveShareSession = async (branchName: string) => {
         throw new Error('No host found in the session.');
     }
 
-    addBranchBroadcastGuest(getCurrentRepoId(), branchName, host);
+    addBranchBroadcastGuest(id, host);
 
-    await startSession(vslsApi, getCurrentRepoId(), branchName);
+    await startSession(vslsApi, registryData.id);
 
     vslsApi.onDidChangePeers(async (e) => {
         if (e.removed.length) {
@@ -97,7 +89,7 @@ export const startLiveShareSession = async (branchName: string) => {
             throw new Error('User not found or joined without id.');
         }
 
-        addBranchBroadcastGuest(getCurrentRepoId(), branchName, user);
+        addBranchBroadcastGuest(registryData.id, user);
     });
 
     return sharedSessionUrl;

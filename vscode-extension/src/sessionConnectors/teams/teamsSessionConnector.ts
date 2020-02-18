@@ -3,11 +3,12 @@ import * as vsls from 'vsls';
 import { onCommitPushToRemote } from '../../branchBroadcast/git/onCommit';
 import { ISessionConnector } from '../../branchBroadcast/interfaces/ISessionConnector';
 import { getBranchRegistryRecord } from '../../commands/registerBranch/branchRegistry';
-import { connectorRepository } from '../../connectorRepository/connectorRepository';
+import {
+    connectorRepository,
+    IGitHubConnector,
+    ITeamsConnector,
+} from '../../connectorRepository/connectorRepository';
 import { IConnectorData } from '../../interfaces/IConnectorData';
-import { ISlackChannel } from '../../interfaces/ISlackChannel';
-import * as keytar from '../../keytar';
-import { SlackCommentRenderer } from '../../sessionConnectors/renderer/slackCommentRenderer';
 import { Repository } from '../../typings/git';
 import {
     ISessionCommitPushEvent,
@@ -15,34 +16,22 @@ import {
     ISessionEvent,
     ISessionUserJoinEvent,
 } from '../renderer/events';
+import { TeamsCommentRenderer } from '../renderer/teamsCommentRenderer';
 
 export class TeamsSessionConnector implements ISessionConnector {
     private sessionStartTimestamp: number;
 
     private isDisposed = false;
 
-    private sessionCommentUrl: any | undefined;
-
     private events: ISessionEvent[] = [];
-    private renderer: SlackCommentRenderer;
-
-    private getAuthToken = async (): Promise<string | null> => {
-        const id = this.connectorData.id;
-        const connector = connectorRepository.getConnector(id);
-
-        if (!connector) {
-            throw new Error(`No connector found.`);
-        }
-
-        return await keytar.get(connector.accessTokenKeytarKey);
-    };
+    private renderer: TeamsCommentRenderer;
 
     get registryData() {
-        const result = getBranchRegistryRecord(this.repoId, this.branchName);
+        const result = getBranchRegistryRecord(this.id);
 
         if (!result) {
             throw new Error(
-                `No branch broadcast record found for "${this.repoId} / ${this.branchName}".`
+                `No branch broadcast record found for "${this.id}".`
             );
         }
 
@@ -51,8 +40,7 @@ export class TeamsSessionConnector implements ISessionConnector {
 
     constructor(
         private vslsAPI: vsls.LiveShare,
-        private repoId: string,
-        private branchName: string,
+        private id: string,
         repo: Repository,
         private connectorData: IConnectorData,
         connectorsData: IConnectorData[]
@@ -61,9 +49,12 @@ export class TeamsSessionConnector implements ISessionConnector {
 
         const githubConnector = connectorsData.find((connectorData) => {
             return connectorData.type === 'GitHub';
-        });
+        }) as IGitHubConnector;
 
-        this.renderer = new SlackCommentRenderer(githubConnector);
+        this.renderer = new TeamsCommentRenderer(
+            this.registryData,
+            githubConnector
+        );
 
         const { session } = vslsAPI;
         if (!session.id || !session.user) {
@@ -90,11 +81,6 @@ export class TeamsSessionConnector implements ISessionConnector {
             };
 
             this.events.push(event);
-
-            await Promise.all([
-                this.sendSlackEvent(event),
-                this.renderSessionComment(),
-            ]);
         });
 
         this.vslsAPI.onDidChangePeers(async (e: vsls.PeersChangeEvent) => {
@@ -113,14 +99,18 @@ export class TeamsSessionConnector implements ISessionConnector {
                 throw new Error('User not found or joined without id.');
             }
 
-            setTimeout(async () => {
-                await this.reportGuestJoined(user);
-            }, 10);
+            const event: ISessionUserJoinEvent = {
+                type: 'guest-join',
+                user,
+                timestamp: Date.now(),
+            };
+
+            this.events.push(event);
         });
     }
 
     public init = async () => {
-        await Promise.all([this.renderSessionComment()]);
+        await this.renderSessionComment();
 
         return this;
     };
@@ -134,108 +124,27 @@ export class TeamsSessionConnector implements ISessionConnector {
         };
 
         this.events.push(event);
-
-        await Promise.all([
-            this.sendSlackEvent(event),
-            this.renderSessionComment(),
-        ]);
-
-        await Promise.all([this.renderSessionComment()]);
     };
 
     private renderSessionComment = async () => {
-        const { channel } = this.connectorData.data as {
-            channel: ISlackChannel;
-            channelConnectionName: string;
-        };
+        const payload = await this.renderer.render(this.events);
 
-        const ts = this.sessionCommentUrl && (this.sessionCommentUrl as any).ts;
-        const body = await this.renderer.render(this.events, channel, ts);
+        const connector = connectorRepository.getConnector(
+            this.connectorData.id
+        ) as ITeamsConnector;
 
-        const url = !ts
-            ? 'https://slack.com/api/chat.postMessage'
-            : 'https://slack.com/api/chat.update';
+        if (!connector || !connector.webHookUrl) {
+            throw new Error('No connector found or webhookUrl set on one.');
+        }
 
-        const result = await fetch(url, {
+        const result = await fetch(connector.webHookUrl, {
             method: 'POST',
+            body: payload,
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${await this.getAuthToken()}`,
             },
-            body,
         });
 
-        const bodyJSON = await result.json();
-
-        if (bodyJSON.ok === false) {
-            throw new Error('Slack request failed.');
-        }
-
-        this.sessionCommentUrl = bodyJSON;
-    };
-
-    private reportGuestJoined = async (guest: vsls.UserInfo) => {
-        const isGuestInSession = this.events.find((event) => {
-            if (event.type !== 'guest-join') {
-                return;
-            }
-
-            return event.user.id === guest.id;
-        });
-
-        if (isGuestInSession) {
-            return;
-        }
-
-        const event: ISessionUserJoinEvent = {
-            type: 'guest-join',
-            user: guest,
-            timestamp: Date.now(),
-        };
-
-        this.events.push(event);
-
-        await Promise.all([
-            this.sendSlackEvent(event),
-            this.renderSessionComment(),
-        ]);
-    };
-
-    private sendSlackEvent = async (
-        event:
-            | ISessionUserJoinEvent
-            | ISessionCommitPushEvent
-            | ISessionEndEvent
-    ) => {
-        if (!this.sessionCommentUrl) {
-            throw new Error('Send the message first.');
-        }
-
-        const { channel } = this.connectorData.data as {
-            channel: ISlackChannel;
-            channelConnectionName: string;
-        };
-
-        const result = await fetch('https://slack.com/api/chat.postMessage', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${await this.getAuthToken()}`,
-            },
-            body: JSON.stringify(
-                {
-                    channel: channel.id,
-                    thread_ts: (this.sessionCommentUrl as any).ts,
-                    ...(await this.renderer.renderEvent(event, this.events)),
-                },
-                null,
-                4
-            ),
-        });
-
-        const res = await result.json();
-        if (!res.ok) {
-            throw new Error(`Slack API request failed.`);
-        }
+        result;
     };
 }

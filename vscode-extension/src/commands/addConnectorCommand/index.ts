@@ -9,6 +9,7 @@ import { SlackConnectorCommandInitializer } from '../../sessionConnectors/comman
 import { TeamsConnectorCommandInitializer } from '../../sessionConnectors/commandInitializers/teamsConnectorCommandInitializer';
 import { GithubSessionConnector } from '../../sessionConnectors/github/githubSessionConnector';
 import { SlackSessionConnector } from '../../sessionConnectors/slack/slackSessionConnector';
+import { TeamsSessionConnector } from '../../sessionConnectors/teams/teamsSessionConnector';
 
 const getConnectorCommandInitializer = (connectorType: TKnowConnectors) => {
     if (connectorType === 'GitHub') {
@@ -35,6 +36,10 @@ export const getConnector = (connectorType: TKnowConnectors) => {
 
     if (connectorType === 'Slack') {
         return SlackSessionConnector;
+    }
+
+    if (connectorType === 'Teams') {
+        return TeamsSessionConnector;
     }
 
     throw new Error(`No connector for "${connectorType}" type found.`);

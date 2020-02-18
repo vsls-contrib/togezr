@@ -3,10 +3,12 @@ import { disconnectBranchCommand } from './disconnectBranch';
 import { registerBranchCommand } from './registerBranch';
 import { registerCommand } from './registerCommand';
 import { removeConnectorCommand } from './removeConnector';
+import { shareIntoCommand } from './shareIntoCommand';
 
 export const registerCommands = () => {
     registerCommand('togezr.connectBranch', registerBranchCommand);
     registerCommand('togezr.disconnectBranch', disconnectBranchCommand);
     registerCommand('togezr.addConnector', addConnectorCommand);
     registerCommand('togezr.removeConnector', removeConnectorCommand);
+    registerCommand('togezr.shareInto', shareIntoCommand);
 };

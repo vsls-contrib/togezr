@@ -8,6 +8,7 @@ export const CommandId = {
     setGitHubToken: 'togezr.setGitHubToken',
     connectBranch: 'togezr.connectBranch',
     disconnectBranch: 'togezr.disconnectBranch',
+    shareInto: 'togezr.shareInto',
 } as const;
 
 export async function registerCommand(
@@ -25,6 +26,10 @@ export async function registerCommand(
 export async function registerCommand(
     name: typeof CommandId.disconnectBranch,
     command: (branch: any) => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.shareInto,
+    command: () => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(name: any, command: any) {
     const wrappedCommand = createCommand(command);
