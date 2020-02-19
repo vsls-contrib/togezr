@@ -23,6 +23,7 @@ import { IConnectorData } from '../interfaces/IConnectorData';
 import { IGitHubIssue } from '../interfaces/IGitHubIssue';
 import { ISlackChannel } from '../interfaces/ISlackChannel';
 import { getIconPack } from '../utils/icons';
+import { isCurrentBranchInRegistryData } from '../utils/isCurrentBranchInRegistryData';
 
 const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
     'Currently running',
@@ -58,22 +59,43 @@ export class BranchConnectionTreeItem extends TreeItem {
 
         this.registryData = registryData;
 
-        const iconNamePrefix = registryData.isRunning
-            ? 'branch-running'
-            : 'branch-inline';
+        const isRunnable = isCurrentBranchInRegistryData(registryData);
 
-        const iconNameSuffix = registryData.isReadOnly ? 'readonly-' : '';
+        this.setIcon(isRunnable, registryData);
+        this.setTooltip(label, registryData);
+        this.setContextValue(isRunnable, registryData);
+        this.setDescription(registryData);
+    }
+
+    private setIcon(isRunnable: boolean, registryData: IRegistryData) {
+        const { isRunning, isReadOnly } = registryData;
+        const iconNamePrefix = isRunning ? 'branch-running' : 'branch-inline';
+
+        const iconNameSuffix = isReadOnly ? 'readonly-' : '';
+
+        const middlePart = isRunnable && !isRunning ? 'runnable-' : '';
+
         this.iconPath = getIconPack(
-            `${iconNamePrefix}-${iconNameSuffix}icon.svg`
+            `${iconNamePrefix}-${middlePart}${iconNameSuffix}icon.svg`
         );
+    }
 
+    private setTooltip(label: string, registryData: IRegistryData) {
         const tooltipSuffix = registryData.isReadOnly ? '(read-only)' : '';
-
         this.tooltip = `${label} ${tooltipSuffix}`;
+    }
 
-        const contextValueSuffix = registryData.isRunning ? '.running' : '';
+    private setContextValue(isRunnable: boolean, registryData: IRegistryData) {
+        const isRunnableSuffix = isRunnable ? '.runnable' : '';
+
+        const contextValueSuffix = registryData.isRunning
+            ? '.running'
+            : isRunnableSuffix;
+
         this.contextValue = `togezr.branch.connection${contextValueSuffix}`;
+    }
 
+    private setDescription(registryData: IRegistryData) {
         this.description =
             registryData.branchName && registryData.repoId
                 ? path.basename(registryData.repoId)

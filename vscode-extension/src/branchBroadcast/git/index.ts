@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { refreshActivityBar } from '../../activityBar/activityBar';
 import { getBranchRegistryRecordByRepoAndBranch } from '../../commands/registerBranch/branchRegistry';
 import { PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY } from '../../constants';
 import * as memento from '../../memento';
@@ -43,9 +44,10 @@ export const getCurrentRepo = (): Repository | undefined => {
         throw new Error('Initialize Git API first.');
     }
 
-    const repo = gitAPI.repositories[0];
-
-    return repo;
+    try {
+        const repo = gitAPI.repositories[0];
+        return repo;
+    } catch {}
 };
 
 export const getCurrentBranch = () => {
@@ -53,7 +55,7 @@ export const getCurrentBranch = () => {
         throw new Error('Initialize Git API first.');
     }
 
-    const repo = gitAPI.repositories[0];
+    const repo = getCurrentRepo();
 
     if (!repo || !repo.state) {
         throw new Error('Please open a repo');
@@ -118,6 +120,8 @@ export const startListenOnBranchChange = async () => {
             return;
         }
 
+        refreshActivityBar();
+
         const registryData = getBranchRegistryRecordByRepoAndBranch(
             getCurrentRepoId(),
             currentBranch
@@ -148,7 +152,7 @@ export const startListenOnBranchChange = async () => {
         ) {
             const resumeButton = 'Start session';
             const answer = await vscode.window.showInformationMessage(
-                `This branch is connected to ${registryData.connectorsData.length} channels, do you want to start session?`,
+                `Branch "${registryData.branchName}" is connected to ${registryData.connectorsData.length} channels, do you want to start session?`,
                 resumeButton
             );
 

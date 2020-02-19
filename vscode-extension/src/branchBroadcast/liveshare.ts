@@ -13,6 +13,7 @@ import {
     disposeCurrentSessionIfPresent,
     startSession,
 } from '../sessionConnectors/session';
+import { getCurrentBranchRegistryData } from '../utils/getCurrentBranchRegistryData';
 
 // const extractSessionId = (liveshareUrl?: string): string | undefined => {
 //     if (typeof liveshareUrl !== 'string' || !liveshareUrl) {
@@ -37,11 +38,24 @@ export const initializeLiveShare = async () => {
     }
 
     vslsApi.onDidChangeSession(async (e) => {
+        const registryData = getCurrentBranchRegistryData();
+
         if (!e.session.id) {
             await disposeCurrentSessionIfPresent();
             removeAllTemporaryRegistryRecords();
+            if (registryData && registryData.isRunning) {
+                setRegistryRecordRunning(registryData.id, false);
+            }
             refreshActivityBar();
+            return;
         }
+
+        if (!registryData) {
+            return;
+        }
+
+        setRegistryRecordRunning(registryData.id, true);
+        refreshActivityBar();
     });
 };
 
@@ -113,5 +127,6 @@ export const stopLiveShareSession = async () => {
 
     if (vslsApi.session.id) {
         await Promise.all([vslsApi.end(), disposeCurrentSessionIfPresent()]);
+        refreshActivityBar();
     }
 };

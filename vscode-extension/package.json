@@ -85,6 +85,15 @@
                     "dark": "images/dark/stop-icon.svg",
                     "light": "images/light/stop-icon.svg"
                 }
+            },
+            {
+                "command": "togezr.startBranchConnectionSession",
+                "title": "Start the session",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/play-icon.svg",
+                    "light": "images/light/play-icon.svg"
+                }
             }
         ],
         "menus": {
@@ -103,11 +112,20 @@
                     "command": "togezr.stopRunningSession",
                     "when": "viewItem == togezr.branch.connection.running",
                     "group": "inline@1"
+                },
+                {
+                    "command": "togezr.startBranchConnectionSession",
+                    "when": "viewItem == togezr.branch.connection.runnable",
+                    "group": "inline@1"
                 }
             ],
             "commandPalette": [
                 {
                     "command": "togezr.stopRunningSession",
+                    "when": "false"
+                },
+                {
+                    "command": "togezr.startBranchConnectionSession",
                     "when": "false"
                 }
             ]
