@@ -4,6 +4,7 @@ import { registerBranchCommand } from './registerBranch';
 import { registerCommand } from './registerCommand';
 import { removeConnectorCommand } from './removeConnector';
 import { shareIntoCommand } from './shareIntoCommand';
+import { stopRunningSessionCommand } from './stopRunningSessionCommand';
 
 export const registerCommands = () => {
     registerCommand('togezr.connectBranch', registerBranchCommand);
@@ -11,4 +12,5 @@ export const registerCommands = () => {
     registerCommand('togezr.addConnector', addConnectorCommand);
     registerCommand('togezr.removeConnector', removeConnectorCommand);
     registerCommand('togezr.shareInto', shareIntoCommand);
+    registerCommand('togezr.stopRunningSession', stopRunningSessionCommand);
 };

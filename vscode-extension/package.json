@@ -58,19 +58,57 @@
                 "command": "togezr.shareInto",
                 "title": "Share into",
                 "category": "Togezr"
+            },
+            {
+                "command": "togezr.setAutoPlay",
+                "title": "Set branch autoplay",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/play-hollow-icon.svg",
+                    "light": "images/light/play-hollow-icon.svg"
+                }
+            },
+            {
+                "command": "togezr.removeAutoPlay",
+                "title": "Remove branch autoplay",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/play-icon.svg",
+                    "light": "images/light/play-icon.svg"
+                }
+            },
+            {
+                "command": "togezr.stopRunningSession",
+                "title": "Stop running session",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/stop-icon.svg",
+                    "light": "images/light/stop-icon.svg"
+                }
             }
         ],
         "menus": {
             "view/item/context": [
                 {
                     "command": "togezr.disconnectBranch",
-                    "when": "viewItem == togezr.branch.connection",
-                    "group": "inline@1"
+                    "when": "viewItem =~ /togezr\\.branch\\.connection/",
+                    "group": "inline@2"
                 },
                 {
                     "command": "togezr.removeConnector",
                     "when": "viewItem == togezr.connector",
                     "group": "inline@1"
+                },
+                {
+                    "command": "togezr.stopRunningSession",
+                    "when": "viewItem == togezr.branch.connection.running",
+                    "group": "inline@1"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "togezr.stopRunningSession",
+                    "when": "false"
                 }
             ]
         },

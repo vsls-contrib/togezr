@@ -65,7 +65,7 @@ export class BranchConnectionTreeItem extends TreeItem {
 
         this.tooltip = `${label} ${tooltipSuffix}`;
 
-        const contextValueSuffix = registryData.isTemporary ? '.temporary' : '';
+        const contextValueSuffix = registryData.isRunning ? '.running' : '';
         this.contextValue = `togezr.branch.connection${contextValueSuffix}`;
 
         this.description =

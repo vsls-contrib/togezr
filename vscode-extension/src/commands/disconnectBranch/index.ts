@@ -25,7 +25,17 @@ export const disconnectBranchCommand = async (
     item?: BranchConnectionTreeItem
 ) => {
     if (item) {
-        await removeBranchConnection(item.registryData);
+        const YES_BUTTON = 'Disconnect';
+        const answer = await vscode.window.showInformationMessage(
+            `Sure disconnecting the "${item.registryData.branchName}" branch from ${item.registryData.connectorsData.length} connections?`,
+            'Cancel',
+            YES_BUTTON
+        );
+
+        if (answer === YES_BUTTON) {
+            await removeBranchConnection(item.registryData);
+        }
+
         return;
     }
 
