@@ -4,7 +4,10 @@ import { registerBranchBroadcastingExperiment } from './branchBroadcast';
 import { startListenToOriginPush } from './branchBroadcast/git/onCommit';
 import { initializeLiveShare } from './branchBroadcast/liveshare';
 import { registerCommands } from './commands';
-import { removeAllTemporaryRegistryRecords } from './commands/registerBranch/branchRegistry';
+import {
+    removeAllRunningRegistryRecords,
+    removeAllTemporaryRegistryRecords,
+} from './commands/registerBranch/branchRegistry';
 import { CommandId } from './commands/registerCommand';
 import { EXTENSION_NAME, setExtensionPath } from './constants';
 import * as keytar from './keytar';
@@ -36,6 +39,7 @@ export const activate = async (context: vscode.ExtensionContext) => {
         initializeMemento(context);
 
         removeAllTemporaryRegistryRecords();
+        removeAllRunningRegistryRecords();
 
         registerCommands();
 

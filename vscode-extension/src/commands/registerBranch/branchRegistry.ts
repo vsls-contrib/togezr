@@ -98,13 +98,23 @@ export const setRegistryRecordRunning = (
 };
 
 export const removeAllTemporaryRegistryRecords = (): IRegistryRecords => {
-    const data: IRegistryRecords = {
-        ...memento.get<IRegistryRecords | undefined>(BRANCH_REGISTRY_KEY),
-    };
+    const data = getRegistryRecords(true);
 
     for (let [id, value] of Object.entries(data)) {
         if (value.isTemporary) {
             unregisterBranch(id);
+        }
+    }
+
+    return data;
+};
+
+export const removeAllRunningRegistryRecords = (): IRegistryRecords => {
+    const data = getRegistryRecords(true);
+
+    for (let [id, value] of Object.entries(data)) {
+        if (value.isRunning) {
+            setRegistryRecordRunning(id, false);
         }
     }
 
@@ -158,7 +168,7 @@ export const getBranchRegistryRecordByRepoAndBranch = (
 
     return {
         ...defaultRegistryData,
-        ...registryData,
+        ...registryData[1],
     };
 };
 
@@ -199,7 +209,6 @@ export const registerBranch = async (options: IBranchRegistrationOptions) => {
             : {};
 
     const data: IRegistryData = {
-        id: uuid(),
         ...defaultRegistryData,
         ...registryData,
         repoId,
@@ -209,6 +218,10 @@ export const registerBranch = async (options: IBranchRegistrationOptions) => {
         isTemporary,
         repoRootPath,
     };
+
+    if (!data.id) {
+        data.id = uuid();
+    }
 
     setBranchRegistryRecord(data.id, data);
 

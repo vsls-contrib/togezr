@@ -18,10 +18,6 @@ let currentSession: SessionConnectorHub | undefined;
 export const startSession = async (vslsApi: vsls.LiveShare, id: string) => {
     const repo = getCurrentRepo();
 
-    // if (!repo) {
-    //     throw new Error('Cannot start session, repo not found.');
-    // }
-
     currentSession = new SessionConnectorHub(vslsApi, id, repo);
 
     await currentSession.init();

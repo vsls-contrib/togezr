@@ -74,25 +74,8 @@ export class SlackConnectorRegistrationInitializer
             throw new CancellationError('No Slack channel selected.');
         }
 
-        const value = `${connector.name}#${selectedChannel.channelData.name}`;
-        const name = isTemporary
-            ? selectedChannel.channelData.name
-            : await vscode.window.showInputBox({
-                  prompt:
-                      '🤔 What is the name of this Slack channel connection?',
-                  ignoreFocusOut: true,
-                  value,
-                  valueSelection: [0, value.length],
-              });
-
-        if (!name) {
-            throw new CancellationError(
-                'No Slack channel connection name specified.'
-            );
-        }
-
         return {
-            channelConnectionName: name,
+            channelConnectionName: selectedChannel.channelData.name,
             channel: selectedChannel.channelData,
         };
     };

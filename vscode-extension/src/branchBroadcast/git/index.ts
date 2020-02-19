@@ -128,7 +128,7 @@ export const startListenOnBranchChange = async () => {
         }
 
         if (!registryData.isExplicitellyStopped) {
-            return await startLiveShareSession(currentBranch);
+            return await startLiveShareSession(registryData.id);
         }
 
         const branchWithoutNotification = memento.get(
@@ -157,7 +157,7 @@ export const startListenOnBranchChange = async () => {
             }
 
             if (answer === resumeButton) {
-                return await startLiveShareSession(currentBranch);
+                return await startLiveShareSession(registryData.id);
             }
         }
     });

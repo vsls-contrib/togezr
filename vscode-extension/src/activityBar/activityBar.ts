@@ -24,6 +24,11 @@ import { IGitHubIssue } from '../interfaces/IGitHubIssue';
 import { ISlackChannel } from '../interfaces/ISlackChannel';
 import { getIconPack } from '../utils/icons';
 
+const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
+    'Currently running',
+    TreeItemCollapsibleState.Expanded
+);
+
 const BRANCH_CONNECTIONS_ITEM = new TreeItem(
     'Branch connections',
     TreeItemCollapsibleState.Expanded
@@ -56,6 +61,7 @@ export class BranchConnectionTreeItem extends TreeItem {
         const iconNamePrefix = registryData.isRunning
             ? 'branch-running'
             : 'branch-inline';
+
         const iconNameSuffix = registryData.isReadOnly ? 'readonly-' : '';
         this.iconPath = getIconPack(
             `${iconNamePrefix}-${iconNameSuffix}icon.svg`
@@ -176,6 +182,9 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         ._onDidChangeTreeData.event;
 
     constructor() {
+        RUNNING_BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack(
+            'currently-running-icon.svg'
+        );
         BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
         CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
     }
@@ -185,24 +194,51 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
     }
 
     public getChildren(element?: TreeItem): ProviderResult<TreeItem[]> {
+        const branchConnections = getRegistryRecords();
+
+        const runningItem = Object.entries(branchConnections).find(
+            ([name, registryData]) => {
+                return registryData.isRunning;
+            }
+        );
+
         if (!element) {
-            return [BRANCH_CONNECTIONS_ITEM, CONNECTORS_ITEM];
+            const items = [BRANCH_CONNECTIONS_ITEM, CONNECTORS_ITEM];
+
+            if (runningItem) {
+                items.unshift(RUNNING_BRANCH_CONNECTIONS_ITEM);
+            }
+
+            return items;
+        }
+
+        if (element === RUNNING_BRANCH_CONNECTIONS_ITEM) {
+            if (!runningItem) {
+                throw new Error(
+                    'Rendering running items but no running item found.'
+                );
+            }
+
+            return [
+                new BranchConnectionTreeItem(
+                    runningItem[1],
+                    TreeItemCollapsibleState.Expanded
+                ),
+            ];
         }
 
         if (element === BRANCH_CONNECTIONS_ITEM) {
-            const branchConnections = getRegistryRecords(true);
-            const items = Object.entries(branchConnections)
-                .filter(([name, registryData]) => {
-                    return !registryData.isTemporary || registryData.isRunning;
-                })
-                .map(([name, registryData]) => {
+            const branchConnections = getRegistryRecords();
+            const items = Object.entries(branchConnections).map(
+                ([name, registryData]) => {
                     const item = new BranchConnectionTreeItem(
                         registryData,
                         TreeItemCollapsibleState.Collapsed
                     );
 
                     return item;
-                });
+                }
+            );
 
             return items;
         }

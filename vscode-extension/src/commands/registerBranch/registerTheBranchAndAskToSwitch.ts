@@ -57,7 +57,7 @@ export const registerTheBranchAndAskToSwitch = async (
 
     if (answer === startButton) {
         await switchToTheBranch(branchName, true);
-        await startLiveShareSession(branchName);
+        await startLiveShareSession(registryData.id);
     }
 };
 
