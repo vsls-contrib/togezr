@@ -8,24 +8,22 @@ import {
     removeAllRunningRegistryRecords,
     removeAllTemporaryRegistryRecords,
 } from './commands/registerBranch/branchRegistry';
-import { CommandId } from './commands/registerCommand';
 import { EXTENSION_NAME, setExtensionPath } from './constants';
-import * as keytar from './keytar';
 import { initializeKeytar } from './keytar';
 import { log } from './logger';
 import { initializeMemento } from './memento';
 
-const checkGitHubAuthToken = async () => {
-    const token = await keytar.get('githubSecret');
+// const checkGitHubAuthToken = async () => {
+//     const token = await keytar.get('githubSecret');
 
-    if (!token) {
-        await vscode.window.showInformationMessage(
-            'No GitHub API token set, please set it to proceed.'
-        );
+//     if (!token) {
+//         await vscode.window.showInformationMessage(
+//             'No GitHub API token set, please set it to proceed.'
+//         );
 
-        await vscode.commands.executeCommand(CommandId.setGitHubToken);
-    }
-};
+//         await vscode.commands.executeCommand(CommandId.setGitHubToken);
+//     }
+// };
 
 export const activate = async (context: vscode.ExtensionContext) => {
     try {
@@ -38,12 +36,14 @@ export const activate = async (context: vscode.ExtensionContext) => {
         initializeKeytar();
         initializeMemento(context);
 
+        // await gistSessionScheduler.init();
+
         removeAllTemporaryRegistryRecords();
         removeAllRunningRegistryRecords();
 
         registerCommands();
 
-        await checkGitHubAuthToken();
+        // await checkGitHubAuthToken();
 
         await initializeLiveShare();
         await registerBranchBroadcastingExperiment();
@@ -51,6 +51,22 @@ export const activate = async (context: vscode.ExtensionContext) => {
         startListenToOriginPush();
 
         registerActivityBar();
+
+        // const connectors = connectorRepository.getConnectors();
+        // const githubConnector = connectors.find((c) => {
+        //     return c.type === 'GitHub';
+        // }) as IGitHubConnector;
+
+        // if (!githubConnector) {
+        //     return;
+        // }
+
+        // const isueHandler = new GithubCrossRepoIssueHandler(
+        //     githubConnector,
+        //     {} as IGitHubIssue
+        // );
+
+        // await isueHandler.getRepoIssue();
     } catch (e) {
         log.error(e);
         vscode.window.showErrorMessage(e.message);

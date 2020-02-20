@@ -8,6 +8,7 @@ import {
 } from '../../connectorRepository/connectorRepository';
 import { IConnectorData } from '../../interfaces/IConnectorData';
 import { ISlackChannel } from '../../interfaces/ISlackChannel';
+import { ISlackConnectionData } from '../../interfaces/ISlackConnectionData';
 import * as keytar from '../../keytar';
 import { SlackCommentRenderer } from '../../sessionConnectors/renderer/slackCommentRenderer';
 import { Repository } from '../../typings/git';
@@ -133,10 +134,7 @@ export class SlackSessionConnector implements ISessionConnector {
     };
 
     private renderSessionComment = async () => {
-        const { channel } = this.connectorData.data as {
-            channel: ISlackChannel;
-            channelConnectionName: string;
-        };
+        const { channel } = this.connectorData.data as ISlackConnectionData;
 
         const ts = this.sessionCommentUrl && (this.sessionCommentUrl as any).ts;
         const body = await this.renderer.render(this.events, channel, ts);

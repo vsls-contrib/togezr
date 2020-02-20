@@ -1,5 +1,9 @@
 import { addConnectorCommand } from './addConnectorCommand';
 import { disconnectBranchCommand } from './disconnectBranch';
+import {
+    openConnectorInBrowserCommand,
+    openInBrowserCommand,
+} from './openInBrowserCommand';
 import { registerBranchCommand } from './registerBranch';
 import { registerCommand } from './registerCommand';
 import { removeConnectorCommand } from './removeConnector';
@@ -17,5 +21,10 @@ export const registerCommands = () => {
     registerCommand(
         'togezr.startBranchConnectionSession',
         startBranchConnectionSessionCommand
+    );
+    registerCommand('togezr.openInBrowser', openInBrowserCommand);
+    registerCommand(
+        'togezr.openConnectorInBrowser',
+        openConnectorInBrowserCommand
     );
 };

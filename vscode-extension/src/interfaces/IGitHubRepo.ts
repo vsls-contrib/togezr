@@ -1,3 +1,5 @@
+import { IGitHubUser } from './IGitHubUser';
+
 interface IGithubRepoPermissions {
     admin: boolean;
     push: boolean;
@@ -17,6 +19,7 @@ export interface IGithubRepo {
     forks: number;
     watchers: number;
     permissions: IGithubRepoPermissions;
+    owner: IGitHubUser;
     // "id": 108537191,
     // "node_id": "MDEwOlJlcG9zaXRvcnkxMDg1MzcxOTE=",
     // "name": "EntityFramework.Docs.pl-pl",

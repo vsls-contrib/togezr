@@ -11,6 +11,8 @@ export const CommandId = {
     shareInto: 'togezr.shareInto',
     stopRunningSession: 'togezr.stopRunningSession',
     startBranchConnectionSession: 'togezr.startBranchConnectionSession',
+    openInBrowser: 'togezr.openInBrowser',
+    openConnectorInBrowser: 'togezr.openConnectorInBrowser',
 } as const;
 
 export async function registerCommand(
@@ -39,6 +41,14 @@ export async function registerCommand(
 ): Promise<void>;
 export async function registerCommand(
     name: typeof CommandId.startBranchConnectionSession,
+    command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.openInBrowser,
+    command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.openConnectorInBrowser,
     command: () => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(name: any, command: any) {

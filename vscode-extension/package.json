@@ -94,6 +94,24 @@
                     "dark": "images/dark/play-icon.svg",
                     "light": "images/light/play-icon.svg"
                 }
+            },
+            {
+                "command": "togezr.openInBrowser",
+                "title": "Open in browser",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/open-icon.svg",
+                    "light": "images/light/open-icon.svg"
+                }
+            },
+            {
+                "command": "togezr.openConnectorInBrowser",
+                "title": "Open connector in browser",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/open-icon.svg",
+                    "light": "images/light/open-icon.svg"
+                }
             }
         ],
         "menus": {
@@ -101,21 +119,31 @@
                 {
                     "command": "togezr.disconnectBranch",
                     "when": "viewItem =~ /togezr\\.branch\\.connection/",
-                    "group": "inline@2"
+                    "group": "inline@3"
                 },
                 {
                     "command": "togezr.removeConnector",
-                    "when": "viewItem == togezr.connector",
+                    "when": "viewItem =~ /togezr\\.connector/",
                     "group": "inline@1"
                 },
                 {
                     "command": "togezr.stopRunningSession",
                     "when": "viewItem == togezr.branch.connection.running",
-                    "group": "inline@1"
+                    "group": "inline@2"
                 },
                 {
                     "command": "togezr.startBranchConnectionSession",
                     "when": "viewItem == togezr.branch.connection.runnable",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "togezr.openInBrowser",
+                    "when": "viewItem == togezr.connector.source",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.openConnectorInBrowser",
+                    "when": "viewItem == togezr.connector.openable",
                     "group": "inline@1"
                 }
             ],

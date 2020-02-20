@@ -103,7 +103,9 @@ export class BranchConnectionTreeItem extends TreeItem {
     }
 }
 
-class BranchGithubConnectionConnectorTreeItem extends TreeItem {
+export class BranchGithubConnectionConnectorTreeItem extends TreeItem {
+    public connectorData: IConnectorData;
+
     constructor(connectorData: IConnectorData) {
         const githubIssue: IGitHubIssue = connectorData.data.githubIssue;
 
@@ -118,19 +120,22 @@ class BranchGithubConnectionConnectorTreeItem extends TreeItem {
         const label = `${connector.name}`;
         super(label);
 
-        this.description = `Issue#${githubIssue.number}`;
+        this.connectorData = connectorData;
 
+        this.description = `Issue#${githubIssue.number}`;
         this.iconPath = getIconPack('github-connector-icon.svg');
+        this.contextValue = 'togezr.connector.source';
     }
 }
 
-class BranchSlackConnectionConnectorTreeItem extends TreeItem {
+export class BranchSlackConnectionConnectorTreeItem extends TreeItem {
+    public connectorData: IConnectorData;
+
     constructor(connectorData: IConnectorData) {
         const { channel, channelConnectionName } = connectorData.data as {
             channel: ISlackChannel;
             channelConnectionName: string;
         };
-
         const connector = connectorRepository.getConnector(connectorData.id);
 
         if (!connector) {
@@ -142,13 +147,18 @@ class BranchSlackConnectionConnectorTreeItem extends TreeItem {
         const label = channelConnectionName;
         super(label);
 
+        this.connectorData = connectorData;
+
         this.description = channel.purpose.value;
 
         this.iconPath = getIconPack('slack-connector-icon.svg');
+        this.contextValue = 'togezr.connector.source';
     }
 }
 
-class BranchTeamsConnectionConnectorTreeItem extends TreeItem {
+export class BranchTeamsConnectionConnectorTreeItem extends TreeItem {
+    public connectorData: IConnectorData;
+
     constructor(connectorData: IConnectorData) {
         const connector = connectorRepository.getConnector(connectorData.id);
 
@@ -161,12 +171,17 @@ class BranchTeamsConnectionConnectorTreeItem extends TreeItem {
         const label = connector.name;
         super(label);
 
+        this.connectorData = connectorData;
+
         this.iconPath = getIconPack('teams-connector-icon.svg');
+        // this.contextValue = 'togezr.connector.source';
     }
 }
 
 export class ConnectorTreeItem extends TreeItem {
     public id: string;
+
+    public connector: TConnectors;
 
     public contextValue: string = 'togezr.connector';
 
@@ -174,6 +189,12 @@ export class ConnectorTreeItem extends TreeItem {
         super(connector.name);
 
         this.id = connector.id;
+        this.connector = connector;
+
+        if (connector.type === 'GitHub' || connector.type === 'Slack') {
+            this.contextValue = 'togezr.connector.openable';
+        }
+
         this.iconPath = getIconPack(this.getConnectorIconName(connector));
     }
 
