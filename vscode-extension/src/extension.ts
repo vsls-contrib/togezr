@@ -61,12 +61,12 @@ export const activate = async (context: vscode.ExtensionContext) => {
         //     return;
         // }
 
-        // const isueHandler = new GithubCrossRepoIssueHandler(
+        // const issueHandler = new GithubCrossRepoIssueHandler(
         //     githubConnector,
         //     {} as IGitHubIssue
         // );
 
-        // await isueHandler.getRepoIssue();
+        // await issueHandler.getRepoIssue();
     } catch (e) {
         log.error(e);
         vscode.window.showErrorMessage(e.message);

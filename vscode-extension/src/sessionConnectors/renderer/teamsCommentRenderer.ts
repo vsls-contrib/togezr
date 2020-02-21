@@ -2,6 +2,7 @@
 import * as path from 'path';
 import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
 import { IGitHubConnector } from '../../connectorRepository/connectorRepository';
+import { IGithubConnectorData } from '../../interfaces/IGithubConnectorData';
 import { User } from '../../user';
 import { cleanupGithubIssueDescription } from '../../utils/cleanupGithubIssueDescription';
 import { getRepoUrlFromIssueUrl } from '../github/getRepoUrlFromIssueUrl';
@@ -16,13 +17,12 @@ const renderText = (githubConnector?: IGitHubConnector) => {
         throw new Error('No connector data set.');
     }
 
-    const { githubIssue } = githubConnector.data;
+    const { githubIssue } = githubConnector.data as IGithubConnectorData;
 
+    const title = githubIssue.title;
     const cleanBody = cleanupGithubIssueDescription(githubIssue.body);
 
-    return cleanBody;
-
-    return '';
+    return `**[[#${githubIssue.number}](${githubIssue.html_url})] ${title}**                                     \n ${cleanBody}`;
 };
 
 const renderGithubRepoInfo = (
