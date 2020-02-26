@@ -1,5 +1,5 @@
 import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
-import { Repository } from '../../typings/git';
+import { IGitHubIssue } from '../../interfaces/IGitHubIssue';
 import {
     ISSUE_SESSION_DETAILS_FOOTER,
     ISSUE_SESSION_DETAILS_HEADER,
@@ -11,18 +11,14 @@ import { renderGuestsGithub } from './renderGuestsGithub';
 export const getIssueTextWithDetailsGithub = async (
     description: string,
     data: IRegistryData,
-    repo?: Repository
+    githubIssue: IGitHubIssue
 ) => {
-    if (!repo) {
-        throw new Error('Pleae open a repo to proceed.');
-    }
-
     const descriptionRegex = /(\!\[togezr\sseparator\]\(https:\/\/aka\.ms\/togezr-issue-separator-image\)[\s\S]+\#\#\#\#\#\# powered by \[Togezr\]\(https\:\/\/aka\.ms\/togezr-issue-website-link\))/gm;
     const isPresent = !!description.match(descriptionRegex);
 
     const guestsWithBranchInfo = [
         await renderGuestsGithub(data.guests),
-        getIssueDetailsGit(data, repo),
+        getIssueDetailsGit(data, githubIssue),
     ].join('\n');
 
     const issueDetails = [
@@ -30,7 +26,12 @@ export const getIssueTextWithDetailsGithub = async (
         getIssueDetailsLiveShare(data),
         guestsWithBranchInfo,
         ISSUE_SESSION_DETAILS_FOOTER,
-    ].join('\n\n');
+    ]
+        .filter((item) => {
+            return !!item;
+        })
+        .join('\n\n');
+
     if (isPresent) {
         return description.replace(descriptionRegex, issueDetails);
     }

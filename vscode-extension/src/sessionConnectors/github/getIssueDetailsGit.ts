@@ -1,10 +1,13 @@
-import { getRepoOrigin } from '../../branchBroadcast/git';
 import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
-import { Repository } from '../../typings/git';
+import { IGitHubIssue } from '../../interfaces/IGitHubIssue';
+import { getRepoUrlFromIssueUrl } from './getRepoUrlFromIssueUrl';
 
-export const getIssueDetailsGit = (data: IRegistryData, repo: Repository) => {
+export const getIssueDetailsGit = (
+    data: IRegistryData,
+    githubIssue: IGitHubIssue
+) => {
     const { branchName } = data;
-    const repoUrl = getRepoOrigin(repo).replace(/\.git$/i, '');
+    const repoUrl = getRepoUrlFromIssueUrl(githubIssue.html_url);
     const result = `**⎇** [${branchName}](${repoUrl}/tree/${branchName}) [ [⇄ master](${repoUrl}/compare/${branchName}) ]`;
     return result;
 };

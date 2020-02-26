@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import * as vsls from 'vsls';
 import { onCommitPushToRemote } from '../../branchBroadcast/git/onCommit';
 import { ISessionConnector } from '../../branchBroadcast/interfaces/ISessionConnector';
+import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
 import {
     connectorRepository,
     IGitHubConnector,
@@ -19,6 +20,64 @@ import {
     ISessionUserJoinEvent,
 } from '../renderer/events';
 
+const getAuthToken = async (connectorId: string): Promise<string | null> => {
+    const connector = connectorRepository.getConnector(connectorId);
+
+    if (!connector) {
+        throw new Error(`No connector found.`);
+    }
+
+    return await keytar.get(connector.accessTokenKeytarKey);
+};
+
+export const renderBranchConnectedMessageSlack = async (
+    registryData: IRegistryData
+) => {
+    const slackConnectorData = registryData.connectorsData.find((connector) => {
+        return connector.type === 'Slack';
+    });
+
+    if (!slackConnectorData) {
+        throw new Error('No Slack connector found.');
+    }
+
+    const { channel } = slackConnectorData.data as ISlackConnectionData;
+
+    const githubConnector = registryData.connectorsData.find(
+        (connectorData) => {
+            return connectorData.type === 'GitHub';
+        }
+    ) as IGitHubConnector;
+
+    const renderer = new SlackCommentRenderer(registryData, githubConnector);
+
+    const ts = undefined;
+    const body = await renderer.render([], channel);
+
+    const url = !ts
+        ? 'https://slack.com/api/chat.postMessage'
+        : 'https://slack.com/api/chat.update';
+
+    const result = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${await getAuthToken(
+                slackConnectorData.id
+            )}`,
+        },
+        body,
+    });
+
+    const bodyJSON = await result.json();
+
+    if (bodyJSON.ok === false) {
+        throw new Error('Slack request failed.');
+    }
+
+    // this.sessionCommentUrl = bodyJSON;
+};
+
 export class SlackSessionConnector implements ISessionConnector {
     private sessionStartTimestamp: number;
 
@@ -29,22 +88,12 @@ export class SlackSessionConnector implements ISessionConnector {
     private events: ISessionEvent[] = [];
     private renderer: SlackCommentRenderer;
 
-    private getAuthToken = async (): Promise<string | null> => {
-        const id = this.connectorData.id;
-        const connector = connectorRepository.getConnector(id);
-
-        if (!connector) {
-            throw new Error(`No connector found.`);
-        }
-
-        return await keytar.get(connector.accessTokenKeytarKey);
-    };
-
     constructor(
         private vslsAPI: vsls.LiveShare,
         id: string,
         private connectorData: IConnectorData,
         connectorsData: IConnectorData[],
+        registryData: IRegistryData,
         repo?: Repository
     ) {
         this.sessionStartTimestamp = Date.now();
@@ -53,7 +102,7 @@ export class SlackSessionConnector implements ISessionConnector {
             return connectorData.type === 'GitHub';
         }) as IGitHubConnector;
 
-        this.renderer = new SlackCommentRenderer(githubConnector);
+        this.renderer = new SlackCommentRenderer(registryData, githubConnector);
 
         const { session } = vslsAPI;
         if (!session.id || !session.user) {
@@ -147,7 +196,9 @@ export class SlackSessionConnector implements ISessionConnector {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${await this.getAuthToken()}`,
+                Authorization: `Bearer ${await getAuthToken(
+                    this.connectorData.id
+                )}`,
             },
             body,
         });
@@ -207,7 +258,9 @@ export class SlackSessionConnector implements ISessionConnector {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${await this.getAuthToken()}`,
+                Authorization: `Bearer ${await getAuthToken(
+                    this.connectorData.id
+                )}`,
             },
             body: JSON.stringify(
                 {

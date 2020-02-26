@@ -131,7 +131,6 @@ export const getBranchRegistryRecord = (
     }
 
     const registryRecords = getRegistryRecords(true);
-
     const registryData = registryRecords[id];
 
     if (!registryData) {

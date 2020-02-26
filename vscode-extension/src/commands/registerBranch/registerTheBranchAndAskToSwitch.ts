@@ -10,8 +10,38 @@ import { startLiveShareSession } from '../../branchBroadcast/liveshare';
 import { connectorRepository } from '../../connectorRepository/connectorRepository';
 import { CancellationError } from '../../errors/CancellationError';
 import { IConnectorData } from '../../interfaces/IConnectorData';
+import { renderSessionDetails } from '../../sessionConnectors/github/githubSessionConnector';
 import { getConnectorRegistrationInitializer } from '../../sessionConnectors/registrationInitializers';
-import { registerBranch } from './branchRegistry';
+import { renderBranchConnectedMessageSlack } from '../../sessionConnectors/slack/slackSessionConnector';
+import { IRegistryData, registerBranch } from './branchRegistry';
+
+const getConnectorDetailsRenderer = (connector: IConnectorData) => {
+    if (connector.type === 'GitHub') {
+        return renderSessionDetails;
+    }
+
+    if (connector.type === 'Slack') {
+        return renderBranchConnectedMessageSlack;
+    }
+};
+
+const sendInitializationConnectorMessages = async (
+    connectors: IConnectorData[],
+    registryData: IRegistryData
+) => {
+    const promises = [];
+    for (let connector of connectors) {
+        const renderer = getConnectorDetailsRenderer(connector);
+
+        if (!renderer) {
+            continue;
+        }
+
+        promises.push(renderer(registryData));
+    }
+
+    await Promise.all(promises);
+};
 
 export const registerTheBranchAndAskToSwitch = async (
     repoId: string,
@@ -45,6 +75,8 @@ export const registerTheBranchAndAskToSwitch = async (
 
     refreshActivityBar();
     await repo.push('origin', branchName);
+
+    await sendInitializationConnectorMessages(connectorsData, registryData);
 
     const currentBranch = getCurrentBranch();
     const buttonPrefix =

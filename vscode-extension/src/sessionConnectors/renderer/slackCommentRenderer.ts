@@ -1,5 +1,7 @@
 const time = require('pretty-ms');
 
+import * as path from 'path';
+import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
 import { IGitHubConnector } from '../../connectorRepository/connectorRepository';
 import { ISlackChannel } from '../../interfaces/ISlackChannel';
 import { User } from '../../user';
@@ -16,38 +18,70 @@ import {
     ISessionUserJoinEvent,
 } from './events';
 
-const renderDivider = () => {
-    return `{ "type": "divider" }`;
-};
-
 const renderHostHeader = (events: ISessionEvent[]) => {
     const startEvent = events[0] as ISessionStartEvent;
-    const { user, sessionId } = startEvent;
 
     const endEvent = events.find((e) => {
         return e.type === 'end-session';
     });
 
-    const statusText = endEvent ? 'Offline' : '⚡ Live';
-
-    return `{
+    let middleSection = `{
         "type": "section",
         "text": {
             "type": "mrkdwn",
-            "text": "<https://github.com/${user.userName}|${user.displayName}> started <vscode://ms-vsliveshare.vsliveshare/join?${sessionId}|LiveShare session>."
-        },
-        "accessory": {
-            "type": "button",
-            "text": {
-                "type": "plain_text",
-                "text": "${statusText}",
-                "emoji": true
-            }
+            "text": "User connected a feature branch to this channel."
         }
-    }`;
+    },`;
+
+    if (startEvent) {
+        const { user, sessionId } = startEvent;
+        const statusText = endEvent ? 'Offline' : '⚡ Live';
+
+        middleSection = `{
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "<https://github.com/${user.userName}|${user.displayName}> started <vscode://ms-vsliveshare.vsliveshare/join?${sessionId}|LiveShare session>."
+            },
+            "accessory": {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": "${statusText}",
+                    "emoji": true
+                }
+            }
+        },`;
+    }
+
+    return `
+    { "type": "divider" },
+    ${middleSection}
+    { "type": "divider" }`;
 };
 
-const renderGithubIssueDetails = async (githubConnector: IGitHubConnector) => {
+const renderGithubIssueDetails = async (
+    registryData: IRegistryData,
+    githubConnector?: IGitHubConnector
+) => {
+    if (!githubConnector) {
+        const { repoId, repoRootPath, branchName } = registryData;
+
+        const title = repoId ? 'Repository' : 'Project';
+        const description = `*${path.basename(repoId || repoRootPath)}*`;
+
+        const branchSuffix =
+            !repoId || !branchName ? '' : `\n Branch: *${branchName}*`;
+
+        return `{
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "${title}: ${description} ${branchSuffix}"
+            }
+        }`;
+    }
+
     if (!githubConnector.data) {
         throw new Error('No connector data set.');
     }
@@ -75,6 +109,10 @@ const renderGithubIssueDetails = async (githubConnector: IGitHubConnector) => {
 };
 
 const renderGuests = async (events: ISessionEvent[]) => {
+    if (!events.length) {
+        return '';
+    }
+
     const guests = events.filter((e) => {
         return e.type === 'guest-join' || e.type === 'start-session';
     }) as (ISessionUserJoinEvent | ISessionStartEvent)[];
@@ -99,18 +137,18 @@ const renderGuests = async (events: ISessionEvent[]) => {
         text: `*${renderedGuests.length} guest${suffix}*`,
     });
 
-    return `{
-        "type": "context",
-        "elements": ${JSON.stringify(renderedGuests, null, 2)}
-    },
+    return `
     {
         "type": "divider"
+    },
+    {
+        "type": "context",
+        "elements": ${JSON.stringify(renderedGuests, null, 2)}
     }`;
 };
 
 const renderFooter = (events: ISessionEvent[]) => {
     const startEvent = events[0] as ISessionStartEvent;
-    const { sessionId } = startEvent;
 
     const endEvent = events.find((e) => {
         return e.type === 'end-session';
@@ -120,9 +158,17 @@ const renderFooter = (events: ISessionEvent[]) => {
         return null;
     }
 
-    const text = `<vscode://ms-vsliveshare.vsliveshare/join?${sessionId}|Join in VSCode> `;
+    let text = 'Session Coming soon';
+    if (startEvent) {
+        const { sessionId } = startEvent;
+        text = `<vscode://ms-vsliveshare.vsliveshare/join?${sessionId}|Join in VSCode> `;
+    }
 
-    return `{
+    return `
+    {
+        "type": "divider"
+    },
+    {
         "type": "section",
         "text": {
                 "type": "mrkdwn",
@@ -144,6 +190,11 @@ const renderThreadTs = (threadTs?: string) => {
 
 const renderNotificationTitle = (events: ISessionEvent[]) => {
     const startEvent = events[0] as ISessionStartEvent;
+
+    if (!startEvent) {
+        return `User connected a feature branch`;
+    }
+
     const { user } = startEvent;
 
     return `${user.displayName} (${user.emailAddress}) started LiveShare session`;
@@ -254,25 +305,24 @@ const renderSessionEndEvent = async (
 };
 
 export class SlackCommentRenderer {
-    constructor(private githubConnector?: IGitHubConnector) {}
+    constructor(
+        private registyData: IRegistryData,
+        private githubConnector?: IGitHubConnector
+    ) {}
 
     public render = async (
         events: ISessionEvent[],
         channel: ISlackChannel,
         threadTs?: string
     ) => {
-        const blocks = [
-            renderDivider(),
-            renderHostHeader(events),
-            renderDivider(),
-        ];
+        const blocks = [renderHostHeader(events)];
 
-        if (this.githubConnector) {
-            blocks.push(
-                await renderGithubIssueDetails(this.githubConnector),
-                renderDivider()
-            );
-        }
+        blocks.push(
+            await renderGithubIssueDetails(
+                this.registyData,
+                this.githubConnector
+            )
+        );
 
         blocks.push(await renderGuests(events));
 
@@ -285,7 +335,11 @@ export class SlackCommentRenderer {
             "channel": "${channel.id}",
             "text": "${renderNotificationTitle(events)}",
             ${renderThreadTs(threadTs)}
-            "blocks": [ ${blocks.join(', ')} ]
+            "blocks": [ ${blocks
+                .filter((block) => {
+                    return !!block;
+                })
+                .join(', ')} ]
         }`;
     };
 

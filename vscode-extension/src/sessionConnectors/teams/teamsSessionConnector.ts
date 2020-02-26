@@ -2,7 +2,10 @@ import fetch from 'node-fetch';
 import * as vsls from 'vsls';
 import { onCommitPushToRemote } from '../../branchBroadcast/git/onCommit';
 import { ISessionConnector } from '../../branchBroadcast/interfaces/ISessionConnector';
-import { getBranchRegistryRecord } from '../../commands/registerBranch/branchRegistry';
+import {
+    getBranchRegistryRecord,
+    IRegistryData,
+} from '../../commands/registerBranch/branchRegistry';
 import {
     connectorRepository,
     IGitHubConnector,
@@ -43,6 +46,7 @@ export class TeamsSessionConnector implements ISessionConnector {
         private id: string,
         private connectorData: IConnectorData,
         connectorsData: IConnectorData[],
+        registryData: IRegistryData,
         repo?: Repository
     ) {
         this.sessionStartTimestamp = Date.now();
