@@ -54,7 +54,11 @@ export class GitHubConnectorRegistrationInitializer
 
         const issuesOptions = issues
             .filter((issue) => {
-                return issue.state !== 'closed' && issue.locked === false;
+                return (
+                    issue.state !== 'closed' &&
+                    issue.locked === false &&
+                    issue.title !== '[Togezr]: Upcoming Live Share sessions'
+                );
             })
             .map((issue) => {
                 return {
