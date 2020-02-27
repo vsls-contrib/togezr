@@ -100,6 +100,8 @@ export const renderSessionDetails = async (registryData: IRegistryData) => {
 
     const token = await getAuthToken(githubConnectorData.id);
 
+    console.log(token);
+
     const issue = await sendGithubRequest(token, url, 'GET');
 
     const { body = '' } = issue;

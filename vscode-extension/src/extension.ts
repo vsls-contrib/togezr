@@ -13,18 +13,6 @@ import { initializeKeytar } from './keytar';
 import { log } from './logger';
 import { initializeMemento } from './memento';
 
-// const checkGitHubAuthToken = async () => {
-//     const token = await keytar.get('githubSecret');
-
-//     if (!token) {
-//         await vscode.window.showInformationMessage(
-//             'No GitHub API token set, please set it to proceed.'
-//         );
-
-//         await vscode.commands.executeCommand(CommandId.setGitHubToken);
-//     }
-// };
-
 export const activate = async (context: vscode.ExtensionContext) => {
     try {
         log.setLoggingChannel(
