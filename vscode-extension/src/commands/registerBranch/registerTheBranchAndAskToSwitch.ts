@@ -12,17 +12,17 @@ import { CancellationError } from '../../errors/CancellationError';
 import { IConnectorData } from '../../interfaces/IConnectorData';
 import { renderSessionDetails } from '../../sessionConnectors/github/githubSessionConnector';
 import { getConnectorRegistrationInitializer } from '../../sessionConnectors/registrationInitializers';
-import { renderBranchConnectedMessageSlack } from '../../sessionConnectors/slack/slackSessionConnector';
 import { IRegistryData, registerBranch } from './branchRegistry';
 
 const getConnectorDetailsRenderer = (connector: IConnectorData) => {
+    // Support Github connector for branch connector messages for now
     if (connector.type === 'GitHub') {
         return renderSessionDetails;
     }
 
-    if (connector.type === 'Slack') {
-        return renderBranchConnectedMessageSlack;
-    }
+    // if (connector.type === 'Slack') {
+    //     return renderBranchConnectedMessageSlack;
+    // }
 };
 
 const sendInitializationConnectorMessages = async (
