@@ -116,8 +116,8 @@ export class GitHubConnectorCommandInitializer
             //     return 0;
             // });
             .sort((repo1, repo2) => {
-                const date1 = new Date(repo1.pushed_at).getTime();
-                const date2 = new Date(repo2.pushed_at).getTime();
+                const date1 = new Date(repo1.updated_at).getTime();
+                const date2 = new Date(repo2.updated_at).getTime();
 
                 return date2 - date1;
             });
