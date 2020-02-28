@@ -88,15 +88,15 @@ const renderGithubIssueDetails = async (
 
     const { githubIssue } = githubConnector.data;
 
-    const cleanIssueBody = cleanupGithubIssueDescription(githubIssue.body);
+    const cleanIssueBody = cleanupGithubIssueDescription(githubIssue.body, 500);
 
     return `{
         "type": "section",
         "text": {
             "type": "mrkdwn",
-            "text": "[<${githubIssue.html_url}|#${githubIssue.number}>] ${
+            "text": "*[<${githubIssue.html_url}|#${githubIssue.number}>] ${
         githubIssue.title
-    }\n${cleanIssueBody}"
+    }*\\n\\n${cleanIssueBody}"
         },
         "accessory": {
             "type": "image",
@@ -314,7 +314,7 @@ export class SlackCommentRenderer {
         events: ISessionEvent[],
         channel: ISlackChannel,
         threadTs?: string
-    ) => {
+    ): Promise<string> => {
         const blocks = [renderHostHeader(events)];
 
         blocks.push(
