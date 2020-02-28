@@ -22,7 +22,7 @@ const renderText = (githubConnector?: IGitHubConnector) => {
     const title = githubIssue.title;
     const cleanBody = cleanupGithubIssueDescription(githubIssue.body);
 
-    return `**[[#${githubIssue.number}](${githubIssue.html_url})] ${title}**                                     \n ${cleanBody}`;
+    return `**[[#${githubIssue.number}](${githubIssue.html_url})] ${title}**                                              \\n\\n ${cleanBody}`;
 };
 
 const renderGithubRepoInfo = (
