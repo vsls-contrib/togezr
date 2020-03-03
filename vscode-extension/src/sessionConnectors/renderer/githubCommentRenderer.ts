@@ -63,7 +63,7 @@ export class GithubCommentRenderer {
                 });
 
                 const commitMessage = getCleanCommitMessage(g.commit.message);
-                const truncatedCommitMessage = clampString(commitMessage, 30);
+                const truncatedCommitMessage = clampString(commitMessage, 60);
                 return `- 📌 ${guestsUsers.join(
                     ', '
                 )} pushed [1 commit: ${truncatedCommitMessage}](${
