@@ -1,8 +1,14 @@
+export const TOGEZR_CONNECTED_BRANCHES_ISSUE_TITLE = '[Togezr]: Connected branches';
+
+export const GITHUB_ISSUE_TOGEZR_LABEL_NAME = 'togezr';
+export const GITHUB_ISSUE_TOGEZR_LABEL_DESCRIPTION = 'Better together_';
+export const GITHUB_ISSUE_TOGEZR_LABEL_COLOR = '000000';
+
 export const GITHUB_BOT_SECRET = process.env['GITHUB_BOT_SECRET'];
 export const GITHUB_CLIENT_ID = process.env['GITHUB_CLIENT_ID'];
 export const GITHUB_CLIENT_SECRET = process.env['GITHUB_CLIENT_SECRET'];
 export const GITHUB_APP_ID = parseInt(process.env['GITHUB_APP_ID'], 10);
-export const GITHUB_APP_PRIVATE_KEY = process.env['GITHUB_APP_PRIVATE_KEY'];
+export const GITHUB_APP_PRIVATE_KEY = process.env['GITHUB_APP_PRIVATE_KEY'].replace(/\\n/gm, '\n');
 
 if (!GITHUB_BOT_SECRET) {
     throw new Error('No GitHub Bot secret set.');

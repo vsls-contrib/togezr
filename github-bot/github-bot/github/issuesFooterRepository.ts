@@ -1,22 +1,27 @@
-export const createIssueRecord = (badgeString: string, usersString: string, branchString: string) => {
-    return `${badgeString}_${usersString}_${branchString}`;
+import { IIssueTogezrFooter } from "./interfaces/IIssueTogezrFooter";
+
+export const createIssueRecord = (issueDetails: IIssueTogezrFooter) => {
+    const { badge, users, branch } = issueDetails;
+    
+    return `${badge}_${users}_${branch}`;
 }
 
 export class IssuesFooterRepository {
     private lastUpdatedFooterIssuesMap = new Map<string, string>();
 
-    public isIssueFooterChanged = (issueId: string, badgeString: string, usersString: string, branchString: string): boolean => {
-        const record = this.lastUpdatedFooterIssuesMap.get(issueId);
-        const issueRecord = createIssueRecord(badgeString, usersString, branchString);
+    public isIssueFooterChanged = (issueDetails: IIssueTogezrFooter): boolean => {
+        const { issue } = issueDetails;
+        const record = this.lastUpdatedFooterIssuesMap.get(issue.id);
+        const issueRecord = createIssueRecord(issueDetails);
 
         if (!record) {
-            this.lastUpdatedFooterIssuesMap.set(issueId, issueRecord);
+            this.lastUpdatedFooterIssuesMap.set(issue.id, issueRecord);
             return true;
         }
 
         const isEqual = (record === issueRecord);
         if (!isEqual) {
-            this.lastUpdatedFooterIssuesMap.set(issueId, issueRecord);
+            this.lastUpdatedFooterIssuesMap.set(issue.id, issueRecord);
             return true;
         }
 

@@ -1,8 +1,18 @@
 import { IGithubUser } from './IGithubUser';
 
+interface IGithubIssueLabel {
+    id: number;
+    node_id: string;
+    url: string;
+    name: string;
+    color: string;
+    default: boolean;
+    description: string;
+}
+
 export interface IGithubIssue {
     title: string;
-    body: string;
+    body: string | null;
     number: number;
     id: string;
     url: string;
@@ -10,6 +20,7 @@ export interface IGithubIssue {
     locked: boolean;
     html_url: string;
     user: IGithubUser;
+    labels: IGithubIssueLabel[];
     // "url": "https://api.github.com/repos/legomushroom/liveshare-teams/issues/1",
     // "repository_url": "https://api.github.com/repos/legomushroom/liveshare-teams",
     // "labels_url": "https://api.github.com/repos/legomushroom/liveshare-teams/issues/1/labels{/name}",
