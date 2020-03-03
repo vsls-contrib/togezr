@@ -34,6 +34,14 @@ export const GITHUB_ISSUE_TOGEZR_FOOTER_REGEX = /(\!\[togezr\sseparator\]\(https
 export const GITHUB_ISSUE_FOOTER_BADGE_REGEX = /\[!\[Live Share session\]\(https:\/\/togezr-vsls-session-badge\.azurewebsites\.net\/api\/vsls-compact-badge\?sessionId.+\)/gm;
 export const GITHUB_ISSUE_FOOTER_USERS_REGEX = /\[\<img\ssrc="https:\/\/avatars\d{1,3}\.githubusercontent\.com.+\]\(https:\/\/github\.com\/.+\)/gm;
 export const GITHUB_ISSUE_FOOTER_BRANCH_REGEX = /\*\*⎇\*\*\s+?\[.+\]\(https:\/\/github\.com\/.+\/.+\/tree\/.+\)\s+?\[\s?\[⇄\smaster\]\(https:\/\/github\.com\/.+\)\s\]/gm;
+export const GITHUB_ISSUE_SESSION_COMMENT_REGEX = /\@.+\s+?started\s+?\[Live Share session\]\(.+\/join\?([A-Za-z0-9]{36}).+\)/gm;
 
 export const GITHUB_ISSUE_FOOTER_SEPARATOR = '![togezr separator](https://aka.ms/togezr-issue-separator-image)';
 export const GITHUB_ISSUE_FOOTER_POWERED_BY = '###### powered by [Togezr](https://aka.ms/togezr-issue-website-link)';
+
+export const GITHUB_ISSUE_SESSION_COMMENT_SESSION_COMPLETE_LABEL  = '- 🤗 Session ended.';
+
+export const SECOND_MS = 1000;
+export const MINUTE_MS = 60 * SECOND_MS;
+export const HOUR_MS = 60 * MINUTE_MS;
+export const DAY_MS = 24 * MINUTE_MS;

@@ -1,5 +1,10 @@
 import { IGithubUser } from './IGithubUser';
 
+export interface IGithubInstallationShort {
+    id: number;
+    node_id: string;
+}
+
 export interface IGithubInstallation {
     id: number;
     events: ('issues' | 'issue_comment' | 'label')[];

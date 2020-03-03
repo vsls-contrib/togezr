@@ -37,11 +37,11 @@ export class GithubAppTokenSigner {
         });
     }
 
-    public getToken = async (installationId: string) => {
+    public getToken = async (installationId: number | string) => {
         await this.app.getSignedJsonWebToken();
 
         const installationAccessToken = await this.app.getInstallationAccessToken({
-            installationId: parseInt(installationId, 10)
+            installationId: parseInt(`${installationId}`, 10)
         });
 
         return installationAccessToken;

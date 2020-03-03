@@ -44,7 +44,7 @@ const getSessionInfo = async (query) => {
     });
 }
 
-const saessionInfoToImage = (sessionInfo) => {
+const sessionInfoToImage = (sessionInfo) => {
     if (!sessionInfo) {
         return `<svg width="48px" height="11px" viewBox="0 0 48 11" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
             <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -116,7 +116,7 @@ module.exports = async function (context, req) {
     const sessionInfo = await getSessionInfo(req.query);
     context.res = {
         status: 200,
-        body: saessionInfoToImage(sessionInfo),
+        body: sessionInfoToImage(sessionInfo),
         headers: {
             'Content-Type': 'image/svg+xml',
             'Cache': 'no-cache',
