@@ -8,6 +8,40 @@ import { IGitHubInstallation } from '../../interfaces/IGitHubInstallation';
 import { IGithubRepo } from '../../interfaces/IGitHubRepo';
 import { sendGithubRequest } from '../../utils/sendGithubRequest';
 
+const getAllGithubRepos = async (
+    token: string,
+    installation: IGitHubInstallation
+) => {
+    const result = [];
+    let i = 1;
+    let total_count = Infinity;
+
+    do {
+        const reposResult = await sendGithubRequest<{
+            total_count: number;
+            repositories: IGithubRepo[];
+        }>(
+            token,
+            `https://api.github.com/user/installations/${
+                installation.id
+            }/repositories?type=all&per_page=100&page=${i++}`,
+            'GET',
+            undefined,
+            {
+                Accept: 'application/vnd.github.machine-man-preview+json',
+            }
+        );
+
+        const { repositories } = reposResult;
+
+        total_count = reposResult.total_count;
+
+        result.push(...repositories);
+    } while (result.length < total_count || i >= 10);
+
+    return result;
+};
+
 export class GitHubConnectorCommandInitializer
     implements IConnectorCommandInitializer {
     public init = async () => {
@@ -61,24 +95,32 @@ export class GitHubConnectorCommandInitializer
 
         const { installation } = selectedInstallation;
 
-        const reposResult = await sendGithubRequest<{
-            total_count: number;
-            repositories: IGithubRepo[];
-        }>(
-            token,
-            `https://api.github.com/user/installations/${installation.id}/repositories`,
-            'GET',
-            undefined,
-            {
-                Accept: 'application/vnd.github.machine-man-preview+json',
-            }
-        );
+        const repositories = await getAllGithubRepos(token, installation);
 
-        const { repositories } = reposResult;
+        const myRepos = repositories
+            .filter((repo) => {
+                return repo.permissions.push;
+            })
+            // .sort((repo1, repo2) => {
+            //     // const date1 = new Date(repo1.updated_at);
+            //     // const date2 = new Date(repo2.updated_at);
 
-        const myRepos = repositories.filter((repo) => {
-            return repo.permissions.push;
-        });
+            //     if (repo1.updated_at > repo2.updated_at) {
+            //         return -1;
+            //     }
+
+            //     if (repo2.updated_at > repo1.updated_at) {
+            //         return 1;
+            //     }
+
+            //     return 0;
+            // });
+            .sort((repo1, repo2) => {
+                const date1 = new Date(repo1.updated_at).getTime();
+                const date2 = new Date(repo2.updated_at).getTime();
+
+                return date2 - date1;
+            });
 
         const repoOptions = myRepos.map((repo) => {
             return {

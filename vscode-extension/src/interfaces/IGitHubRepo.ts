@@ -20,6 +20,8 @@ export interface IGithubRepo {
     watchers: number;
     permissions: IGithubRepoPermissions;
     owner: IGitHubUser;
+    updated_at: string;
+    pushed_at: string;
     // "id": 108537191,
     // "node_id": "MDEwOlJlcG9zaXRvcnkxMDg1MzcxOTE=",
     // "name": "EntityFramework.Docs.pl-pl",
