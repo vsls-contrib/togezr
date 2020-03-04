@@ -12,7 +12,7 @@ import {
 import { renderLiveShareCompactBadge } from './renderLiveShareCompactBadge';
 
 export class GithubCommentRenderer {
-    constructor(private sessionStartTimestamp: number) {}
+    constructor() {}
 
     private async renderAllSessionUsers(
         guests: (ISessionUserJoinEvent | ISessionStartEvent)[]
@@ -33,8 +33,16 @@ export class GithubCommentRenderer {
             return e.type === 'guest-join' || e.type === 'start-session';
         }) as (ISessionUserJoinEvent | ISessionStartEvent)[];
 
+        const sessionStartEvent = events.find((event) => {
+            return event.type === 'start-session';
+        });
+
+        if (!sessionStartEvent) {
+            throw new Error('No start event found.');
+        }
+
         const renderedEvents = events.map((g) => {
-            const timeDelta = g.timestamp - this.sessionStartTimestamp;
+            const timeDelta = g.timestamp - sessionStartEvent.timestamp;
             const prettyTimeDelta = time(timeDelta);
 
             if (g.type === 'start-session') {
@@ -47,13 +55,22 @@ export class GithubCommentRenderer {
                 )}`;
             }
 
+            if (g.type === 'restart-session') {
+                const { sessionId } = g;
+
+                return `- 💫 [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) restarted. (+${prettyTimeDelta})`;
+            }
+
             if (g.type === 'guest-join') {
                 return `- 🤝 @${g.user.userName} joined the session. (+${prettyTimeDelta})`;
             }
 
-            if (g.type === 'end-session') {
-                return `- 🤗 Session ended. (+${prettyTimeDelta})`;
-            }
+            /**
+             * Don't render the end event since the GitHub bot should take care of it.
+             */
+            // if (g.type === 'end-session') {
+            //     return `- 🤗 Session ended. (+${prettyTimeDelta})`;
+            // }
 
             if (g.type === 'commit-push') {
                 const guestsUsers = guests.map((g, i) => {

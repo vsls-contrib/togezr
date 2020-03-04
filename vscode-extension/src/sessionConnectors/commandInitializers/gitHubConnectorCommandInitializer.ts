@@ -101,20 +101,6 @@ export class GitHubConnectorCommandInitializer
             .filter((repo) => {
                 return repo.permissions.push;
             })
-            // .sort((repo1, repo2) => {
-            //     // const date1 = new Date(repo1.updated_at);
-            //     // const date2 = new Date(repo2.updated_at);
-
-            //     if (repo1.updated_at > repo2.updated_at) {
-            //         return -1;
-            //     }
-
-            //     if (repo2.updated_at > repo1.updated_at) {
-            //         return 1;
-            //     }
-
-            //     return 0;
-            // });
             .sort((repo1, repo2) => {
                 const date1 = new Date(repo1.updated_at).getTime();
                 const date2 = new Date(repo2.updated_at).getTime();
