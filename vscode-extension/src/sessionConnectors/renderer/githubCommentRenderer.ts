@@ -28,6 +28,26 @@ export class GithubCommentRenderer {
         return users;
     }
 
+    private getGuestsCommitMessage = (
+        guests: (ISessionUserJoinEvent | ISessionStartEvent)[]
+    ): string => {
+        const guestsUsers = guests.map((g, i) => {
+            return i === guests.length - 1 && i !== 0
+                ? `and @${g.user.userName}`
+                : `@${g.user.userName}`;
+        });
+
+        if (guestsUsers.length === 1) {
+            return guestsUsers.toString();
+        }
+
+        const allButLastGuests = guestsUsers.slice(0, -1).join(', ');
+        const lastGuest = guestsUsers.slice(-1);
+        const joinedGuests = `${allButLastGuests} ${lastGuest}`;
+
+        return joinedGuests;
+    };
+
     public render = async (events: ISessionEvent[]) => {
         const guests = events.filter((e) => {
             return e.type === 'guest-join' || e.type === 'start-session';
@@ -73,19 +93,11 @@ export class GithubCommentRenderer {
             // }
 
             if (g.type === 'commit-push') {
-                const guestsUsers = guests.map((g, i) => {
-                    return i === guests.length - 1
-                        ? `and @${g.user.userName}`
-                        : `@${g.user.userName}`;
-                });
-
                 const commitMessage = getCleanCommitMessage(g.commit.message);
                 const truncatedCommitMessage = clampString(commitMessage, 60);
-                return `- 📌 ${guestsUsers.join(
-                    ', '
-                )} pushed [1 commit: ${truncatedCommitMessage}](${
-                    g.repoUrl
-                }/commit/${g.commit.hash}) (+${prettyTimeDelta})`;
+                const joinedGuests = this.getGuestsCommitMessage(guests);
+
+                return `- 📌 ${joinedGuests} pushed [1 commit: ${truncatedCommitMessage}](${g.repoUrl}/commit/${g.commit.hash}) (+${prettyTimeDelta})`;
             }
         });
 
