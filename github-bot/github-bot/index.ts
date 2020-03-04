@@ -1,8 +1,15 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { handleIssueUpdate } from './github/handleIssueUpdate';
-import { IGithubIssue } from './github/interfaces/IGithubIssue';
 import { trace } from './trace';
 import { handleIssueSessionComment } from './github/handleIssueSessionComment';
+
+const isIssueConnectedEvent = (body: any) => {
+    const isEdited = (body.action === 'edited');
+    const isClosed = (body.action === 'closed');
+    const isReopened = (body.action === 'reopened');
+
+    return (isEdited || isClosed || isReopened) && body.issue;
+}
 
 const httpTrigger: AzureFunction = async function (context: Context, req: HttpRequest): Promise<void> {
     trace.initializeTrace(context);
@@ -11,8 +18,8 @@ const httpTrigger: AzureFunction = async function (context: Context, req: HttpRe
 
         trace.info('Request received:', method, url);
 
-        if (body.action === 'edited' && body.issue as IGithubIssue) {
-            trace.info('Handle issue update.');
+        if (isIssueConnectedEvent(body)) {
+            trace.info('Handle issue update.', body);
             await handleIssueUpdate(body);
         }
 
