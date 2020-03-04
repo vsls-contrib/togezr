@@ -9,3 +9,6 @@ export const setExtensionPath = (path: string) => {
 
 export const PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY =
     'PREVENT_BRANCH_SWITCH_NOTIFICATION_MEMENTO_KEY';
+
+export const SECOND_MS = 1000;
+export const MINUTE_MS = 60 * SECOND_MS;

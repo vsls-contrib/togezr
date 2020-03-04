@@ -2,12 +2,17 @@ import * as vsls from 'vsls';
 import { Commit } from '../../typings/git';
 
 interface ISessionEventBase {
-    type: 'start-session' | 'end-session' | 'guest-join' | 'commit-push';
+    type:
+        | 'start-session'
+        | 'restart-session'
+        | 'end-session'
+        | 'guest-join'
+        | 'commit-push';
     timestamp: number;
 }
 
 export interface ISessionStartEvent extends ISessionEventBase {
-    type: 'start-session';
+    type: 'start-session' | 'restart-session';
     sessionId: string;
     user: vsls.UserInfo;
 }

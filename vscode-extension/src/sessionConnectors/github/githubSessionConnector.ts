@@ -10,11 +10,12 @@ import {
     connectorRepository,
     IGitHubConnector,
 } from '../../connectorRepository/connectorRepository';
-import { EXTENSION_NAME_LOWERCASE } from '../../constants';
+import { EXTENSION_NAME_LOWERCASE, MINUTE_MS } from '../../constants';
 import { IConnectorData } from '../../interfaces/IConnectorData';
 import { IGithubConnectorData } from '../../interfaces/IGithubConnectorData';
 import { IGitHubIssue } from '../../interfaces/IGitHubIssue';
 import * as keytar from '../../keytar';
+import * as memento from '../../memento';
 import { ISessionEvent } from '../renderer/events';
 import { GithubCommentRenderer } from '../renderer/githubCommentRenderer';
 import { getIssueOwner } from './getIssueOwner';
@@ -123,6 +124,49 @@ export const renderSessionDetails = async (registryData: IRegistryData) => {
     });
 };
 
+interface IEventsRecord {
+    events: ISessionEvent[];
+    lastUpdateTimestamp: number;
+}
+
+const GITHUB_SESSION_EVENTS_MEMENTO_KEY = 'GITHUB_SESSION_EVENTS_MEMENTO_KEY';
+const GITHUB_SESSION_COMMENT_URL_MEMENTO_KEY =
+    'GITHUB_SESSION_COMMENT_URL_MEMENTO_KEY';
+const saveEvents = (id: string, events: ISessionEvent[]) => {
+    const key = `${GITHUB_SESSION_EVENTS_MEMENTO_KEY}${id}`;
+
+    memento.set(key, {
+        events,
+        lastUpdateTimestamp: Date.now(),
+    });
+};
+
+const getEvents = (id: string): ISessionEvent[] | undefined => {
+    const key = `${GITHUB_SESSION_EVENTS_MEMENTO_KEY}${id}`;
+
+    const record = memento.get<IEventsRecord>(key);
+    if (!record) {
+        return;
+    }
+
+    const { lastUpdateTimestamp } = record;
+    const delta = Date.now() - lastUpdateTimestamp;
+    if (delta >= 1.5 * MINUTE_MS) {
+        deleteEvents(id);
+        return;
+    }
+
+    return record.events;
+};
+
+const deleteEvents = (id: string): void => {
+    const key = `${GITHUB_SESSION_EVENTS_MEMENTO_KEY}${id}`;
+    const urlKey = `${GITHUB_SESSION_COMMENT_URL_MEMENTO_KEY}${id}`;
+
+    memento.remove(key);
+    memento.remove(urlKey);
+};
+
 export class GithubSessionConnector implements ISessionConnector {
     private sessionCommentUrl: string | undefined;
 
@@ -131,7 +175,7 @@ export class GithubSessionConnector implements ISessionConnector {
 
     private isDisposed = false;
 
-    private sessionStartTimestamp: number;
+    private heartBeatInterval: NodeJS.Timer;
 
     get registryData() {
         const result = getBranchRegistryRecord(this.id);
@@ -152,20 +196,25 @@ export class GithubSessionConnector implements ISessionConnector {
         connectorsData: IConnectorData[],
         registryData: IRegistryData
     ) {
-        this.sessionStartTimestamp = Date.now();
-        this.renderer = new GithubCommentRenderer(this.sessionStartTimestamp);
+        this.renderer = new GithubCommentRenderer();
+
+        this.heartBeatInterval = setInterval(this.onHeartBeat, 5000);
+
+        const events = getEvents(id);
+        const urlKey = `${GITHUB_SESSION_COMMENT_URL_MEMENTO_KEY}${id}`;
+        const commentUrl = memento.get<string | undefined>(urlKey);
+
+        if (events && events.length && commentUrl) {
+            this.events = [...events];
+            this.sessionCommentUrl = commentUrl;
+        }
 
         const { session } = vslsAPI;
         if (!session.id || !session.user) {
             throw new Error('No LiveShare session found.');
         }
 
-        this.events.push({
-            type: 'start-session',
-            timestamp: Date.now(),
-            sessionId: session.id,
-            user: session.user,
-        });
+        this.addSessionStartEvent(session.id, session.user);
 
         onCommitPushToRemote(async ([commit, repoUrl]) => {
             if (this.isDisposed) {
@@ -228,13 +277,17 @@ export class GithubSessionConnector implements ISessionConnector {
     }
 
     public async dispose() {
-        // const githubIssue: IGitHubIssue = this.connectorData.data.githubIssue;
         this.isDisposed = true;
 
-        this.events.push({
-            type: 'end-session',
-            timestamp: Date.now(),
-        });
+        clearInterval(this.heartBeatInterval);
+
+        /**
+         * Don't create session end event since the GitHub bot now responsible for posting the end message.
+         */
+        // this.events.push({
+        //     type: 'end-session',
+        //     timestamp: Date.now(),
+        // });
 
         await Promise.all([
             this.renderSessionComment(),
@@ -261,6 +314,9 @@ export class GithubSessionConnector implements ISessionConnector {
             const res = await sendGithubRequest(token, url, 'POST', ghBody);
 
             this.sessionCommentUrl = res.url;
+
+            const urlKey = `${GITHUB_SESSION_COMMENT_URL_MEMENTO_KEY}${this.id}`;
+            memento.set(urlKey, res.url);
 
             if (!this.sessionCommentUrl) {
                 throw new Error('No session comment created.');
@@ -295,5 +351,25 @@ export class GithubSessionConnector implements ISessionConnector {
         });
 
         await this.renderSessionComment();
+    };
+
+    private addSessionStartEvent = (sessionId: string, user: vsls.UserInfo) => {
+        const startEvent = this.events.find((event) => {
+            return event.type === 'start-session';
+        });
+
+        const type = startEvent ? 'restart-session' : 'start-session';
+        this.events.push({
+            type,
+            sessionId,
+            user,
+            timestamp: Date.now(),
+        });
+
+        saveEvents(sessionId, this.events);
+    };
+
+    private onHeartBeat = () => {
+        saveEvents(this.id, this.events);
     };
 }
