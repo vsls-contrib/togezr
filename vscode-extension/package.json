@@ -178,13 +178,14 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "npm run build:webpack",
+        "vscode:prepublish": "yarn build:webpack",
+        "update-vsls-version": "node ./scripts/update-vsls-version.js",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
-        "build:webpack": "webpack --config ./webpack/webpack.node.config.js",
-        "watch:webpack": "webpack --watch --progress --config ./webpack/webpack.node.config.js",
+        "build:webpack": "yarn update-vsls-version && webpack --config ./webpack/webpack.node.config.js",
+        "watch:webpack": "yarn update-vsls-version && webpack --watch --progress --config ./webpack/webpack.node.config.js",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "test": "yarn compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
         "@types/keytar": "^4.4.2",
@@ -205,7 +206,7 @@
         "node-fetch": "^2.6.0",
         "pretty-ms": "^5.1.0",
         "uuid": "^3.4.0",
-        "vsls": "^1.0.1526"
+        "vsls": "1.0.1526"
     },
     "extensionDependencies": [
         "ms-vsliveshare.vsliveshare",

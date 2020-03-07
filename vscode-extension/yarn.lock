@@ -3636,7 +3636,7 @@ vscode@^1.1.25:
     url-parse "^1.4.4"
     vscode-test "^0.4.1"
 
-vsls@^1.0.1526:
+vsls@1.0.1526:
   version "1.0.1526"
   resolved "https://registry.yarnpkg.com/vsls/-/vsls-1.0.1526.tgz#7940cb77335a15de5cdbc74f169fc81b7b602dda"
   integrity sha512-bxqb2iZzauwVluidgFS1CPZHF1KbNwIGqHeIow/7gtrJpLBLg+Bs0dgSvHLJafwfQulO+dsycWYPF64R6D3R/A==
