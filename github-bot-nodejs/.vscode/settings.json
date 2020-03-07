@@ -1,0 +1,9 @@
+{
+    "debug.node.autoAttach": "on",
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/61aa8a3f-5795-490f-a00f-519eb5e29433/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/togezr-github-bot-nodejs",
+    "appService.deploySubpath": ""
+}
