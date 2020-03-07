@@ -7,16 +7,9 @@ dotenv.config();
 import { handleIssueUpdate } from './github/handleIssueUpdate';
 import { trace } from './trace';
 import { handleIssueSessionComment } from './github/handleIssueSessionComment';
+import { isIssueConnectedEvent } from './utils/isIssueConnectedEvent';
 
 const PORT = process.env.PORT || 3000;
-
-const isIssueConnectedEvent = (body: any) => {
-    const isEdited = (body.action === 'edited');
-    const isClosed = (body.action === 'closed');
-    const isReopened = (body.action === 'reopened');
-
-    return (isEdited || isClosed || isReopened) && body.issue;
-}
 
 const app = express();
 
@@ -29,12 +22,12 @@ app.post('/', async (req, res) => {
         trace.info('Request received:', method, url);
 
         if (isIssueConnectedEvent(body)) {
-            trace.info('Handle issue update.', body);
+            trace.info('Handle issue update.', Object.keys(body));
             await handleIssueUpdate(body);
         }
 
         if (body.action === 'created' && body.comment) {
-            trace.info('Handle issue session comment.');
+            trace.info('Handle issue session comment.', Object.keys(body));
             await handleIssueSessionComment(body);
         }
     } catch (e) {

@@ -1,6 +1,7 @@
 import { IGithubIssueSessionCommentEvent } from './interfaces/IGithubIssueSessionCommentEvent';
 import { GITHUB_ISSUE_SESSION_COMMENT_REGEX } from './constants';
 import { sessionCommentTracker } from './sessionCommentTracker/sessionCommentTracker';
+import { trace } from '../trace';
 
 const isSessionComment = (issueUpdateEvent: IGithubIssueSessionCommentEvent) => {
     const { comment } = issueUpdateEvent;
@@ -17,7 +18,9 @@ const isSessionComment = (issueUpdateEvent: IGithubIssueSessionCommentEvent) => 
 }
 
 export const handleIssueSessionComment = async (issueUpdateEvent: IGithubIssueSessionCommentEvent) => {
+    trace.info('***** handleIssueSessionComment');
     if (!isSessionComment(issueUpdateEvent)) {
+        trace.info('Not a session comment');
         return;
     }
 

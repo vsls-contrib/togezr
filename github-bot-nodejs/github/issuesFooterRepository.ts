@@ -1,9 +1,29 @@
 import { IIssueTogezrFooter } from "./interfaces/IIssueTogezrFooter";
+import { trace } from "../trace";
+
+const hashString = (str: string) => {
+    if (!str) {
+        return `0`;
+    }
+    let hash = 0, i, chr;
+
+    for (i = 0; i < str.length; i++) {
+        chr   = str.charCodeAt(i);
+        hash  = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+    
+    return `${hash}`;
+}
 
 export const createIssueRecord = (issueDetails: IIssueTogezrFooter) => {
-    const { badge, users, branch } = issueDetails;
+    const { badge, users, branch, issue } = issueDetails;
+
+    const result = `${hashString(badge)}_${hashString(users)}_${hashString(branch)}_${issue.state}`;
+
+    trace.info(`create issue record: #${issue.number}, ${result}`)
     
-    return `${badge}_${users}_${branch}`;
+    return result;
 }
 
 export class IssuesFooterRepository {

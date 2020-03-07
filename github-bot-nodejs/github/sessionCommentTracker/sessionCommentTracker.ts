@@ -9,6 +9,7 @@ import { IGithubRepo } from '../interfaces/IGithubRepo';
 import { IGithubComment } from '../interfaces/IGithubComment';
 import { IGithubInstallation } from '../interfaces/IGithubInstallation';
 import { githubApp } from '../app/githubApp';
+import { trace } from '../../trace';
 
 const getSessionId = (body: string): string | null => {
     const matches = matchAll(body, GITHUB_ISSUE_SESSION_COMMENT_REGEX);
@@ -130,18 +131,23 @@ export class SessionCommentTracker {
         const { comment, issue, repository, installation } = issueUpdateEvent;
         const { body } = comment;
 
+        trace.info(`Track github session comment: ${comment.html_url}`);
+
         if (!body) {
             console.warn(`Session commend was passed to session tracker, but no comment body set.`);
             return;
         }
 
         const sessionId = getSessionId(body);
+        trace.info(`Track github session comment sessionId: ${sessionId}`);
         if (!sessionId) {
             console.warn(`Session commend was passed to session tracker, but no sessionId found.`, body);
             return;
         }
 
         const existingRecord = this.trackedSessions.get(comment.id);
+
+        trace.info(`Track github session comment existingRecord: `, existingRecord);
 
         this.trackedSessions.set(comment.id, {
             comment,

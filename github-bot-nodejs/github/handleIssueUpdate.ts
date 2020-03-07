@@ -1,5 +1,5 @@
 import { IGithubIssueEvent } from './interfaces/IGithubIssueEvent';
-import { GITHUB_ISSUE_TOGEZR_FOOTER_REGEX, GITHUB_ISSUE_FOOTER_SEPARATOR, GITHUB_ISSUE_FOOTER_POWERED_BY, GITHUB_ISSUE_TOGEZR_LABEL_NAME, GITHUB_ISSUE_TOGEZR_LABEL_DESCRIPTION, GITHUB_ISSUE_TOGEZR_LABEL_COLOR, TOGEZR_CONNECTED_BRANCHES_ISSUE_TITLE} from './constants';
+import { GITHUB_ISSUE_TOGEZR_FOOTER_REGEX, GITHUB_ISSUE_FOOTER_SEPARATOR, GITHUB_ISSUE_FOOTER_POWERED_BY, GITHUB_ISSUE_TOGEZR_LABEL_NAME, GITHUB_ISSUE_TOGEZR_LABEL_DESCRIPTION, GITHUB_ISSUE_TOGEZR_LABEL_COLOR, TOGEZR_CONNECTED_BRANCHES_ISSUE_TITLE } from './constants';
 import { issuesFooterRepository } from './issuesFooterRepository';
 import { getFooterBranch } from './parser/getFooterBranch';
 import { getFooterUsers } from './parser/getFooterUsers';
@@ -7,19 +7,28 @@ import { getFooterBadge } from './parser/getFooterBadge';
 import { githubApp } from './app/githubApp';
 import { IGithubIssue } from './interfaces/IGithubIssue';
 import { IIssueTogezrFooter } from './interfaces/IIssueTogezrFooter';
+import { trace } from '../trace';
 
 const getIssueTogezrFooter = (issue: IGithubIssue): IIssueTogezrFooter | null=> {
+    trace.info(`getIssueTogezrFooter: ${issue.state}`);
+
     const { body } = issue;
+
+    trace.info(`getIssueTogezrFooter body: `, !!body);
+
     if (!body) {
         return  null;
     }
 
     const footerMatch = body.match(GITHUB_ISSUE_TOGEZR_FOOTER_REGEX);
+
+    trace.info(`getIssueTogezrFooter footerMatch: `, !!footerMatch);
     if (!footerMatch) {
         return null;
     }
 
     const footer = footerMatch[0];
+    trace.info(`getIssueTogezrFooter footer: `, !!footer);
     if (!footer) {
         return null;
     }
@@ -27,6 +36,8 @@ const getIssueTogezrFooter = (issue: IGithubIssue): IIssueTogezrFooter | null=> 
     const badge = getFooterBadge(footer);
     const users = getFooterUsers(footer);
     const branch = getFooterBranch(footer);
+
+    trace.info(`getIssueTogezrFooter badge: ${!!badge} users: ${!!users}, branch: ${branch}`);
 
     if (!badge || !users || !branch) {
         return null;
@@ -53,18 +64,28 @@ const renderRepoWideIssueDetail = (issueData: IIssueTogezrFooter) => {
 }
 
 const renderRepoWideIssue = (issues: IGithubIssue[]): string | null => {
+    trace.info(`renderRepoWideIssue: ${issues.length}.`);
+
     const issueDetails = issues
         .filter((issue) => {
             return !issue.title.startsWith(TOGEZR_CONNECTED_BRANCHES_ISSUE_TITLE);
         })
-        .filter((issue) => {
-            return issue.state === 'open';
-        })
         .map((issue) => {
             return getIssueTogezrFooter(issue);
-        })
+        });
+    
+    trace.info(`issueDetails length: ${issueDetails.length}.`);
+    
+    if (!issueDetails.length) {
+        return null;
+    }
+
+    const issueFooters = issueDetails
         .filter((issue) => {
             return !!issue;
+        })
+        .filter((issue) => {
+            return issue.issue.state !== 'closed';
         })
         .sort((issue1, issue2) => {
             if (!issue1.users || !issue2.users) {
@@ -72,27 +93,33 @@ const renderRepoWideIssue = (issues: IGithubIssue[]): string | null => {
             }
 
             return issue2.users.length - issue1.users.length;
+        })
+        .map((issue) => {
+            return renderRepoWideIssueDetail(issue);
+        })
+        .filter((issue) => {
+            return !!issue;
         });
 
-    if (!issueDetails.length) {
-        return null;
-    }
-
-    const issueFooters = issueDetails.map((issue) => {
-        return renderRepoWideIssueDetail(issue);
-    });
+    trace.info(`issueFooters length: ${issueFooters.length}.`);
 
     const isChangedDescriptions = issueDetails.map((issueDetail) => {
         return issuesFooterRepository.isIssueFooterChanged(issueDetail);
     });
 
+    trace.info(`isChangedDescriptions: `, isChangedDescriptions);
+
     const isNothingChanged = (isChangedDescriptions.indexOf(true) === -1);
     if (isNothingChanged) {
+        trace.info(`Nothing changed.`);
         return;
     }
 
     const details = issueFooters.join(`\n${GITHUB_ISSUE_FOOTER_SEPARATOR}`);
     const header = `**${issueFooters.length} Connected branches:**\n${GITHUB_ISSUE_FOOTER_SEPARATOR}`;
+
+    trace.info(`details: `, !!details);
+    trace.info(`header: `, !!header);
 
     return [
         header,
@@ -108,6 +135,8 @@ export const handleIssueUpdate = async (issueUpdateEvent: IGithubIssueEvent) => 
     const { id } = issueUpdateEvent.installation;
     const token = await githubApp.getToken(id);
 
+    trace.info(`handleIssueUpdate: got token ${!!token}`);
+
     const { owner, name } = repository;
 
     const issues: IGithubIssue[] = await githubApp.rest(token).paginate(`GET /repos/${owner.login}/${name}/issues?state=all&labels=togezr`);
@@ -117,6 +146,13 @@ export const handleIssueUpdate = async (issueUpdateEvent: IGithubIssueEvent) => 
     });
 
     const repoWideDetails = renderRepoWideIssue(issues);
+
+    trace.info(`Repo wide details: ${!!repoWideDetails}.`);
+
+    if (!repoWideDetails) {
+        return;
+    }
+
     const togezrLabel = {
         name: GITHUB_ISSUE_TOGEZR_LABEL_NAME,
         color: GITHUB_ISSUE_TOGEZR_LABEL_COLOR,
@@ -124,6 +160,8 @@ export const handleIssueUpdate = async (issueUpdateEvent: IGithubIssueEvent) => 
     };
 
     if (!sessionsIssue) {
+        trace.info(`Session issue not found, creating.`);
+
         await githubApp.rest(token).issues.create({
             owner: owner.login,
             repo: name,
@@ -132,8 +170,12 @@ export const handleIssueUpdate = async (issueUpdateEvent: IGithubIssueEvent) => 
             labels: [togezrLabel]
         });
 
+        trace.info(`Session issue created.`);
+
         return;
     }
+
+    trace.info(`Session issue found: #${sessionsIssue.number}, state: ${sessionsIssue.state}.`);
 
     // if session issue closed(disabled), no-op
     if (sessionsIssue.state === 'closed') {
@@ -149,7 +191,9 @@ export const handleIssueUpdate = async (issueUpdateEvent: IGithubIssueEvent) => 
 
     const labels = existingTogezrLabel
         ? undefined
-        : [...sessionsIssue.labels, togezrLabel]
+        : [...sessionsIssue.labels, togezrLabel];
+
+    trace.info(`labels:`, labels);
 
     await githubApp.rest(token).issues.update({
         owner: owner.login,
@@ -158,4 +202,6 @@ export const handleIssueUpdate = async (issueUpdateEvent: IGithubIssueEvent) => 
         body: repoWideDetails,
         labels
     });
+
+    trace.info(`Issue ${sessionsIssue.number} updated.`, !!repoWideDetails);
 };
