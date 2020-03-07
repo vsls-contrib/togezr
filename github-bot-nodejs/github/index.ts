@@ -1,0 +1,1 @@
+export { handleIssueUpdate } from './handleIssueUpdate';
