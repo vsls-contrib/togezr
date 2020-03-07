@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { DAY_MS } from '../../constants';
 import * as memento from '../../memento';
 import { DEFAULT_GITHUB_AVATAR } from '../constants';
 
@@ -9,8 +10,7 @@ interface ICachedAvatarLink {
     lastUpdate: number;
 }
 
-// 5 days
-const CACHE_UPDATE_THRESHOLD_MS = 5 * 24 * 60 * 60 * 1000;
+const CACHE_UPDATE_THRESHOLD_MS = 5 * DAY_MS;
 
 const isValidCacheRecod = (cachedRecord: ICachedAvatarLink) => {
     const lastUpdate = new Date(parseInt(`${cachedRecord.lastUpdate}`, 10));

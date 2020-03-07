@@ -151,7 +151,7 @@ const getEvents = (id: string): ISessionEvent[] | undefined => {
 
     const { lastUpdateTimestamp } = record;
     const delta = Date.now() - lastUpdateTimestamp;
-    if (delta >= 1.5 * MINUTE_MS) {
+    if (delta >= 2 * MINUTE_MS) {
         deleteEvents(id);
         return;
     }

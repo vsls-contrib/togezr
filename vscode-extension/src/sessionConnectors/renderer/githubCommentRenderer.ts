@@ -97,7 +97,7 @@ export class GithubCommentRenderer {
                 const truncatedCommitMessage = clampString(commitMessage, 60);
                 const joinedGuests = this.getGuestsCommitMessage(guests);
 
-                return `- 📌 ${joinedGuests} pushed [1 commit: ${truncatedCommitMessage}](${g.repoUrl}/commit/${g.commit.hash}) (+${prettyTimeDelta})`;
+                return `- 📌 ${joinedGuests} pushed 1 commit: [${truncatedCommitMessage}](${g.repoUrl}/commit/${g.commit.hash}) (+${prettyTimeDelta})`;
             }
         });
 
