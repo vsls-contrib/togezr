@@ -184,7 +184,7 @@
         "watch": "tsc -watch -p ./",
         "build:webpack": "yarn update-vsls-version && webpack --config ./webpack/webpack.node.config.js",
         "watch:webpack": "yarn update-vsls-version && webpack --watch --progress --config ./webpack/webpack.node.config.js",
-        "postinstall": "node ./node_modules/vscode/bin/install",
+        "postinstall": "yarn update-vsls-version && node ./node_modules/vscode/bin/install",
         "test": "yarn compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {

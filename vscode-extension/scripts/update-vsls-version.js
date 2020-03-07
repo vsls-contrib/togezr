@@ -18,5 +18,5 @@ packageJSON.version = VSLS_PACKAGE_JSON_VERSION;
 fs.writeFileSync(PACKAGE_JSON_PATH, JSON.stringify(packageJSON, null, 4));
 
 console.log(
-    `vsls package.json updated to version ${VSLS_PACKAGE_JSON_VERSION}`
+    `\n** vsls package.json updated to version ${VSLS_PACKAGE_JSON_VERSION}\n`
 );
