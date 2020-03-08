@@ -3,12 +3,12 @@ import {
     Disposable,
     Event,
     EventEmitter,
-    ProviderResult,
     TreeDataProvider,
     TreeItem,
     TreeItemCollapsibleState,
     window,
 } from 'vscode';
+import { accountsKeychain } from '../accounts/accountsKeychain';
 // import { connectorRepository } from 'src/connectorRepository/connectorRepository';
 import {
     getRegistryRecords,
@@ -19,6 +19,7 @@ import {
     TConnectors,
 } from '../connectorRepository/connectorRepository';
 import { EXTENSION_NAME_LOWERCASE } from '../constants';
+import { IAccountRecord } from '../interfaces/IAccountRecord';
 import { IConnectorData } from '../interfaces/IConnectorData';
 import { IGitHubIssue } from '../interfaces/IGitHubIssue';
 import { ISlackChannel } from '../interfaces/ISlackChannel';
@@ -38,6 +39,11 @@ const BRANCH_CONNECTIONS_ITEM = new TreeItem(
 const CONNECTORS_ITEM = new TreeItem(
     'Connectors',
     TreeItemCollapsibleState.Expanded
+);
+
+const ACCOUNTS_ITEM = new TreeItem(
+    'Accounts',
+    TreeItemCollapsibleState.Collapsed
 );
 
 export class BranchConnectionTreeItem extends TreeItem {
@@ -200,15 +206,43 @@ export class ConnectorTreeItem extends TreeItem {
 
     private getConnectorIconName(connector: TConnectors) {
         if (connector.type === 'GitHub') {
-            return 'github-connector-icon.svg';
+            return 'github-icon.svg';
         }
 
         if (connector.type === 'Slack') {
-            return 'slack-connector-icon.svg';
+            return 'slack-icon.svg';
         }
 
         if (connector.type === 'Teams') {
-            return 'teams-connector-icon.svg';
+            return 'teams-icon.svg';
+        }
+
+        throw new Error(
+            `Not know connector type: "${(connector as any).type}"`
+        );
+    }
+}
+
+export class AccountTreeItem extends TreeItem {
+    public contextValue: string = 'togezr.account';
+
+    constructor(public account: IAccountRecord) {
+        super(account.name);
+
+        this.iconPath = getIconPack(this.getAccountIconName(account));
+    }
+
+    private getAccountIconName(connector: IAccountRecord) {
+        if (connector.type === 'GitHub') {
+            return 'github-icon.svg';
+        }
+
+        if (connector.type === 'Slack') {
+            return 'slack-icon.svg';
+        }
+
+        if (connector.type === 'Teams') {
+            return 'teams-icon.svg';
         }
 
         throw new Error(
@@ -230,13 +264,14 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         );
         BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
         CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
+        ACCOUNTS_ITEM.iconPath = getIconPack('account-icon.svg');
     }
 
     public refresh() {
         this._onDidChangeTreeData.fire();
     }
 
-    public getChildren(element?: TreeItem): ProviderResult<TreeItem[]> {
+    public getChildren = async (element?: TreeItem): Promise<TreeItem[]> => {
         const branchConnections = getRegistryRecords();
 
         const runningItem = Object.entries(branchConnections).find(
@@ -246,7 +281,11 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         );
 
         if (!element) {
-            const items = [BRANCH_CONNECTIONS_ITEM, CONNECTORS_ITEM];
+            const items = [
+                BRANCH_CONNECTIONS_ITEM,
+                CONNECTORS_ITEM,
+                ACCOUNTS_ITEM,
+            ];
 
             if (runningItem) {
                 items.unshift(RUNNING_BRANCH_CONNECTIONS_ITEM);
@@ -298,6 +337,18 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             return items;
         }
 
+        if (element === ACCOUNTS_ITEM) {
+            const accounts = await accountsKeychain.getAllAccounts();
+
+            const items = accounts.map((account) => {
+                const item = new AccountTreeItem(account);
+
+                return item;
+            });
+
+            return items;
+        }
+
         if (element instanceof BranchConnectionTreeItem) {
             if (!element.registryData) {
                 throw new Error(
@@ -338,7 +389,7 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         }
 
         return [];
-    }
+    };
 
     public getTreeItem(node: TreeItem): TreeItem {
         return node;

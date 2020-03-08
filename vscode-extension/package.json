@@ -112,6 +112,15 @@
                     "dark": "images/dark/open-icon.svg",
                     "light": "images/light/open-icon.svg"
                 }
+            },
+            {
+                "command": "togezr.addAccount",
+                "title": "Add account",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/1.svg",
+                    "light": "images/light/1.svg"
+                }
             }
         ],
         "menus": {
