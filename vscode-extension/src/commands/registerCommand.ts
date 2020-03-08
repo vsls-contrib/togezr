@@ -14,6 +14,7 @@ export const CommandId = {
     openInBrowser: 'togezr.openInBrowser',
     openConnectorInBrowser: 'togezr.openConnectorInBrowser',
     addAccount: 'togezr.addAccount',
+    removeAccount: 'togezr.removeAccount',
 } as const;
 
 export async function registerCommand(
@@ -54,6 +55,10 @@ export async function registerCommand(
 ): Promise<void>;
 export async function registerCommand(
     name: typeof CommandId.addAccount,
+    command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.removeAccount,
     command: () => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(name: any, command: any) {

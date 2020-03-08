@@ -7,6 +7,7 @@ import {
 } from './openInBrowserCommand';
 import { registerBranchCommand } from './registerBranch';
 import { registerCommand } from './registerCommand';
+import { removeAccountCommand } from './removeAccountCommand';
 import { removeConnectorCommand } from './removeConnector';
 import { shareIntoCommand } from './shareIntoCommand';
 import { startBranchConnectionSessionCommand } from './startBranchConnectionSessionCommand';
@@ -30,4 +31,5 @@ export const registerCommands = () => {
     );
 
     registerCommand('togezr.addAccount', addAccountCommand);
+    registerCommand('togezr.removeAccount', removeAccountCommand);
 };

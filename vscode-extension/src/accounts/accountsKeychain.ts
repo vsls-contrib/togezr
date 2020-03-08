@@ -17,7 +17,7 @@ export class AccountsKeychain {
         const accountJSON = await keytar.get(this.getAccountKey(name));
 
         if (!accountJSON) {
-            this.addAccountName(name);
+            this.removeAccountName(name);
             return null;
         }
 
@@ -44,18 +44,9 @@ export class AccountsKeychain {
         this.addAccountName(name);
     };
 
-    public deleteAccount = async (account: IAccountRecord): Promise<void> => {
-        const { name } = account;
-
-        const result = await keytar.remove(this.getAccountKey(name));
-
-        if (result) {
-            this.removeAccountName(name);
-
-            return;
-        }
-
-        throw new Error(`Could not delete the account ${name}`);
+    public deleteAccount = async (name: string): Promise<void> => {
+        await keytar.remove(this.getAccountKey(name));
+        this.removeAccountName(name);
     };
 
     public getAllAccounts = async (): Promise<IAccountRecord[]> => {
@@ -80,7 +71,7 @@ export class AccountsKeychain {
         return result;
     };
 
-    private getAccountNames = () => {
+    public getAccountNames = () => {
         const accounts: string[] | undefined = memento.get(
             ACCOUNTS_MEMENTO_KEY
         );

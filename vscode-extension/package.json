@@ -118,8 +118,17 @@
                 "title": "Add account",
                 "category": "Togezr",
                 "icon": {
-                    "dark": "images/dark/1.svg",
-                    "light": "images/light/1.svg"
+                    "dark": "images/dark/add-icon.svg",
+                    "light": "images/light/add-icon.svg"
+                }
+            },
+            {
+                "command": "togezr.removeAccount",
+                "title": "Remove account",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/cross-icon.svg",
+                    "light": "images/light/cross-icon.svg"
                 }
             }
         ],
@@ -153,6 +162,16 @@
                 {
                     "command": "togezr.openConnectorInBrowser",
                     "when": "viewItem == togezr.connector.openable",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.addAccount",
+                    "when": "viewItem == togezr.accounts.header",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.removeAccount",
+                    "when": "viewItem == togezr.account",
                     "group": "inline@1"
                 }
             ],

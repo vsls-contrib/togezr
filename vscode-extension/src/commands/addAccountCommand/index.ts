@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { accountsKeychain } from '../../accounts/accountsKeychain';
+import { refreshActivityBar } from '../../activityBar/activityBar';
 import { CancellationError } from '../../errors/CancellationError';
 import {
     KNOWN_ACCOUNT_TYPES,
@@ -10,7 +11,8 @@ const findNewAccountName = async (
     name: string,
     interation = 0
 ): Promise<string> => {
-    const existingAccount = await accountsKeychain.getAccount(name);
+    const accountName = `${name}${interation || ''}`;
+    const existingAccount = await accountsKeychain.getAccount(accountName);
 
     if (existingAccount) {
         return await findNewAccountName(name, interation + 1);
@@ -20,7 +22,7 @@ const findNewAccountName = async (
         return name;
     }
 
-    return `${name}${interation}`;
+    return accountName;
 };
 
 const getAccountName = async (name: string): Promise<string> => {
@@ -80,4 +82,6 @@ export const addAccountCommand = async () => {
     });
 
     vscode.window.showInformationMessage(`Account "${name}" added.`);
+
+    refreshActivityBar();
 };

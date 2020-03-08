@@ -230,6 +230,7 @@ export class AccountTreeItem extends TreeItem {
         super(account.name);
 
         this.iconPath = getIconPack(this.getAccountIconName(account));
+        this.contextValue = 'togezr.account';
     }
 
     private getAccountIconName(connector: IAccountRecord) {
@@ -264,7 +265,11 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         );
         BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
         CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
+
+        const accounts = accountsKeychain.getAccountNames();
         ACCOUNTS_ITEM.iconPath = getIconPack('account-icon.svg');
+        ACCOUNTS_ITEM.contextValue = 'togezr.accounts.header';
+        ACCOUNTS_ITEM.label = `Accounts (${accounts.length})`;
     }
 
     public refresh() {
