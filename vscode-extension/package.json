@@ -60,6 +60,11 @@
                 "category": "Togezr"
             },
             {
+                "command": "togezr.shareIntoAccount",
+                "title": "Share into",
+                "category": "Togezr"
+            },
+            {
                 "command": "togezr.setAutoPlay",
                 "title": "Set branch autoplay",
                 "category": "Togezr",
@@ -229,6 +234,7 @@
         "webpack-merge": "^4.2.2"
     },
     "dependencies": {
+        "@slack/web-api": "^5.8.0",
         "@types/uuid": "^3.4.7",
         "git-user-name": "^2.0.0",
         "node-fetch": "^2.6.0",

@@ -9,6 +9,7 @@ export const CommandId = {
     connectBranch: 'togezr.connectBranch',
     disconnectBranch: 'togezr.disconnectBranch',
     shareInto: 'togezr.shareInto',
+    shareIntoAccount: 'togezr.shareIntoAccount',
     stopRunningSession: 'togezr.stopRunningSession',
     startBranchConnectionSession: 'togezr.startBranchConnectionSession',
     openInBrowser: 'togezr.openInBrowser',
@@ -59,6 +60,10 @@ export async function registerCommand(
 ): Promise<void>;
 export async function registerCommand(
     name: typeof CommandId.removeAccount,
+    command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.shareIntoAccount,
     command: () => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(name: any, command: any) {

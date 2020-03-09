@@ -266,10 +266,8 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
         CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
 
-        const accounts = accountsKeychain.getAccountNames();
         ACCOUNTS_ITEM.iconPath = getIconPack('account-icon.svg');
         ACCOUNTS_ITEM.contextValue = 'togezr.accounts.header';
-        ACCOUNTS_ITEM.label = `Accounts (${accounts.length})`;
     }
 
     public refresh() {
@@ -286,6 +284,9 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         );
 
         if (!element) {
+            const accounts = accountsKeychain.getAccountNames();
+            ACCOUNTS_ITEM.label = `Accounts (${accounts.length})`;
+
             const items = [
                 BRANCH_CONNECTIONS_ITEM,
                 CONNECTORS_ITEM,

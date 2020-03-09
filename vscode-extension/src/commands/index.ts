@@ -9,6 +9,7 @@ import { registerBranchCommand } from './registerBranch';
 import { registerCommand } from './registerCommand';
 import { removeAccountCommand } from './removeAccountCommand';
 import { removeConnectorCommand } from './removeConnector';
+import { shareIntoAccountCommand } from './shareIntoAccountCommand/shareIntoAccountCommand';
 import { shareIntoCommand } from './shareIntoCommand';
 import { startBranchConnectionSessionCommand } from './startBranchConnectionSessionCommand';
 import { stopRunningSessionCommand } from './stopRunningSessionCommand';
@@ -19,6 +20,7 @@ export const registerCommands = () => {
     registerCommand('togezr.addConnector', addConnectorCommand);
     registerCommand('togezr.removeConnector', removeConnectorCommand);
     registerCommand('togezr.shareInto', shareIntoCommand);
+    registerCommand('togezr.shareIntoAccount', shareIntoAccountCommand);
     registerCommand('togezr.stopRunningSession', stopRunningSessionCommand);
     registerCommand(
         'togezr.startBranchConnectionSession',
