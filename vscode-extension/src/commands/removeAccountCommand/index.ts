@@ -1,9 +1,7 @@
 import * as vscode from 'vscode';
 import { accountsKeychain } from '../../accounts/accountsKeychain';
-import {
-    AccountTreeItem,
-    refreshActivityBar,
-} from '../../activityBar/activityBar';
+import { AccountTreeItem } from '../../activityBar/accounts/AccountTreeItem';
+import { refreshActivityBar } from '../../activityBar/activityBar';
 import { CancellationError } from '../../errors/CancellationError';
 
 const confirmDeletion = async (accountName: string): Promise<Boolean> => {

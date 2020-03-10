@@ -6,9 +6,9 @@ import { ISlackUser } from '../../interfaces/ISlackUser';
 import { getSlackAPI } from '../../slack/api';
 import { SLACK_EMOJI_MAP } from '../../slack/constants';
 
-const getSlackUsersChannel = async (
+const getSlackUserChannel = async (
     users: ISlackUser[]
-): Promise<ISlackUser[]> => {
+): Promise<ISlackUser> => {
     const options = users
         .map((user) => {
             const { profile } = user;
@@ -28,28 +28,35 @@ const getSlackUsersChannel = async (
             return !!user.label;
         });
 
-    const selectedUsers = await vscode.window.showQuickPick(options, {
-        canPickMany: true,
+    const selectedUser = await vscode.window.showQuickPick(options, {
+        // canPickMany: true,
         ignoreFocusOut: true,
         placeHolder: 'Select users to share with',
     });
 
-    if (!selectedUsers) {
+    if (!selectedUser) {
         throw new CancellationError();
     }
 
-    const result = selectedUsers.map((record) => {
-        return record.user;
-    });
-
-    return result;
+    return selectedUser.user;
 };
 
 interface ISlackUsersWebCallResult extends WebAPICallResult {
     members: ISlackUser[];
 }
 
-const getSlackAccountChannel = async (accountName: string) => {
+interface IUsersChannelResponse {
+    type: 'user';
+    user: ISlackUser;
+}
+
+// const isGroupExistsForTheUsers = (usergroups: , users: ISlackUser[]) => {
+
+// }
+
+const getSlackAccountChannel = async (
+    accountName: string
+): Promise<IUsersChannelResponse | undefined> => {
     const api = await getSlackAPI(accountName);
 
     const [usersResponse, usergroups, channels] = await Promise.all<
@@ -62,17 +69,17 @@ const getSlackAccountChannel = async (accountName: string) => {
 
     const channelOptions = [];
 
-    const USERS_LABEL = 'Users';
-    const USER_GROUPS_LABEL = 'User Groups';
+    const USER_LABEL = 'User';
+    // const USER_GROUPS_LABEL = 'User Groups';
     const CHANNELS_LABEL = 'Channels';
 
     if (users.ok && users.members.length) {
-        channelOptions.push(USERS_LABEL);
+        channelOptions.push(USER_LABEL);
     }
 
-    if (usergroups.ok && usergroups.usergroups.length) {
-        channelOptions.push(USER_GROUPS_LABEL);
-    }
+    // if (usergroups.ok && usergroups.usergroups.length) {
+    //     channelOptions.push(USER_GROUPS_LABEL);
+    // }
 
     if (channels.ok && channels.channels.length) {
         channelOptions.push(CHANNELS_LABEL);
@@ -87,16 +94,20 @@ const getSlackAccountChannel = async (accountName: string) => {
         throw new CancellationError('No channel selected.');
     }
 
-    if (answer === USERS_LABEL) {
-        const usersForChannel = await getSlackUsersChannel(users.members);
+    console.log(users, usergroups, channels);
 
-        return usersForChannel;
+    if (answer === USER_LABEL) {
+        const userForChannel = await getSlackUserChannel(users.members);
+
+        return {
+            type: 'user',
+            user: userForChannel,
+        };
     }
 
     // members, usergroups, channels
-    console.log(users, usergroups, channels);
 
-    return users;
+    // return users;
 };
 
 export const shareIntoAccountCommand = async () => {

@@ -1,23 +1,8 @@
-export interface ISlackUserProfile {
-    title: string;
-    phone: string;
-    skype: string;
-    last_name: string;
-    real_name: string;
-    real_name_normalized: string;
-    status_emoji: string;
-    status_expiration: number;
-    status_text: string;
-    status_text_canonical: string;
-    team: string;
-}
-
-export interface ISlackUser {
+export interface ISlackUserGroup {
     id: string;
     team_id: string;
     name: string;
     real_name: string;
-    profile: ISlackUserProfile;
     color: string;
     deleted: boolean;
     has_2fa: boolean;

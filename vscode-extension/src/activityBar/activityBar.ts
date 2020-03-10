@@ -9,7 +9,6 @@ import {
     window,
 } from 'vscode';
 import { accountsKeychain } from '../accounts/accountsKeychain';
-// import { connectorRepository } from 'src/connectorRepository/connectorRepository';
 import {
     getRegistryRecords,
     IRegistryData,
@@ -19,12 +18,18 @@ import {
     TConnectors,
 } from '../connectorRepository/connectorRepository';
 import { EXTENSION_NAME_LOWERCASE } from '../constants';
-import { IAccountRecord } from '../interfaces/IAccountRecord';
 import { IConnectorData } from '../interfaces/IConnectorData';
 import { IGitHubIssue } from '../interfaces/IGitHubIssue';
 import { ISlackChannel } from '../interfaces/ISlackChannel';
 import { getIconPack } from '../utils/icons';
 import { isCurrentBranchInRegistryData } from '../utils/isCurrentBranchInRegistryData';
+import { AccountTreeItem } from './accounts/AccountTreeItem';
+import { getAccountChildren } from './accounts/getAccountChildren';
+import { getSlackChannels } from './slack/getSlackChannels';
+import { getSlackUsers } from './slack/getSlackUsers';
+import { resetSlackAccountCache } from './slack/slackAccountCache';
+import { SlackChannelsTreeItem } from './slack/SlackChannelsTreeItem';
+import { SlackUsersTreeItem } from './slack/SlackUsersTreeItem';
 
 const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
     'Currently running',
@@ -43,7 +48,7 @@ const CONNECTORS_ITEM = new TreeItem(
 
 const ACCOUNTS_ITEM = new TreeItem(
     'Accounts',
-    TreeItemCollapsibleState.Collapsed
+    TreeItemCollapsibleState.Expanded
 );
 
 export class BranchConnectionTreeItem extends TreeItem {
@@ -222,36 +227,6 @@ export class ConnectorTreeItem extends TreeItem {
         );
     }
 }
-
-export class AccountTreeItem extends TreeItem {
-    public contextValue: string = 'togezr.account';
-
-    constructor(public account: IAccountRecord) {
-        super(account.name);
-
-        this.iconPath = getIconPack(this.getAccountIconName(account));
-        this.contextValue = 'togezr.account';
-    }
-
-    private getAccountIconName(connector: IAccountRecord) {
-        if (connector.type === 'GitHub') {
-            return 'github-icon.svg';
-        }
-
-        if (connector.type === 'Slack') {
-            return 'slack-icon.svg';
-        }
-
-        if (connector.type === 'Teams') {
-            return 'teams-icon.svg';
-        }
-
-        throw new Error(
-            `Not know connector type: "${(connector as any).type}"`
-        );
-    }
-}
-
 export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
     private _disposables: Disposable[] = [];
 
@@ -266,7 +241,7 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
         CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
 
-        ACCOUNTS_ITEM.iconPath = getIconPack('account-icon.svg');
+        // ACCOUNTS_ITEM.iconPath = getIconPack('account-icon.svg');
         ACCOUNTS_ITEM.contextValue = 'togezr.accounts.header';
     }
 
@@ -286,6 +261,8 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         if (!element) {
             const accounts = accountsKeychain.getAccountNames();
             ACCOUNTS_ITEM.label = `Accounts (${accounts.length})`;
+
+            resetSlackAccountCache();
 
             const items = [
                 BRANCH_CONNECTIONS_ITEM,
@@ -392,6 +369,18 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             );
 
             return items;
+        }
+
+        if (element instanceof AccountTreeItem) {
+            return await getAccountChildren(element);
+        }
+
+        if (element instanceof SlackUsersTreeItem) {
+            return await getSlackUsers(element);
+        }
+
+        if (element instanceof SlackChannelsTreeItem) {
+            return await getSlackChannels(element);
         }
 
         return [];
