@@ -1,6 +1,6 @@
-const GITHUB_ACCOUNT_TYPE = 'GitHub';
-const SLACK_ACCOUNT_TYPE = 'Slack';
-const TEAMS_ACCOUNT_TYPE = 'Teams';
+export const GITHUB_ACCOUNT_TYPE = 'GitHub';
+export const SLACK_ACCOUNT_TYPE = 'Slack';
+export const TEAMS_ACCOUNT_TYPE = 'Teams';
 
 export type TAccountType =
     | typeof GITHUB_ACCOUNT_TYPE

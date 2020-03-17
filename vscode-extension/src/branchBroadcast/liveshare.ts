@@ -118,6 +118,40 @@ export const startLiveShareSession = async (id: string) => {
     return sharedSessionUrl;
 };
 
+export const startLSSession = async (isReadOnly: boolean) => {
+    if (!vslsApi) {
+        throw new Error(
+            'No LiveShare API found, call `initializeLiveShare` first.'
+        );
+    }
+
+    const access = isReadOnly ? vsls.Access.ReadOnly : vsls.Access.ReadWrite;
+
+    const sharedSessionUrl: vscode.Uri | null = await vslsApi.share({
+        isPersistent: true,
+        access,
+    });
+
+    return sharedSessionUrl;
+
+    // refreshActivityBar();
+
+    // const host = vslsApi.session.user;
+    // if (!host || !host.id || !host.emailAddress) {
+    //     throw new Error('No host found in the session.');
+    // }
+};
+
+export const lsApi = () => {
+    if (!vslsApi) {
+        throw new Error(
+            'No LiveShare API found, call `initializeLiveShare` first.'
+        );
+    }
+
+    return vslsApi;
+};
+
 export const stopLiveShareSession = async () => {
     if (!vslsApi) {
         throw new Error(
