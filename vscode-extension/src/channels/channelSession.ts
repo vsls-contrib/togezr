@@ -1,20 +1,33 @@
-import { WebClient } from '@slack/web-api';
+import * as vscode from 'vscode';
 import * as vsls from 'vsls';
 import { onCommitPushToRemote } from '../branchBroadcast/git/onCommit';
-import { TSlackChannel } from '../commands/shareIntoAccountCommand/shareIntoAccountCommand';
-import { renderSlackComment } from '../renderers/slack/renderSlackComment';
-import {
-    ISessionEvent,
-    ISessionStartEvent,
-} from '../sessionConnectors/renderer/events';
-import { getSlackAPI } from '../slack/api';
+import { MINUTE_MS } from '../constants';
+import { TChannel } from '../interfaces/TChannel';
+import * as memento from '../memento';
+import { ISessionEvent } from '../sessionConnectors/renderer/events';
+import { hashString } from '../utils/hashString';
 
-export type TChannel = TSlackChannel;
+const HEARTBEAT_INTERVAL = 1000;
+const CHANNEL_SESSION_PREFIX = 'togezr.channel.session';
+
+type TPrimitive = string | number | boolean;
+
+export interface IChannelMementoRecord {
+    timestamp: number;
+    events: ISessionEvent[];
+    data?: { [key: string]: TPrimitive };
+}
 
 export class ChannelSession {
-    public readonly events: ISessionEvent[] = [];
+    public events: ISessionEvent[] = [];
 
     public isDisposed: boolean = false;
+
+    private heartbeatInterval: NodeJS.Timer | undefined;
+
+    private id: string;
+
+    private mementoRecordExpirationThreshold: number = 3 * MINUTE_MS;
 
     constructor(
         public channel: TChannel,
@@ -29,13 +42,43 @@ export class ChannelSession {
         }
 
         const { token } = account;
-
         if (!token) {
             throw new Error(
                 `No token found for the account "${account.name}".`
             );
         }
+
+        const path = vscode.workspace.rootPath;
+        if (!path) {
+            throw new Error('Cannot get workspace path.');
+        }
+
+        const hashedPath = hashString(path);
+        this.id = `${CHANNEL_SESSION_PREFIX}.${hashedPath}`;
+
+        this.readExistingRecord();
     }
+
+    public readExistingRecord = () => {
+        if (!this.id) {
+            throw new Error('Calculate channel session id first.');
+        }
+
+        const record = memento.get<IChannelMementoRecord | undefined>(this.id);
+        if (!record) {
+            return null;
+        }
+
+        const delta = Date.now() - record.timestamp;
+        if (delta >= this.mementoRecordExpirationThreshold) {
+            memento.remove(this.id);
+            return null;
+        }
+
+        this.events = record.events;
+
+        return record;
+    };
 
     public init = async () => {
         const { session } = this.vslsAPI;
@@ -43,11 +86,26 @@ export class ChannelSession {
             throw new Error('No LiveShare session found.');
         }
 
+        const startEventType = this.events.length
+            ? 'restart-session'
+            : 'start-session';
+
         this.onEvent({
-            type: 'start-session',
+            type: startEventType,
             sessionId: session.id,
             user: session.user,
             timestamp: Date.now(),
+        });
+
+        this.vslsAPI.onDidChangeSession(async (e: vsls.SessionChangeEvent) => {
+            if (!e.session.id) {
+                this.onEvent({
+                    type: 'end-session',
+                    timestamp: Date.now(),
+                });
+
+                await this.dispose();
+            }
         });
 
         this.vslsAPI.onDidChangePeers(async (e: vsls.PeersChangeEvent) => {
@@ -85,61 +143,54 @@ export class ChannelSession {
                 timestamp: Date.now(),
             });
         });
+
+        this.heartbeatInterval = setInterval(
+            this.persistData,
+            HEARTBEAT_INTERVAL
+        );
     };
 
     public async onEvent(e: ISessionEvent) {
-        this.events.push({
-            ...e,
-        });
-    }
-}
+        /**
+         * Don't add user join event twice.
+         */
+        if (e.type === 'guest-join') {
+            const existingEvent = this.events.find((event) => {
+                if (event.type !== 'guest-join') {
+                    return false;
+                }
 
-export class SlackChannelSession extends ChannelSession {
-    private slackAPI: WebClient | null = null;
-
-    get api() {
-        if (!this.slackAPI) {
-            throw new Error('Call "initSlackAPI" first.');
-        }
-
-        return this.slackAPI;
-    }
-
-    private ensureSlackAPI = async () => {
-        if (this.slackAPI) {
-            return;
-        }
-
-        this.slackAPI = await getSlackAPI(this.channel.account.name);
-    };
-
-    public async onEvent(e: ISessionEvent) {
-        await super.onEvent(e);
-
-        const comment = await renderSlackComment(this.events, this.channel);
-
-        await this.updateSlackComment(comment);
-    }
-
-    private updateSlackComment = async (
-        commentBody: any[],
-        thread_ts?: string
-    ) => {
-        await this.ensureSlackAPI();
-
-        if (this.channel.type === 'slack-user') {
-            const { user } = this.channel;
-            const startSession = this.events[0] as ISessionStartEvent;
-
-            const result = await this.api.chat.postMessage({
-                channel: user.im.id,
-                text: `${startSession.user.displayName} started Live Share session`,
-                blocks: commentBody,
-                thread_ts,
-                mrkdwn: true,
+                return event.user.id === e.user.id;
             });
 
-            console.log(result);
+            if (existingEvent) {
+                return;
+            }
+        }
+
+        this.events.push({ ...e });
+        this.persistData();
+    }
+
+    public onPersistData = (record: IChannelMementoRecord) => {
+        return record;
+    };
+
+    public persistData = () => {
+        const record: IChannelMementoRecord = {
+            timestamp: Date.now(),
+            events: this.events,
+        };
+
+        const pipedRecord = this.onPersistData(record);
+        memento.set(this.id, pipedRecord);
+    };
+
+    public dispose = async () => {
+        this.isDisposed = true;
+
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
         }
     };
 }

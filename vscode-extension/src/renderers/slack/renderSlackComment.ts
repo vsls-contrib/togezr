@@ -1,4 +1,4 @@
-import { TSlackChannel } from '../../commands/shareIntoAccountCommand/shareIntoAccountCommand';
+import { TSlackChannel } from '../../interfaces/TSlackChannel';
 import { ISessionEvent } from '../../sessionConnectors/renderer/events';
 import { renderFooter } from './renderSlackFooter';
 import { renderGuests } from './renderSlackGuests';
@@ -10,6 +10,7 @@ export const renderSlackComment = async (
 ): Promise<any[]> => {
     const blocks = [...renderHostHeader(events)];
 
+    // TODO: read from the GitHub channel if possible
     // { type: 'divider' },
     // // blocks.push(
     // //     await renderGithubIssueDetails(this.registyData, this.githubConnector)
