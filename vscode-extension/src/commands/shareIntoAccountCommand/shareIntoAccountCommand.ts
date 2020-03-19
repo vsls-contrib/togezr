@@ -1,20 +1,24 @@
 import * as vscode from 'vscode';
-import { accountsKeychain } from '../../accounts/accountsKeychain';
+import { SlackChannelTreeItem } from '../../activityBar/slack/SlackChannelTreeItem';
+import { SlackUserTreeItem } from '../../activityBar/slack/SlackUserTreeItem';
 import { lsApi, startLSSession } from '../../branchBroadcast/liveshare';
 import { SlackChannelSession } from '../../channels/SlackChannelSession';
 import { CancellationError } from '../../errors/CancellationError';
-import { getSlackAccountChannel } from './getSlackAccountChannel';
+import { askUserForChannel } from './askUserForChannel';
+import { getChannelFromTreeItem } from './getChannelFromTreeItem';
 
 export const SLACK_USER_CHANNEL_TYPE = 'slack-user';
 export const SLACK_CHANNEL_CHANNEL_TYPE = 'slack-channel';
 
-export const shareIntoAccountCommand = async () => {
+export const shareIntoAccountCommand = async (
+    item?: SlackUserTreeItem | SlackChannelTreeItem
+) => {
     if (!vscode.workspace.rootPath) {
         throw new Error('Please open a project to share.');
     }
 
     const READ_ONLY_BUTTON = 'Read-only session';
-    const sessionReadOonluAnswer = await vscode.window.showQuickPick(
+    const sessionReadOnlyAnswer = await vscode.window.showQuickPick(
         ['Read/Write session', READ_ONLY_BUTTON],
         {
             placeHolder: 'Select session type',
@@ -22,34 +26,18 @@ export const shareIntoAccountCommand = async () => {
         }
     );
 
-    if (!sessionReadOonluAnswer) {
+    if (!sessionReadOnlyAnswer) {
         throw new CancellationError('No session type selected.');
     }
 
-    const isReadOnlySession = sessionReadOonluAnswer === READ_ONLY_BUTTON;
+    const isReadOnlySession = sessionReadOnlyAnswer === READ_ONLY_BUTTON;
 
-    const accounts = accountsKeychain.getAccountNames();
+    const slackChannel = item
+        ? getChannelFromTreeItem(item)
+        : await askUserForChannel();
 
-    // const connectors = connectorRepository.getConnectors();
-
-    const accountOptions = accounts.map((account) => {
-        return {
-            label: account,
-        };
-    });
-
-    const selectedAccount = await vscode.window.showQuickPick(accountOptions, {
-        placeHolder: 'Select accounts to share into',
-        // canPickMany: true,
-    });
-
-    if (!selectedAccount) {
-        throw new CancellationError('No connectors selected.');
-    }
-
-    const slackChannel = await getSlackAccountChannel(selectedAccount.label);
     if (!slackChannel) {
-        throw new CancellationError('No slack channel selected.');
+        throw new CancellationError('No slack channel found.');
     }
 
     const lsAPI = lsApi();

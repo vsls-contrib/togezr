@@ -1,36 +1,52 @@
+import { getUsersWithIms } from '../../commands/shareIntoAccountCommand/getUsersWithIms';
 import { IAccountRecord } from '../../interfaces/IAccountRecord';
+import { ISlackImsWebCallResult } from '../../interfaces/ISlackUserWithIM';
 import { getSlackAPI } from '../../slack/api';
 import { ISlackChannelsWebCallResult } from './interfaces/ISlackChannelsWebCallResult';
 import { ISlackUsersWebCallResult } from './interfaces/ISlackUsersWebCallResult';
 import { slackAccountCache } from './slackAccountCache';
 import { SlackChannelsTreeItem } from './SlackChannelsTreeItem';
 import { SlackUsersTreeItem } from './SlackUsersTreeItem';
+
 export const getSlackAccountChildren = async (account: IAccountRecord) => {
     const { name } = account;
+
     const api = await getSlackAPI(name);
+
     const result = [];
-    const [usersResponse, channelResponse] = await Promise.all<
+
+    const [usersResponse, imsResponse, channelResponse] = await Promise.all<
         ISlackUsersWebCallResult,
+        ISlackImsWebCallResult,
         ISlackChannelsWebCallResult
-    >([api.users.list(), api.channels.list()]);
+    >([api.users.list(), api.im.list(), api.channels.list()]);
+
     const { members = [] } = usersResponse;
     const { channels = [] } = channelResponse;
-    const users = members.filter(
+    const { ims = [] } = imsResponse;
+
+    const existingUsers = members.filter(
         (m) => !m.deleted && !m.is_bot && !m.is_app_user
     );
+
+    const users = getUsersWithIms(existingUsers, ims);
+
     const cleanChannles = channels.filter(
         (ch) => !ch.unlinked && !ch.is_archived
     );
+
     slackAccountCache[name] = {
         users,
         channels: cleanChannles,
     };
+
     if (users.length) {
-        const usersTreeItem = new SlackUsersTreeItem(name);
+        const usersTreeItem = new SlackUsersTreeItem(name, account);
         result.push(usersTreeItem);
     }
+
     if (users.length) {
-        const channelsTreeItem = new SlackChannelsTreeItem(name);
+        const channelsTreeItem = new SlackChannelsTreeItem(name, account);
         result.push(channelsTreeItem);
     }
     return result;

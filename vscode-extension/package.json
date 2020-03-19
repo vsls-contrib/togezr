@@ -61,8 +61,12 @@
             },
             {
                 "command": "togezr.shareIntoAccount",
-                "title": "Share into",
-                "category": "Togezr"
+                "title": "Share with",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/play-icon.svg",
+                    "light": "images/light/play-icon.svg"
+                }
             },
             {
                 "command": "togezr.setAutoPlay",
@@ -177,6 +181,11 @@
                 {
                     "command": "togezr.removeAccount",
                     "when": "viewItem == togezr.account",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.shareIntoAccount",
+                    "when": "viewItem == togezr.share-into.tree.item",
                     "group": "inline@1"
                 }
             ],

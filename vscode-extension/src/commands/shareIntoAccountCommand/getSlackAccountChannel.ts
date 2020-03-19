@@ -2,25 +2,26 @@ import * as vscode from 'vscode';
 import { accountsKeychain } from '../../accounts/accountsKeychain';
 import { ISlackChannelsWebCallResult } from '../../activityBar/slack/interfaces/ISlackChannelsWebCallResult';
 import { CancellationError } from '../../errors/CancellationError';
-import { ISlackChannelChannel } from '../../interfaces/ISlackChannelChannel';
-import { ISlackUserChannel } from '../../interfaces/ISlackUserChannel';
 import {
     ISlackImsWebCallResult,
     ISlackUsersWebCallResult,
 } from '../../interfaces/ISlackUserWithIM';
+import { TSlackChannel } from '../../interfaces/TSlackChannel';
 import { getSlackAPI } from '../../slack/api';
 import { getSlackChannelChannel } from './getSlackChannelChannel';
 import { getSlackUserChannel } from './getSlackUserChannel';
 
 export const getSlackAccountChannel = async (
     accountName: string
-): Promise<ISlackUserChannel | ISlackChannelChannel | undefined> => {
+): Promise<TSlackChannel | undefined> => {
     const api = await getSlackAPI(accountName);
+
     const [usersResponse, imsResponse, channelsResponse] = await Promise.all<
         any,
         any,
         any
     >([api.users.list(), api.im.list(), api.channels.list()]);
+
     const users = usersResponse as ISlackUsersWebCallResult;
     const ims = imsResponse as ISlackImsWebCallResult;
     const channelsWebResponse = channelsResponse as ISlackChannelsWebCallResult;
@@ -44,7 +45,7 @@ export const getSlackAccountChannel = async (
     if (answer === USER_LABEL) {
         const userForChannel = await getSlackUserChannel(
             users.members,
-            ims.ims
+            ims.ims || []
         );
         const account = await accountsKeychain.getAccount(accountName);
         if (!account) {

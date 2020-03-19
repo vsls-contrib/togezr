@@ -1,9 +1,18 @@
-import { TreeItem } from 'vscode';
+import { IAccountRecord } from '../../interfaces/IAccountRecord';
 import { ISlackChannel } from '../../interfaces/ISlackChannel';
-export class SlackChannelTreeItem extends TreeItem {
-    constructor(channel: ISlackChannel) {
+import { ShareIntoTreeItem } from '../ShareIntoTreeItem';
+
+export class SlackChannelTreeItem extends ShareIntoTreeItem {
+    public channel: ISlackChannel;
+    public account: IAccountRecord;
+
+    constructor(channel: ISlackChannel, account: IAccountRecord) {
         const { name, topic } = channel;
         super(`#${name}`);
+
         this.description = topic.value;
+
+        this.channel = channel;
+        this.account = account;
     }
 }

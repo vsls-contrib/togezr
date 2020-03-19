@@ -1,6 +1,7 @@
 import { ISlackChannel } from '../../../interfaces/ISlackChannel';
-import { ISlackUser } from '../../../interfaces/ISlackUser';
+import { ISlackUserWithIM } from '../../../interfaces/ISlackUserWithIM';
+
 export interface ISlackAccountCacheRecord {
-    users: ISlackUser[];
+    users: ISlackUserWithIM[];
     channels: ISlackChannel[];
 }

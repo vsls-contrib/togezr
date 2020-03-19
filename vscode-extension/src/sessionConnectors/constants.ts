@@ -6,3 +6,7 @@ export const ISSUE_SESSION_DETAILS_FOOTER =
 
 export const DEFAULT_GITHUB_AVATAR =
     'https://avatars1.githubusercontent.com/u/35971525?s=460&v=4';
+
+export const TreeItemContext = {
+    ShareIntoTreeItem: 'togezr.share-into.tree.item',
+} as const;

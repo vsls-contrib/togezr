@@ -11,5 +11,5 @@ export interface ISlackUsersWebCallResult extends WebAPICallResult {
 }
 
 export interface ISlackImsWebCallResult extends WebAPICallResult {
-    ims: ISlackIM[];
+    ims?: ISlackIM[];
 }

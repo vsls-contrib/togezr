@@ -6,12 +6,14 @@ export const getSlackUsers = (
     element: SlackUsersTreeItem
 ): SlackUserTreeItem[] => {
     const cache = slackAccountCache[element.itemId];
+
     if (!cache) {
         throw new Error('No slack cached record found.');
     }
     const { users } = cache;
+
     const result = users.map((user) => {
-        const userItem = new SlackUserTreeItem(user);
+        const userItem = new SlackUserTreeItem(user, element.account);
         return userItem;
     });
     return result;
