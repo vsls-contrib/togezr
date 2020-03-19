@@ -29,9 +29,15 @@ export const getSlackAccountChannel = async (
     const channelOptions = [];
     const USER_LABEL = 'User';
     const CHANNELS_LABEL = 'Channels';
+
+    api.users.getPresence({
+        user: users.members[0].id,
+    });
+
     if (users.ok && users.members.length) {
         channelOptions.push(USER_LABEL);
     }
+
     if (channelsWebResponse.ok && channels.length) {
         channelOptions.push(CHANNELS_LABEL);
     }

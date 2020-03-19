@@ -3,7 +3,7 @@ import { CancellationError } from '../../errors/CancellationError';
 import { ISlackIM } from '../../interfaces/ISlackIm';
 import { ISlackUser } from '../../interfaces/ISlackUser';
 import { ISlackUserWithIM } from '../../interfaces/ISlackUserWithIM';
-import { SLACK_EMOJI_MAP } from '../../slack/constants';
+import { renderSlackStatus } from '../../utils/renderSlackStatus';
 import { getUsersWithIms } from './getUsersWithIms';
 
 export const getSlackUserChannel = async (
@@ -17,9 +17,10 @@ export const getSlackUserChannel = async (
     const options = users
         .map((user) => {
             const { profile } = user;
-            const description = `${SLACK_EMOJI_MAP[profile.status_emoji]} ${
-                profile.status_text
-            }`;
+            const { status_emoji, status_text } = profile;
+
+            const description = renderSlackStatus(status_emoji, status_text);
+
             return {
                 label: user.real_name,
                 description,

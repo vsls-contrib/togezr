@@ -1,6 +1,6 @@
 import { IAccountRecord } from '../../interfaces/IAccountRecord';
 import { ISlackUserWithIM } from '../../interfaces/ISlackUserWithIM';
-import { SLACK_EMOJI_MAP } from '../../slack/constants';
+import { renderSlackStatus } from '../../utils/renderSlackStatus';
 import { ShareIntoTreeItem } from '../ShareIntoTreeItem';
 
 export class SlackUserTreeItem extends ShareIntoTreeItem {
@@ -8,9 +8,8 @@ export class SlackUserTreeItem extends ShareIntoTreeItem {
         super(user.real_name || user.name);
 
         const { profile } = user;
+        const { status_emoji, status_text } = profile;
 
-        this.description = `${SLACK_EMOJI_MAP[profile.status_emoji]} ${
-            profile.status_text
-        }`;
+        this.description = renderSlackStatus(status_emoji, status_text);
     }
 }
