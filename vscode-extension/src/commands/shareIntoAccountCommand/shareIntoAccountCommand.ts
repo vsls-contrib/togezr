@@ -52,9 +52,9 @@ export const shareIntoAccountCommand = async () => {
         throw new CancellationError('No slack channel selected.');
     }
 
-    await startLSSession(isReadOnlySession);
     const lsAPI = lsApi();
-
     const session = new SlackChannelSession(slackChannel, [], lsAPI);
+
+    await startLSSession(isReadOnlySession, session.sessionId);
     await session.init();
 };

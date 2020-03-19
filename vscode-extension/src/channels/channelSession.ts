@@ -5,7 +5,6 @@ import { MINUTE_MS } from '../constants';
 import { TChannel } from '../interfaces/TChannel';
 import * as memento from '../memento';
 import { ISessionEvent } from '../sessionConnectors/renderer/events';
-import { hashString } from '../utils/hashString';
 
 const HEARTBEAT_INTERVAL = 1000;
 const CHANNEL_SESSION_PREFIX = 'togezr.channel.session';
@@ -15,11 +14,14 @@ type TPrimitive = string | number | boolean;
 export interface IChannelMementoRecord {
     timestamp: number;
     events: ISessionEvent[];
+    sessionId?: string;
     data?: { [key: string]: TPrimitive };
 }
 
 export class ChannelSession {
     public events: ISessionEvent[] = [];
+
+    public sessionId?: string;
 
     public isDisposed: boolean = false;
 
@@ -34,7 +36,7 @@ export class ChannelSession {
         public siblingChannels: ChannelSession[],
         public vslsAPI: vsls.LiveShare
     ) {
-        const { account } = this.channel;
+        const { account, type } = this.channel;
         if (!account) {
             throw new Error(
                 `No account found for the channel "${channel.type}".`
@@ -53,13 +55,17 @@ export class ChannelSession {
             throw new Error('Cannot get workspace path.');
         }
 
-        const hashedPath = hashString(path);
-        this.id = `${CHANNEL_SESSION_PREFIX}.${hashedPath}`;
+        const suffix =
+            this.channel.type === 'slack-user'
+                ? this.channel.user.im.id
+                : this.channel.channel.id;
+
+        this.id = `${CHANNEL_SESSION_PREFIX}.${type}.${account.name}.${suffix}`;
 
         this.readExistingRecord();
     }
 
-    public readExistingRecord = () => {
+    public readExistingRecord() {
         if (!this.id) {
             throw new Error('Calculate channel session id first.');
         }
@@ -71,13 +77,18 @@ export class ChannelSession {
 
         const delta = Date.now() - record.timestamp;
         if (delta >= this.mementoRecordExpirationThreshold) {
-            memento.remove(this.id);
+            this.deleteExistingRecord();
             return null;
         }
 
         this.events = record.events;
+        this.sessionId = record.sessionId;
 
         return record;
+    }
+
+    public deleteExistingRecord = () => {
+        memento.remove(this.id);
     };
 
     public init = async () => {
@@ -85,6 +96,8 @@ export class ChannelSession {
         if (!session.id || !session.user) {
             throw new Error('No LiveShare session found.');
         }
+
+        this.sessionId = session.id;
 
         const startEventType = this.events.length
             ? 'restart-session'
@@ -105,6 +118,7 @@ export class ChannelSession {
                 });
 
                 await this.dispose();
+                return;
             }
         });
 
@@ -180,6 +194,7 @@ export class ChannelSession {
         const record: IChannelMementoRecord = {
             timestamp: Date.now(),
             events: this.events,
+            sessionId: this.sessionId,
         };
 
         const pipedRecord = this.onPersistData(record);

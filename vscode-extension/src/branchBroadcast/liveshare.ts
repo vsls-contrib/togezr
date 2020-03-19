@@ -118,7 +118,10 @@ export const startLiveShareSession = async (id: string) => {
     return sharedSessionUrl;
 };
 
-export const startLSSession = async (isReadOnly: boolean) => {
+export const startLSSession = async (
+    isReadOnly: boolean,
+    sessionId?: string
+) => {
     if (!vslsApi) {
         throw new Error(
             'No LiveShare API found, call `initializeLiveShare` first.'
@@ -126,20 +129,13 @@ export const startLSSession = async (isReadOnly: boolean) => {
     }
 
     const access = isReadOnly ? vsls.Access.ReadOnly : vsls.Access.ReadWrite;
-
     const sharedSessionUrl: vscode.Uri | null = await vslsApi.share({
         isPersistent: true,
+        sessionId,
         access,
     });
 
-    return sharedSessionUrl;
-
-    // refreshActivityBar();
-
-    // const host = vslsApi.session.user;
-    // if (!host || !host.id || !host.emailAddress) {
-    //     throw new Error('No host found in the session.');
-    // }
+    return sharedSessionUrl?.path;
 };
 
 export const lsApi = () => {

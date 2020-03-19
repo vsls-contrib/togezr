@@ -11,6 +11,7 @@ import { ChannelSession, IChannelMementoRecord } from './ChannelSession';
 export class SlackChannelSession extends ChannelSession {
     private slackAPI: WebClient | null = null;
     private messageTs?: string;
+
     get api() {
         if (!this.slackAPI) {
             throw new Error('Call "initSlackAPI" first.');
@@ -110,20 +111,7 @@ export class SlackChannelSession extends ChannelSession {
         );
     };
 
-    public onPersistData = (record: IChannelMementoRecord) => {
-        if (!this.messageTs) {
-            return record;
-        }
-
-        return {
-            ...record,
-            data: {
-                ts: this.messageTs,
-            },
-        };
-    };
-
-    public readExistingRecord = () => {
+    public readExistingRecord() {
         const record = super.readExistingRecord();
         if (!record) {
             return null;
@@ -135,10 +123,26 @@ export class SlackChannelSession extends ChannelSession {
         }
 
         const { ts } = data;
-        if (typeof ts === 'string') {
-            this.messageTs = ts;
+        if (typeof ts !== 'string') {
+            this.deleteExistingRecord();
+            return null;
         }
 
+        this.messageTs = ts;
+
         return record;
+    }
+
+    public onPersistData = (record: IChannelMementoRecord) => {
+        if (!this.messageTs) {
+            return record;
+        }
+
+        return {
+            ...record,
+            data: {
+                ts: this.messageTs,
+            },
+        };
     };
 }
