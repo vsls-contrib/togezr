@@ -1,4 +1,4 @@
-import { IAccountRecord } from '../interfaces/IAccountRecord';
+import { IAccountRecord, TAccountRecord } from '../interfaces/IAccountRecord';
 import * as keytar from '../keytar';
 import * as memento from '../memento';
 import { arrayUnique } from '../utils/arrayUnique';
@@ -13,7 +13,7 @@ export class AccountsKeychain {
 
     public getAccount = async (
         name: string
-    ): Promise<IAccountRecord | null> => {
+    ): Promise<TAccountRecord | null> => {
         const accountJSON = await keytar.get(this.getAccountKey(name));
 
         if (!accountJSON) {
@@ -49,10 +49,10 @@ export class AccountsKeychain {
         this.removeAccountName(name);
     };
 
-    public getAllAccounts = async (): Promise<IAccountRecord[]> => {
+    public getAllAccounts = async (): Promise<TAccountRecord[]> => {
         const accountNames = this.getAccountNames();
 
-        const resultPromises: Promise<IAccountRecord>[] = accountNames.map(
+        const resultPromises: Promise<TAccountRecord>[] = accountNames.map(
             async (name: string) => {
                 const account = await this.getAccount(name);
 

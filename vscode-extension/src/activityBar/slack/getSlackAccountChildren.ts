@@ -1,5 +1,5 @@
 import { getUsersWithIms } from '../../commands/shareIntoAccountCommand/getUsersWithIms';
-import { IAccountRecord } from '../../interfaces/IAccountRecord';
+import { ISlackAccountRecord } from '../../interfaces/IAccountRecord';
 import { ISlackImsWebCallResult } from '../../interfaces/ISlackUserWithIM';
 import { getSlackAPI } from '../../slack/api';
 import { ISlackChannelsWebCallResult } from './interfaces/ISlackChannelsWebCallResult';
@@ -8,7 +8,7 @@ import { slackAccountCache } from './slackAccountCache';
 import { SlackChannelsTreeItem } from './SlackChannelsTreeItem';
 import { SlackUsersTreeItem } from './SlackUsersTreeItem';
 
-export const getSlackAccountChildren = async (account: IAccountRecord) => {
+export const getSlackAccountChildren = async (account: ISlackAccountRecord) => {
     const { name } = account;
 
     const api = await getSlackAPI(name);
@@ -31,13 +31,13 @@ export const getSlackAccountChildren = async (account: IAccountRecord) => {
 
     const users = getUsersWithIms(existingUsers, ims);
 
-    const cleanChannles = channels.filter(
-        (ch) => !ch.unlinked && !ch.is_archived
-    );
+    const cleanChannels = channels.filter((ch) => {
+        return !ch.unlinked && !ch.is_archived;
+    });
 
     slackAccountCache[name] = {
         users,
-        channels: cleanChannles,
+        channels: cleanChannels,
     };
 
     if (users.length) {

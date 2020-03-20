@@ -1,6 +1,7 @@
 import { addAccountCommand } from './addAccountCommand';
 import { addConnectorCommand } from './addConnectorCommand';
 import { disconnectBranchCommand } from './disconnectBranch';
+import { openAccountInBrowserCommand } from './openAccountInBrowserCommand';
 import {
     openConnectorInBrowserCommand,
     openInBrowserCommand,
@@ -34,4 +35,5 @@ export const registerCommands = () => {
 
     registerCommand('togezr.addAccount', addAccountCommand);
     registerCommand('togezr.removeAccount', removeAccountCommand);
+    registerCommand('togezr.openAccountInBrowser', openAccountInBrowserCommand);
 };

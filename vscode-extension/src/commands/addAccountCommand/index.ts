@@ -2,10 +2,13 @@ import * as vscode from 'vscode';
 import { accountsKeychain } from '../../accounts/accountsKeychain';
 import { refreshActivityBar } from '../../activityBar/activityBar';
 import { CancellationError } from '../../errors/CancellationError';
+import { ISlackTeam } from '../../interfaces/ISlackTeam';
+import { ISlackTeamInfoWebCallResult } from '../../interfaces/ISlackUserWithIM';
 import {
     KNOWN_ACCOUNT_TYPES,
     TAccountType,
 } from '../../interfaces/TAccountType';
+import { getSlackAPIByToken } from '../../slack/api';
 
 const findNewAccountName = async (
     name: string,
@@ -25,8 +28,11 @@ const findNewAccountName = async (
     return accountName;
 };
 
-const getAccountName = async (name: string): Promise<string> => {
-    const inputValue = await findNewAccountName(name);
+const getAccountName = async (
+    name: string,
+    defaultName?: string
+): Promise<string> => {
+    const inputValue = await findNewAccountName(defaultName || name);
 
     const inputName = await vscode.window.showInputBox({
         prompt: 'What is the account name?',
@@ -64,8 +70,6 @@ export const addAccountCommand = async () => {
         }
     }
 
-    const name = await getAccountName(type);
-
     const token = await vscode.window.showInputBox({
         prompt: 'Provide token for this account',
         ignoreFocusOut: true,
@@ -75,11 +79,35 @@ export const addAccountCommand = async () => {
         throw new CancellationError();
     }
 
-    await accountsKeychain.addAccount({
+    let slackTeam: ISlackTeam | undefined;
+
+    if (type === 'Slack') {
+        const api = await getSlackAPIByToken(token);
+        const teamInfoResponse: ISlackTeamInfoWebCallResult = await api.team.info();
+
+        if (!teamInfoResponse.ok) {
+            throw new Error('Cannot get Slack team info.');
+        }
+
+        const { team } = teamInfoResponse;
+        if (!team) {
+            throw new Error(
+                'Got teams response from Slack API, but no "team" property set.'
+            );
+        }
+        slackTeam = team;
+    }
+
+    const name = await getAccountName(type, slackTeam?.name);
+
+    const account = {
         type,
         name,
         token,
-    });
+        team: slackTeam,
+    };
+
+    await accountsKeychain.addAccount(account);
 
     vscode.window.showInformationMessage(`Account "${name}" added.`);
 

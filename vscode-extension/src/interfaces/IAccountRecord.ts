@@ -1,9 +1,15 @@
+import { ISlackTeam } from './ISlackTeam';
 import {
     GITHUB_ACCOUNT_TYPE,
     SLACK_ACCOUNT_TYPE,
     TAccountType,
     TEAMS_ACCOUNT_TYPE,
 } from './TAccountType';
+
+export type TAccountRecord =
+    | ISlackAccountRecord
+    | ITeamsAccountRecord
+    | IGitHubAccountRecord;
 
 export interface IAccountRecord {
     type: TAccountType;
@@ -13,6 +19,7 @@ export interface IAccountRecord {
 
 export interface ISlackAccountRecord extends IAccountRecord {
     type: typeof SLACK_ACCOUNT_TYPE;
+    team: ISlackTeam;
 }
 
 export interface ITeamsAccountRecord extends IAccountRecord {

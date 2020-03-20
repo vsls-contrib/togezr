@@ -1,5 +1,5 @@
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { IAccountRecord } from '../../interfaces/IAccountRecord';
+import { ISlackAccountRecord } from '../../interfaces/IAccountRecord';
 import { getIconPack } from '../../utils/icons';
 import { TSlackAccountSubsections } from './interfaces/TSlackAccountSubsections';
 export class SlackChannelsTreeItem extends TreeItem {
@@ -7,7 +7,7 @@ export class SlackChannelsTreeItem extends TreeItem {
 
     constructor(
         public itemId: string,
-        public account: IAccountRecord,
+        public account: ISlackAccountRecord,
         label: string = 'Channels'
     ) {
         super(label, TreeItemCollapsibleState.Expanded);

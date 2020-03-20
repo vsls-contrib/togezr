@@ -16,6 +16,7 @@ export const CommandId = {
     openConnectorInBrowser: 'togezr.openConnectorInBrowser',
     addAccount: 'togezr.addAccount',
     removeAccount: 'togezr.removeAccount',
+    openAccountInBrowser: 'togezr.openAccountInBrowser',
 } as const;
 
 export async function registerCommand(
@@ -65,6 +66,10 @@ export async function registerCommand(
 export async function registerCommand(
     name: typeof CommandId.shareIntoAccount,
     command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.openAccountInBrowser,
+    command: (treeItem: any) => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(name: any, command: any) {
     const wrappedCommand = createCommand(command);

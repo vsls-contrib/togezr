@@ -10,6 +10,7 @@ export interface ISlackUserProfile {
     status_text: string;
     status_text_canonical: string;
     team: string;
+    always_active: boolean;
 }
 
 export interface ISlackUser {

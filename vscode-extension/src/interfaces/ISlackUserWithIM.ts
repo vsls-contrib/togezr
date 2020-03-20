@@ -1,5 +1,6 @@
 import { WebAPICallResult } from '@slack/web-api';
 import { ISlackIM } from './ISlackIm';
+import { ISlackTeam } from './ISlackTeam';
 import { ISlackUser } from './ISlackUser';
 
 export interface ISlackUserWithIM extends ISlackUser {
@@ -12,4 +13,8 @@ export interface ISlackUsersWebCallResult extends WebAPICallResult {
 
 export interface ISlackImsWebCallResult extends WebAPICallResult {
     ims?: ISlackIM[];
+}
+
+export interface ISlackTeamInfoWebCallResult extends ISlackImsWebCallResult {
+    team?: ISlackTeam;
 }

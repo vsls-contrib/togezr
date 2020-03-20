@@ -29,6 +29,7 @@ import { getSlackChannels } from './slack/getSlackChannels';
 import { getSlackUsers } from './slack/getSlackUsers';
 import { resetSlackAccountCache } from './slack/slackAccountCache';
 import { SlackChannelsTreeItem } from './slack/SlackChannelsTreeItem';
+import { slackUserStatusRepository } from './slack/slackUserStatusRepository';
 import { SlackUsersTreeItem } from './slack/SlackUsersTreeItem';
 
 const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
@@ -241,8 +242,15 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
         CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
 
-        // ACCOUNTS_ITEM.iconPath = getIconPack('account-icon.svg');
         ACCOUNTS_ITEM.contextValue = 'togezr.accounts.header';
+
+        slackUserStatusRepository.onUserStatus(() => {
+            this._onDidChangeTreeData.fire();
+        });
+
+        setInterval(async () => {
+            await slackUserStatusRepository.refreshStatuses();
+        }, 5000);
     }
 
     public refresh() {
