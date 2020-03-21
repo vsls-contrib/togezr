@@ -17,13 +17,23 @@ export class SlackUserTreeItem extends ShareIntoTreeItem {
 
         this.description = renderSlackStatus(status_emoji, status_text);
 
+        const cachedStatus = slackUserStatusRepository.getCachedStatus(user.id);
+
+        let name =
+            cachedStatus.status !== 'unknown'
+                ? `${this.label} (${cachedStatus.status})`
+                : this.label;
+
         if (user.is_bot || user.profile.always_active) {
             this.iconPath = getIconPack('presence-status-active-icon.svg');
-            return;
+            name = `${this.label} (active)`;
+        } else {
+            this.getUserPresenceIcon(cachedStatus.status);
         }
 
-        const cachedStatus = slackUserStatusRepository.getCachedStatus(user.id);
-        this.getUserPresenceIcon(cachedStatus.status);
+        this.tooltip = this.description
+            ? `${name} • ${this.description}`
+            : name;
     }
 
     private getUserPresenceIcon = (status: TUserPresenceStatus) => {

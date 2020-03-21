@@ -15,6 +15,10 @@ export class SlackChannelTreeItem extends ShareIntoTreeItem {
 
         this.description = topic.value;
 
+        this.tooltip = this.description
+            ? `${this.label} • ${this.description}`
+            : this.label;
+
         this.channel = channel;
         this.account = account;
     }

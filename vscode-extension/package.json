@@ -148,6 +148,15 @@
                     "dark": "images/dark/cross-icon.svg",
                     "light": "images/light/cross-icon.svg"
                 }
+            },
+            {
+                "command": "togezr.addGitHubAccountRepo",
+                "title": "Add repo",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/cross-icon.svg",
+                    "light": "images/light/cross-icon.svg"
+                }
             }
         ],
         "menus": {
@@ -211,6 +220,10 @@
                 {
                     "command": "togezr.startBranchConnectionSession",
                     "when": "false"
+                },
+                {
+                    "command": "togezr.addGitHubAccountRepo",
+                    "when": "false"
                 }
             ]
         },
@@ -258,6 +271,7 @@
         "webpack-merge": "^4.2.2"
     },
     "dependencies": {
+        "@octokit/rest": "^17.1.1",
         "@slack/web-api": "^5.8.0",
         "@types/uuid": "^3.4.7",
         "emoji-js": "^3.5.0",

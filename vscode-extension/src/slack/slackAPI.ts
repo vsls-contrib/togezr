@@ -15,7 +15,7 @@ export const getSlackAPI = async (accountName: string) => {
     const account = await accountsKeychain.getAccount(accountName);
 
     if (!account) {
-        throw new Error(`No "${accountName}" found.`);
+        throw new Error(`No "${accountName}" of type found.`);
     }
 
     const webApi = new WebClient(account.token, {

@@ -7,7 +7,7 @@ import {
     ISlackUsersWebCallResult,
 } from '../../interfaces/ISlackUserWithIM';
 import { TSlackChannel } from '../../interfaces/TSlackChannel';
-import { getSlackAPI } from '../../slack/api';
+import { getSlackAPI } from '../../slack/slackAPI';
 import { getSlackChannelChannel } from './getSlackChannelChannel';
 import { getSlackUserChannel } from './getSlackUserChannel';
 

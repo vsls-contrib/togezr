@@ -1,7 +1,7 @@
 import { getUsersWithIms } from '../../commands/shareIntoAccountCommand/getUsersWithIms';
 import { ISlackAccountRecord } from '../../interfaces/IAccountRecord';
 import { ISlackImsWebCallResult } from '../../interfaces/ISlackUserWithIM';
-import { getSlackAPI } from '../../slack/api';
+import { getSlackAPI } from '../../slack/slackAPI';
 import { ISlackChannelsWebCallResult } from './interfaces/ISlackChannelsWebCallResult';
 import { ISlackUsersWebCallResult } from './interfaces/ISlackUsersWebCallResult';
 import { slackAccountCache } from './slackAccountCache';

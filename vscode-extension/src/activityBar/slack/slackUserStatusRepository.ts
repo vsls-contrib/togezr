@@ -1,7 +1,7 @@
 import { WebAPICallResult, WebClient } from '@slack/web-api';
 import { EventEmitter } from 'vscode';
 import { SECOND_MS } from '../../constants';
-import { getSlackAPI } from '../../slack/api';
+import { getSlackAPI } from '../../slack/slackAPI';
 
 export type TUserPresenceStatus = 'active' | 'away' | 'unknown';
 

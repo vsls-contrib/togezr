@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { IGitHubAccountRecord } from '../interfaces/IAccountRecord';
 import { createCommand } from './createCommand';
 import { IRegisterBranchOptions } from './registerBranch';
 
@@ -17,6 +18,7 @@ export const CommandId = {
     addAccount: 'togezr.addAccount',
     removeAccount: 'togezr.removeAccount',
     openAccountInBrowser: 'togezr.openAccountInBrowser',
+    addGitHubAccountRepo: 'togezr.addGitHubAccountRepo',
 } as const;
 
 export async function registerCommand(
@@ -70,6 +72,10 @@ export async function registerCommand(
 export async function registerCommand(
     name: typeof CommandId.openAccountInBrowser,
     command: (treeItem: any) => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.addGitHubAccountRepo,
+    command: (account: IGitHubAccountRecord) => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(name: any, command: any) {
     const wrappedCommand = createCommand(command);

@@ -8,7 +8,7 @@ import {
     KNOWN_ACCOUNT_TYPES,
     TAccountType,
 } from '../../interfaces/TAccountType';
-import { getSlackAPIByToken } from '../../slack/api';
+import { getSlackAPIByToken } from '../../slack/slackAPI';
 
 const findNewAccountName = async (
     name: string,

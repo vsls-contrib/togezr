@@ -5,7 +5,7 @@ import {
     ISessionEvent,
     ISessionStartEvent,
 } from '../sessionConnectors/renderer/events';
-import { getSlackAPI } from '../slack/api';
+import { getSlackAPI } from '../slack/slackAPI';
 import { ChannelSession, IChannelMementoRecord } from './ChannelSession';
 
 export class SlackChannelSession extends ChannelSession {
