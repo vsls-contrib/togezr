@@ -188,7 +188,7 @@
                 },
                 {
                     "command": "togezr.openAccountInBrowser",
-                    "when": "viewItem == togezr.account.channel.tree.item",
+                    "when": "viewItem == togezr.account.channel.tree.item || viewItem == togezr.account.channel.tree.item.openable",
                     "group": "inline@1"
                 },
                 {

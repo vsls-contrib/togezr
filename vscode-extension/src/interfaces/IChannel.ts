@@ -1,7 +1,7 @@
 import { IAccountRecord } from './IAccountRecord';
-import { TSlackChannelType } from './TSlackChannelType';
+import { TChannelType } from './TChannel';
 
 export interface IChannel {
-    type: TSlackChannelType;
+    type: TChannelType;
     account: IAccountRecord;
 }

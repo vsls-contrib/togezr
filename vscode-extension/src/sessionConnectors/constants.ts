@@ -9,4 +9,5 @@ export const DEFAULT_GITHUB_AVATAR =
 
 export const TreeItemContext = {
     ShareIntoTreeItem: 'togezr.account.channel.tree.item',
+    OpenInBrowserItem: 'togezr.account.channel.tree.item.openable',
 } as const;

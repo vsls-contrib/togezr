@@ -1,8 +1,8 @@
-import { SLACK_USER_CHANNEL_TYPE } from '../commands/shareIntoAccountCommand/shareIntoAccountCommand';
 import { IChannel } from './IChannel';
 import { ISlackUserWithIM } from './ISlackUserWithIM';
+import { TSlackUserChannelType } from './TSlackChannel';
 
 export interface ISlackUserChannel extends IChannel {
-    type: typeof SLACK_USER_CHANNEL_TYPE;
+    type: TSlackUserChannelType;
     user: ISlackUserWithIM;
 }

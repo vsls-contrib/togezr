@@ -25,6 +25,8 @@ import { getIconPack } from '../utils/icons';
 import { isCurrentBranchInRegistryData } from '../utils/isCurrentBranchInRegistryData';
 import { AccountTreeItem } from './accounts/AccountTreeItem';
 import { getAccountChildren } from './accounts/getAccountChildren';
+import { getGitHubRepoIssues } from './github/getGitHubRepoIssues';
+import { GitHubAccountRepoTreeItem } from './github/GitHubAccountRepoTreeItem';
 import { getSlackChannels } from './slack/getSlackChannels';
 import { getSlackUsers } from './slack/getSlackUsers';
 import { resetSlackAccountCache } from './slack/slackAccountCache';
@@ -39,12 +41,12 @@ const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
 
 const BRANCH_CONNECTIONS_ITEM = new TreeItem(
     'Branch connections',
-    TreeItemCollapsibleState.Expanded
+    TreeItemCollapsibleState.Collapsed
 );
 
 const CONNECTORS_ITEM = new TreeItem(
     'Connectors',
-    TreeItemCollapsibleState.Expanded
+    TreeItemCollapsibleState.Collapsed
 );
 
 const ACCOUNTS_ITEM = new TreeItem(
@@ -295,7 +297,7 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             return [
                 new BranchConnectionTreeItem(
                     runningItem[1],
-                    TreeItemCollapsibleState.Expanded
+                    TreeItemCollapsibleState.Collapsed
                 ),
             ];
         }
@@ -381,6 +383,10 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
 
         if (element instanceof AccountTreeItem) {
             return await getAccountChildren(element);
+        }
+
+        if (element instanceof GitHubAccountRepoTreeItem) {
+            return await getGitHubRepoIssues(element);
         }
 
         if (element instanceof SlackUsersTreeItem) {

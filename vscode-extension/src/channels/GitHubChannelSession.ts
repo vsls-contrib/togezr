@@ -1,21 +1,17 @@
 import { WebClient } from '@slack/web-api';
 import * as vsls from 'vsls';
-import { TSlackChannel } from '../interfaces/TSlackChannel';
-import { renderSlackComment } from '../renderers/slack/renderSlackComment';
+import { TGitHubChannel } from '../interfaces/TGitHubChannel';
 import { renderSlackEventReply } from '../renderers/slack/renderSlackEventReply';
-import {
-    ISessionEvent,
-    ISessionStartEvent,
-} from '../sessionConnectors/renderer/events';
+import { ISessionEvent } from '../sessionConnectors/renderer/events';
 import { getSlackAPI } from '../slack/slackAPI';
 import { ChannelSession, IChannelMementoRecord } from './ChannelSession';
 
-export class SlackChannelSession extends ChannelSession {
+export class GitHubChannelSession extends ChannelSession {
     private slackAPI: WebClient | null = null;
     private messageTs?: string;
 
     constructor(
-        public channel: TSlackChannel,
+        public channel: TGitHubChannel,
         public siblingChannels: ChannelSession[],
         public vslsAPI: vsls.LiveShare
     ) {
@@ -42,10 +38,10 @@ export class SlackChannelSession extends ChannelSession {
         await super.onEvent(e);
         await this.ensureSlackAPI();
 
-        if (e.type !== 'commit-push') {
-            const comment = await renderSlackComment(this.events, this.channel);
-            await this.updateSlackComment(comment);
-        }
+        // if (e.type !== 'commit-push') {
+        //     const comment = await renderSlackComment(this.events, this.channel);
+        //     await this.updateSlackComment(comment);
+        // }
 
         /**
          * Don't add comment for end session, this should be
@@ -60,27 +56,27 @@ export class SlackChannelSession extends ChannelSession {
         await this.addSlackReplyOnComment(e);
     }
 
-    private updateSlackComment = async (commentBody: any[]) => {
-        const channelId = this.getChannelId();
+    // private updateSlackComment = async (commentBody: any[]) => {
+    //     const channelId = this.getChannelId();
 
-        const startSession = this.events[0] as ISessionStartEvent;
-        const message = {
-            channel: channelId,
-            text: `${startSession.user.displayName} started Live Share session`,
-            blocks: commentBody,
-            mrkdwn: true,
-        };
+    //     const startSession = this.events[0] as ISessionStartEvent;
+    //     const message = {
+    //         channel: channelId,
+    //         text: `${startSession.user.displayName} started Live Share session`,
+    //         blocks: commentBody,
+    //         mrkdwn: true,
+    //     };
 
-        const result = this.messageTs
-            ? await this.api.chat.update({ ...message, ts: this.messageTs })
-            : await this.api.chat.postMessage(message);
+    //     const result = this.messageTs
+    //         ? await this.api.chat.update({ ...message, ts: this.messageTs })
+    //         : await this.api.chat.postMessage(message);
 
-        if (!result.ok) {
-            throw new Error('Cannot update Slack comment.');
-        }
-        const ts = result.ts as string | undefined;
-        this.messageTs = this.messageTs || ts;
-    };
+    //     if (!result.ok) {
+    //         throw new Error('Cannot update Slack comment.');
+    //     }
+    //     const ts = result.ts as string | undefined;
+    //     this.messageTs = this.messageTs || ts;
+    // };
 
     private addSlackReplyOnComment = async (event: ISessionEvent) => {
         // do not render session start event
@@ -108,13 +104,13 @@ export class SlackChannelSession extends ChannelSession {
     };
 
     private getChannelId = () => {
-        if (this.channel.type === 'slack-user') {
-            return this.channel.user.im.id;
-        }
+        // if (this.channel.type === 'slack-user') {
+        //     return this.channel.user.im.id;
+        // }
 
-        if (this.channel.type === 'slack-channel') {
-            return this.channel.channel.id;
-        }
+        // if (this.channel.type === 'slack-channel') {
+        //     return this.channel.channel.id;
+        // }
 
         throw new Error(
             `Unknown channel type "${(this.channel as any).type}".`

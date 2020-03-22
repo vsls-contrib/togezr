@@ -1,6 +1,5 @@
 import { SlackChannelTreeItem } from '../../activityBar/slack/SlackChannelTreeItem';
 import { SlackUserTreeItem } from '../../activityBar/slack/SlackUserTreeItem';
-import { TChannel } from '../../interfaces/TChannel';
 import { TSlackChannel } from '../../interfaces/TSlackChannel';
 
 type TShareIntoTreeItem = SlackUserTreeItem | SlackChannelTreeItem;
@@ -34,7 +33,9 @@ const isSlackTreeItem = (item: TShareIntoTreeItem): boolean => {
     );
 };
 
-export const getChannelFromTreeItem = (item: TShareIntoTreeItem): TChannel => {
+export const getSlackChannelFromTreeItem = (
+    item: TShareIntoTreeItem
+): TSlackChannel => {
     if (isSlackTreeItem(item)) {
         return getChannelFromSlackTreeitem(item);
     }

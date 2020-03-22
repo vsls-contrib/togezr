@@ -31,6 +31,28 @@ export class ChannelSession {
 
     private mementoRecordExpirationThreshold: number = 3 * MINUTE_MS;
 
+    private getMementoId = () => {
+        switch (this.channel.type) {
+            case 'slack-user': {
+                return this.channel.user.im.id;
+            }
+
+            case 'slack-channel': {
+                return this.channel.channel.id;
+            }
+
+            case 'github-issue': {
+                return this.channel.issue.html_url;
+            }
+
+            default: {
+                throw new Error(
+                    `Unknown channel session type ${(this.channel as any).type}`
+                );
+            }
+        }
+    };
+
     constructor(
         public channel: TChannel,
         public siblingChannels: ChannelSession[],
@@ -55,11 +77,7 @@ export class ChannelSession {
             throw new Error('Cannot get workspace path.');
         }
 
-        const suffix =
-            this.channel.type === 'slack-user'
-                ? this.channel.user.im.id
-                : this.channel.channel.id;
-
+        const suffix = this.getMementoId();
         this.id = `${CHANNEL_SESSION_PREFIX}.${type}.${account.name}.${suffix}`;
 
         this.readExistingRecord();
