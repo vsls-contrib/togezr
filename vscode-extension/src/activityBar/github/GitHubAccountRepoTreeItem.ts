@@ -11,12 +11,15 @@ export class GitHubAccountRepoTreeItem extends TreeItem {
     ) {
         super(repo.name, TreeItemCollapsibleState.Expanded);
 
-        this.description = this.repo.description;
-        this.iconPath = getIconPack('repo-icon.svg');
+        const stars = `[✭ ${repo.stargazers_count}]`;
+
+        this.description = `${stars} ${this.repo.description}`;
+
         this.tooltip = this.repo.description
             ? `${this.label} • ${this.description}`
             : this.label;
 
+        this.iconPath = getIconPack('repo-icon.svg');
         this.contextValue = TreeItemContext.GitHubAccountRepoTreeItem;
     }
 }

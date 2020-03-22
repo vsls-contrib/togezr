@@ -22,6 +22,7 @@ export interface IGithubRepo {
     owner: IGitHubUser;
     updated_at: string;
     pushed_at: string;
+    stargazers_count: number;
     // "id": 108537191,
     // "node_id": "MDEwOlJlcG9zaXRvcnkxMDg1MzcxOTE=",
     // "name": "EntityFramework.Docs.pl-pl",

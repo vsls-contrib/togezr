@@ -30,6 +30,16 @@ export class AccountTreeItem extends TreeItem {
             return 'togezr.account.github';
         }
 
-        return 'togezr.account';
+        if (this.account.type === 'Slack') {
+            return 'togezr.account.slack';
+        }
+
+        if (this.account.type === 'Teams') {
+            return 'togezr.account.teams';
+        }
+
+        throw new Error(
+            `Unknown account type "${(this.account as any).type}".`
+        );
     }
 }
