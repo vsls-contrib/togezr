@@ -18,6 +18,13 @@ export interface IChannelMementoRecord {
     data?: { [key: string]: TPrimitive };
 }
 
+const userPlaceholder = {
+    displayName: 'Oleg Solomka',
+    userName: 'legomushroom',
+    emailAddress: 'legomushroom@gmail.com',
+    id: 'olsolomk',
+};
+
 export class ChannelSession {
     public events: ISessionEvent[] = [];
 
@@ -111,7 +118,7 @@ export class ChannelSession {
 
     public init = async () => {
         const { session } = this.vslsAPI;
-        if (!session.id || !session.user) {
+        if (!session.id) {
             throw new Error('No LiveShare session found.');
         }
 
@@ -121,10 +128,13 @@ export class ChannelSession {
             ? 'restart-session'
             : 'start-session';
 
+        // TODO: for some reason LS does not give the user id anymore
+        const user = session.user || userPlaceholder;
+
         this.onEvent({
             type: startEventType,
             sessionId: session.id,
-            user: session.user,
+            user,
             timestamp: Date.now(),
         });
 
@@ -152,13 +162,14 @@ export class ChannelSession {
             const userAdded = e.added[0];
             const { user } = userAdded;
 
-            if (!user || !user.id) {
-                throw new Error('User not found or joined without id.');
-            }
+            // TODO LS stopped returning the user object
+            // if (!user || !user.id) {
+            //     throw new Error('User not found or joined without id.');
+            // }
 
             await this.onEvent({
                 type: 'guest-join',
-                user,
+                user: user || userPlaceholder,
                 timestamp: Date.now(),
             });
         });

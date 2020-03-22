@@ -1,4 +1,3 @@
-import { WebClient } from '@slack/web-api';
 import * as vsls from 'vsls';
 import { TSlackChannel } from '../interfaces/TSlackChannel';
 import { renderSlackComment } from '../renderers/slack/renderSlackComment';
@@ -11,7 +10,6 @@ import { getSlackAPI } from '../slack/slackAPI';
 import { ChannelSession, IChannelMementoRecord } from './ChannelSession';
 
 export class SlackChannelSession extends ChannelSession {
-    private slackAPI: WebClient | null = null;
     private messageTs?: string;
 
     constructor(
@@ -22,25 +20,8 @@ export class SlackChannelSession extends ChannelSession {
         super(channel, siblingChannels, vslsAPI);
     }
 
-    get api() {
-        if (!this.slackAPI) {
-            throw new Error('Call "initSlackAPI" first.');
-        }
-
-        return this.slackAPI;
-    }
-
-    private ensureSlackAPI = async () => {
-        if (this.slackAPI) {
-            return;
-        }
-
-        this.slackAPI = await getSlackAPI(this.channel.account.name);
-    };
-
     public async onEvent(e: ISessionEvent) {
         await super.onEvent(e);
-        await this.ensureSlackAPI();
 
         if (e.type !== 'commit-push') {
             const comment = await renderSlackComment(this.events, this.channel);
@@ -61,6 +42,7 @@ export class SlackChannelSession extends ChannelSession {
     }
 
     private updateSlackComment = async (commentBody: any[]) => {
+        const api = await getSlackAPI(this.channel.account.name);
         const channelId = this.getChannelId();
 
         const startSession = this.events[0] as ISessionStartEvent;
@@ -72,8 +54,8 @@ export class SlackChannelSession extends ChannelSession {
         };
 
         const result = this.messageTs
-            ? await this.api.chat.update({ ...message, ts: this.messageTs })
-            : await this.api.chat.postMessage(message);
+            ? await api.chat.update({ ...message, ts: this.messageTs })
+            : await api.chat.postMessage(message);
 
         if (!result.ok) {
             throw new Error('Cannot update Slack comment.');
@@ -83,6 +65,8 @@ export class SlackChannelSession extends ChannelSession {
     };
 
     private addSlackReplyOnComment = async (event: ISessionEvent) => {
+        const api = await getSlackAPI(this.channel.account.name);
+
         // do not render session start event
         if (event.type === 'start-session') {
             return;
@@ -93,7 +77,7 @@ export class SlackChannelSession extends ChannelSession {
         }
 
         const message = await renderSlackEventReply(event, this.events);
-        const result = await this.api.chat.postMessage({
+        const result = await api.chat.postMessage({
             channel: this.getChannelId(),
             ...message,
             mrkdwn: true,

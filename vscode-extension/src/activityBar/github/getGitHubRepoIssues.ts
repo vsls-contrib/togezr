@@ -8,7 +8,7 @@ export const getGitHubRepoIssues = async (
     const { account, repo } = element;
     const issues = await gitHubIssuesRetriever.getIssues(account, repo);
     const treeItems = issues.map((issue) => {
-        return new GitHubAccountRepoIssueTreeItem(repo, issue);
+        return new GitHubAccountRepoIssueTreeItem(account, repo, issue);
     });
     return treeItems;
 };

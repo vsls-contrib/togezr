@@ -12,8 +12,6 @@ import {
 import { renderLiveShareCompactBadge } from './renderLiveShareCompactBadge';
 
 export class GithubCommentRenderer {
-    constructor() {}
-
     private async renderAllSessionUsers(
         guests: (ISessionUserJoinEvent | ISessionStartEvent)[]
     ) {
@@ -111,3 +109,5 @@ export class GithubCommentRenderer {
         return eventsString;
     };
 }
+
+export const githubCommentRenderer = new GithubCommentRenderer();

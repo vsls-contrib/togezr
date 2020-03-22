@@ -12,8 +12,8 @@ export const getGithubAccountChildren = async (
         const repoTreeItem = new GitHubAccountRepoTreeItem(account, repo.repo);
         result.push(repoTreeItem);
     }
-    if (result.length === 0) {
-        result.push(new GitHubAccountAddMoreTreeItem('+ Add repo...', account));
-    }
+    // if (result.length === 0) {
+    result.push(new GitHubAccountAddMoreTreeItem('+ Add repo...', account));
+    // }
     return result;
 };

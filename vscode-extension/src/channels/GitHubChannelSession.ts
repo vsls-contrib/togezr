@@ -1,14 +1,44 @@
-import { WebClient } from '@slack/web-api';
 import * as vsls from 'vsls';
+import { getGithubAPI } from '../github/githubAPI';
 import { TGitHubChannel } from '../interfaces/TGitHubChannel';
-import { renderSlackEventReply } from '../renderers/slack/renderSlackEventReply';
+import { renderGitHubComment } from '../renderers/github/renderGitHubComment';
 import { ISessionEvent } from '../sessionConnectors/renderer/events';
-import { getSlackAPI } from '../slack/slackAPI';
 import { ChannelSession, IChannelMementoRecord } from './ChannelSession';
 
+declare type IssuesCreateCommentResponseUser = {
+    avatar_url: string;
+    events_url: string;
+    followers_url: string;
+    following_url: string;
+    gists_url: string;
+    gravatar_id: string;
+    html_url: string;
+    id: number;
+    login: string;
+    node_id: string;
+    organizations_url: string;
+    received_events_url: string;
+    repos_url: string;
+    site_admin: boolean;
+    starred_url: string;
+    subscriptions_url: string;
+    type: string;
+    url: string;
+};
+
+declare type IssuesCreateCommentResponse = {
+    body: string;
+    created_at: string;
+    html_url: string;
+    id: number;
+    node_id: string;
+    updated_at: string;
+    url: string;
+    user: IssuesCreateCommentResponseUser;
+};
+
 export class GitHubChannelSession extends ChannelSession {
-    private slackAPI: WebClient | null = null;
-    private messageTs?: string;
+    private commentId?: number;
 
     constructor(
         public channel: TGitHubChannel,
@@ -18,103 +48,55 @@ export class GitHubChannelSession extends ChannelSession {
         super(channel, siblingChannels, vslsAPI);
     }
 
-    get api() {
-        if (!this.slackAPI) {
-            throw new Error('Call "initSlackAPI" first.');
-        }
-
-        return this.slackAPI;
-    }
-
-    private ensureSlackAPI = async () => {
-        if (this.slackAPI) {
-            return;
-        }
-
-        this.slackAPI = await getSlackAPI(this.channel.account.name);
-    };
-
     public async onEvent(e: ISessionEvent) {
         await super.onEvent(e);
-        await this.ensureSlackAPI();
 
-        // if (e.type !== 'commit-push') {
-        //     const comment = await renderSlackComment(this.events, this.channel);
-        //     await this.updateSlackComment(comment);
-        // }
+        const comment = await renderGitHubComment(this.events, this.channel);
+        await this.updateGitHubComment(comment);
 
         /**
-         * Don't add comment for end session, this should be
+         * Don't add comment for end session, this is the
          * responsibility of the services after some time of
-         * inactivity since the user can restart the session.
+         * inactivity since the user can restart the same session.
          */
         //
         if (e.type === 'end-session') {
             return;
         }
-
-        await this.addSlackReplyOnComment(e);
     }
 
-    // private updateSlackComment = async (commentBody: any[]) => {
-    //     const channelId = this.getChannelId();
+    private updateGitHubComment = async (commentBody: string) => {
+        const api = await getGithubAPI(this.channel.account.name);
 
-    //     const startSession = this.events[0] as ISessionStartEvent;
-    //     const message = {
-    //         channel: channelId,
-    //         text: `${startSession.user.displayName} started Live Share session`,
-    //         blocks: commentBody,
-    //         mrkdwn: true,
-    //     };
+        const repoUrl = this.channel.issue.repository_url;
+        const split = repoUrl.split('/');
 
-    //     const result = this.messageTs
-    //         ? await this.api.chat.update({ ...message, ts: this.messageTs })
-    //         : await this.api.chat.postMessage(message);
+        const owner = split[4];
+        const repo = split[5];
 
-    //     if (!result.ok) {
-    //         throw new Error('Cannot update Slack comment.');
-    //     }
-    //     const ts = result.ts as string | undefined;
-    //     this.messageTs = this.messageTs || ts;
-    // };
+        const options = {
+            body: commentBody,
+            issue_number: this.channel.issue.number,
+            owner,
+            repo,
+        };
 
-    private addSlackReplyOnComment = async (event: ISessionEvent) => {
-        // do not render session start event
-        if (event.type === 'start-session') {
-            return;
+        let commentResult;
+        if (this.commentId == null) {
+            commentResult = await api.issues.createComment(options);
+        } else {
+            commentResult = await api.issues.updateComment({
+                comment_id: this.commentId,
+                ...options,
+            });
         }
 
-        if (!this.messageTs) {
-            throw new Error('Send the message first.');
+        if (commentResult.status >= 300) {
+            throw new Error('GitHub issue comment API call failed.');
         }
 
-        const message = await renderSlackEventReply(event, this.events);
-        const result = await this.api.chat.postMessage({
-            channel: this.getChannelId(),
-            ...message,
-            mrkdwn: true,
-            thread_ts: this.messageTs,
-        });
-
-        if (!result.ok) {
-            throw new Error(
-                `Could not post Slack comment reply for the session event "${event.type}"`
-            );
-        }
-    };
-
-    private getChannelId = () => {
-        // if (this.channel.type === 'slack-user') {
-        //     return this.channel.user.im.id;
-        // }
-
-        // if (this.channel.type === 'slack-channel') {
-        //     return this.channel.channel.id;
-        // }
-
-        throw new Error(
-            `Unknown channel type "${(this.channel as any).type}".`
-        );
+        const { data } = commentResult;
+        this.commentId = data.id;
     };
 
     public readExistingRecord() {
@@ -128,26 +110,26 @@ export class GitHubChannelSession extends ChannelSession {
             return null;
         }
 
-        const { ts } = data;
-        if (typeof ts !== 'string') {
+        const { commentId } = data;
+        if (typeof commentId !== 'number') {
             this.deleteExistingRecord();
             return null;
         }
 
-        this.messageTs = ts;
+        this.commentId = commentId;
 
         return record;
     }
 
     public onPersistData = (record: IChannelMementoRecord) => {
-        if (!this.messageTs) {
+        if (!this.commentId) {
             return record;
         }
 
         return {
             ...record,
             data: {
-                ts: this.messageTs,
+                commentId: this.commentId,
             },
         };
     };
