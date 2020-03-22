@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { CancellationError } from '../errors/CancellationError';
 import { log } from '../logger';
 
 export const createCommand = (command: Function) => {
@@ -8,7 +9,10 @@ export const createCommand = (command: Function) => {
         } catch (e) {
             log.error(e);
 
-            await vscode.window.showErrorMessage(e.message);
+            const isCancellationError = e instanceof CancellationError;
+            if (!isCancellationError) {
+                await vscode.window.showErrorMessage(e.message);
+            }
         }
     };
 };

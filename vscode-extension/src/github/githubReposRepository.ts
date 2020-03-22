@@ -42,6 +42,20 @@ export class GithubReposRepository {
 
         return true;
     };
+
+    public remove = (accountName: string, repo: IGithubRepo): boolean => {
+        const key = this.getKey(accountName);
+
+        const currentRecords = memento.get<IGithubAccountRepo[]>(key) || [];
+
+        const records = currentRecords.filter((record) => {
+            return record.repo.id !== repo.id;
+        });
+
+        memento.set(key, records);
+
+        return true;
+    };
 }
 
 export const githubReposRepository = new GithubReposRepository();

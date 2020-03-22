@@ -11,9 +11,8 @@ export const getGithubAPI = async (accountName: string) => {
     }
 
     const account = await accountsKeychain.getAccount(accountName);
-
     if (!account) {
-        throw new Error(`No "${accountName}" found.`);
+        throw new Error(`No account "${accountName}" found.`);
     }
 
     const webApi = new Octokit({

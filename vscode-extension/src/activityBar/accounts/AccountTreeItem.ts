@@ -3,15 +3,13 @@ import { TAccountRecord } from '../../interfaces/IAccountRecord';
 import { getIconPack } from '../../utils/icons';
 
 export class AccountTreeItem extends TreeItem {
-    public contextValue: string = 'togezr.account';
-
     constructor(public account: TAccountRecord) {
         super(account.name, TreeItemCollapsibleState.Expanded);
 
         this.iconPath = getIconPack(this.getAccountIconName(account));
-        this.contextValue = 'togezr.account';
     }
-    private getAccountIconName(account: TAccountRecord) {
+
+    private getAccountIconName = (account: TAccountRecord) => {
         if (account.type === 'GitHub') {
             return 'github-icon.svg';
         }
@@ -25,5 +23,13 @@ export class AccountTreeItem extends TreeItem {
         }
 
         throw new Error(`Not know account type: "${(account as any).type}"`);
+    };
+
+    get contextValue() {
+        if (this.account.type === 'GitHub') {
+            return 'togezr.account.github';
+        }
+
+        return 'togezr.account';
     }
 }

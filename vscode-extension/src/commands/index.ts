@@ -1,6 +1,6 @@
 import { addAccountCommand } from './addAccountCommand';
 import { addConnectorCommand } from './addConnectorCommand';
-import { addGitHubAccountRepo } from './addGitHubAccountRepo';
+import { addGitHubAccountRepoCommand } from './addGitHubAccountRepoCommand';
 import { disconnectBranchCommand } from './disconnectBranch';
 import { openAccountInBrowserCommand } from './openAccountInBrowserCommand';
 import {
@@ -11,6 +11,7 @@ import { registerBranchCommand } from './registerBranch';
 import { registerCommand } from './registerCommand';
 import { removeAccountCommand } from './removeAccountCommand';
 import { removeConnectorCommand } from './removeConnector';
+import { removeGitHubAccountRepoCommand } from './removeGitHubAccountRepoCommand';
 import { shareIntoAccountCommand } from './shareIntoAccountCommand/shareIntoAccountCommand';
 import { shareIntoCommand } from './shareIntoCommand';
 import { startBranchConnectionSessionCommand } from './startBranchConnectionSessionCommand';
@@ -37,5 +38,9 @@ export const registerCommands = () => {
     registerCommand('togezr.addAccount', addAccountCommand);
     registerCommand('togezr.removeAccount', removeAccountCommand);
     registerCommand('togezr.openAccountInBrowser', openAccountInBrowserCommand);
-    registerCommand('togezr.addGitHubAccountRepo', addGitHubAccountRepo);
+    registerCommand('togezr.addGitHubAccountRepo', addGitHubAccountRepoCommand);
+    registerCommand(
+        'togezr.removeGitHubAccountRepo',
+        removeGitHubAccountRepoCommand
+    );
 };

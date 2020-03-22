@@ -11,7 +11,7 @@ export const getAccountChildren = async (element: AccountTreeItem) => {
         }
 
         case 'GitHub': {
-            return await getGithubAccountChildren(account);
+            return await getGithubAccountChildren(account, element);
         }
 
         default: {
