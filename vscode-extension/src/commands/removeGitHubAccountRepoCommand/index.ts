@@ -7,7 +7,9 @@ export const removeGitHubAccountRepoCommand = async (
     treeItem?: GitHubAccountRepoTreeItem
 ) => {
     if (!treeItem) {
-        throw new Error(`[addGitHubAccountRepo]: no "account" argument set.`);
+        throw new Error(
+            `[removeGitHubAccountRepoCommand]: no "account" argument set.`
+        );
     }
 
     const { account, repo } = treeItem;

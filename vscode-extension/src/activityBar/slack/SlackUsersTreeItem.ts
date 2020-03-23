@@ -10,7 +10,7 @@ export class SlackUsersTreeItem extends TreeItem {
         public account: ISlackAccountRecord,
         label: string = 'Users'
     ) {
-        super(label, TreeItemCollapsibleState.Expanded);
+        super(label, TreeItemCollapsibleState.Collapsed);
 
         this.iconPath = getIconPack('account-icon.svg');
     }

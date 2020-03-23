@@ -150,7 +150,7 @@
                 }
             },
             {
-                "command": "togezr.addGitHubAccountRepo",
+                "command": "togezr.addAccountEntity",
                 "title": "Add repo",
                 "category": "Togezr",
                 "icon": {
@@ -221,7 +221,7 @@
                     "group": "inline@1"
                 },
                 {
-                    "command": "togezr.addGitHubAccountRepo",
+                    "command": "togezr.addAccountEntity",
                     "when": "viewItem == togezr.account.github",
                     "group": "inline@1"
                 },
@@ -241,7 +241,7 @@
                     "when": "false"
                 },
                 {
-                    "command": "togezr.addGitHubAccountRepo",
+                    "command": "togezr.addAccountEntity",
                     "when": "false"
                 }
             ]

@@ -1,6 +1,6 @@
 import { addAccountCommand } from './addAccountCommand';
+import { addAccountEntityCommand } from './addAccountEntityCommand';
 import { addConnectorCommand } from './addConnectorCommand';
-import { addGitHubAccountRepoCommand } from './addGitHubAccountRepoCommand';
 import { disconnectBranchCommand } from './disconnectBranch';
 import { openAccountInBrowserCommand } from './openAccountInBrowserCommand';
 import {
@@ -38,7 +38,7 @@ export const registerCommands = () => {
     registerCommand('togezr.addAccount', addAccountCommand);
     registerCommand('togezr.removeAccount', removeAccountCommand);
     registerCommand('togezr.openAccountInBrowser', openAccountInBrowserCommand);
-    registerCommand('togezr.addGitHubAccountRepo', addGitHubAccountRepoCommand);
+    registerCommand('togezr.addAccountEntity', addAccountEntityCommand);
     registerCommand(
         'togezr.removeGitHubAccountRepo',
         removeGitHubAccountRepoCommand

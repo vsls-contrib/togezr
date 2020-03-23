@@ -9,7 +9,7 @@ export class GitHubAccountRepoTreeItem extends TreeItem {
         public account: IGitHubAccountRecord,
         public repo: IGithubRepo
     ) {
-        super(repo.name, TreeItemCollapsibleState.Expanded);
+        super(repo.name, TreeItemCollapsibleState.Collapsed);
 
         const stars = `[✭ ${repo.stargazers_count}]`;
 

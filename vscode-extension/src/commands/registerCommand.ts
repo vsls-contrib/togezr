@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { AccountTreeItem } from '../activityBar/accounts/AccountTreeItem';
 import { GitHubAccountRepoTreeItem } from '../activityBar/github/GitHubAccountRepoTreeItem';
 import { createCommand } from './createCommand';
 import { IRegisterBranchOptions } from './registerBranch';
@@ -18,7 +19,7 @@ export const CommandId = {
     addAccount: 'togezr.addAccount',
     removeAccount: 'togezr.removeAccount',
     openAccountInBrowser: 'togezr.openAccountInBrowser',
-    addGitHubAccountRepo: 'togezr.addGitHubAccountRepo',
+    addAccountEntity: 'togezr.addAccountEntity',
     removeGitHubAccountRepo: 'togezr.removeGitHubAccountRepo',
 } as const;
 
@@ -75,8 +76,8 @@ export async function registerCommand(
     command: (treeItem: any) => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(
-    name: typeof CommandId.addGitHubAccountRepo,
-    command: (account: GitHubAccountRepoTreeItem) => Promise<unknown>
+    name: typeof CommandId.addAccountEntity,
+    command: (account: AccountTreeItem) => Promise<unknown>
 ): Promise<void>;
 export async function registerCommand(
     name: typeof CommandId.removeGitHubAccountRepo,

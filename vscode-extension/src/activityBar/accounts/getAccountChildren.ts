@@ -1,5 +1,6 @@
 import { getGithubAccountChildren } from '../github/getGithubAccountChildren';
 import { getSlackAccountChildren } from '../slack/getSlackAccountChildren';
+import { getTeamsAccountChildren } from '../teams/getTeamsAccountChildren';
 import { AccountTreeItem } from './AccountTreeItem';
 
 export const getAccountChildren = async (element: AccountTreeItem) => {
@@ -14,8 +15,12 @@ export const getAccountChildren = async (element: AccountTreeItem) => {
             return await getGithubAccountChildren(account, element);
         }
 
+        case 'Teams': {
+            return await getTeamsAccountChildren(account);
+        }
+
         default: {
-            throw new Error(`Unknown account type "${account.type}".`);
+            throw new Error(`Unknown account type "${(account as any).type}".`);
         }
     }
 };

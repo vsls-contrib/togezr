@@ -1,20 +1,20 @@
 import * as vscode from 'vscode';
+import { AccountTreeItem } from '../../activityBar/accounts/AccountTreeItem';
 import { refreshActivityBar } from '../../activityBar/activityBar';
-import { GitHubAccountRepoTreeItem } from '../../activityBar/github/GitHubAccountRepoTreeItem';
 import { CancellationError } from '../../errors/CancellationError';
 import { getGithubAPI } from '../../github/githubAPI';
 import { githubReposRepository } from '../../github/githubReposRepository';
+import {
+    IGitHubAccountRecord,
+    ITeamsAccountRecord,
+} from '../../interfaces/IAccountRecord';
 import { IGithubRepo } from '../../interfaces/IGitHubRepo';
+import { TeamsAPI } from '../../teams/teamsAPI';
+import { teamsTeamsRepository } from '../../teams/teamsTeamsRepository';
 
-export const addGitHubAccountRepoCommand = async (
-    treeItem?: GitHubAccountRepoTreeItem
+export const addGitHubAccountEntityCommand = async (
+    account: IGitHubAccountRecord
 ) => {
-    if (!treeItem) {
-        throw new Error(`[addGitHubAccountRepo]: no "account" argument set.`);
-    }
-
-    const { account } = treeItem;
-
     const api = await getGithubAPI(account.name);
 
     const reposResponse = await api.repos.list({
@@ -51,7 +51,7 @@ export const addGitHubAccountRepoCommand = async (
         });
 
     const selectedRepoAnswer = await vscode.window.showQuickPick(options, {
-        placeHolder: 'Select a repo',
+        placeHolder: 'Select repo',
         ignoreFocusOut: true,
     });
 
@@ -65,4 +65,55 @@ export const addGitHubAccountRepoCommand = async (
     refreshActivityBar();
 
     await vscode.window.showInformationMessage(`"${repo.name}" repo added.`);
+};
+
+const addTeamsAccountEntityCommand = async (account: ITeamsAccountRecord) => {
+    const api = new TeamsAPI(account);
+
+    const teams = await api.getUserJoinedTeams();
+
+    const options = teams.map((team) => {
+        return {
+            label: team.displayName,
+            description: team.description,
+            team,
+        };
+    });
+
+    const answer = await vscode.window.showQuickPick(options, {
+        placeHolder: 'Select team',
+        ignoreFocusOut: true,
+    });
+
+    if (!answer) {
+        throw new CancellationError('No team selected.');
+    }
+
+    teamsTeamsRepository.add(account.name, answer.team);
+
+    refreshActivityBar();
+
+    await vscode.window.showInformationMessage(
+        `"${answer.team.displayName}" team added.`
+    );
+};
+
+export const addAccountEntityCommand = async (treeItem?: AccountTreeItem) => {
+    if (!treeItem) {
+        throw new Error(
+            `[addAccountEntityCommand]: no "account" argument set.`
+        );
+    }
+
+    const { account } = treeItem;
+
+    if (account.type === 'GitHub') {
+        return await addGitHubAccountEntityCommand(account);
+    }
+
+    if (account.type === 'Teams') {
+        return await addTeamsAccountEntityCommand(account);
+    }
+
+    throw new Error(`Unknown account type "${account.type}".`);
 };

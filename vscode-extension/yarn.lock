@@ -18,6 +18,11 @@
     esutils "^2.0.2"
     js-tokens "^4.0.0"
 
+"@microsoft/teams-js@^1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@microsoft/teams-js/-/teams-js-1.6.0.tgz#3f3052f79803be57b68dfb711cb551f30c7ed62a"
+  integrity sha512-6OGjEgyC5C5iyJtTT1FKVHv69ROs/NJUI6McuBAtnsYU79W+ixpMnyRE6VMyMUgA0aPmfSsqxS9GFE/TbGTGmQ==
+
 "@octokit/auth-token@^2.4.0":
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/@octokit/auth-token/-/auth-token-2.4.0.tgz#b64178975218b99e4dfe948253f0673cbbb59d9f"

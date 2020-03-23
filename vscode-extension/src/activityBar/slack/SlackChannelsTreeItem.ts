@@ -10,7 +10,7 @@ export class SlackChannelsTreeItem extends TreeItem {
         public account: ISlackAccountRecord,
         label: string = 'Channels'
     ) {
-        super(label, TreeItemCollapsibleState.Expanded);
+        super(label, TreeItemCollapsibleState.Collapsed);
         this.iconPath = getIconPack('hash-icon.svg');
     }
 }

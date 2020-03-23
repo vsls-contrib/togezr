@@ -33,6 +33,12 @@ import { resetSlackAccountCache } from './slack/slackAccountCache';
 import { SlackChannelsTreeItem } from './slack/SlackChannelsTreeItem';
 import { slackUserStatusRepository } from './slack/slackUserStatusRepository';
 import { SlackUsersTreeItem } from './slack/SlackUsersTreeItem';
+import { getTeamsChannels } from './teams/getTeamsChannels';
+import { getTeamsTeams } from './teams/getTeamsTeams';
+import { getTeamsUsers } from './teams/getTeamsUsers';
+import { TeamsTeamsTreeItem } from './teams/TeamsTeamsTreeItem';
+import { TeamsTeamTreeItem } from './teams/TeamsTeamTreeItem';
+import { TeamsUsersTreeItem } from './teams/TeamsUsersTreeItem';
 
 const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
     'Currently running',
@@ -381,6 +387,10 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             return items;
         }
 
+        /**
+         * GitHub
+         */
+
         if (element instanceof AccountTreeItem) {
             return await getAccountChildren(element);
         }
@@ -389,12 +399,31 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             return await getGitHubRepoIssues(element);
         }
 
+        /**
+         * Slack
+         */
+
         if (element instanceof SlackUsersTreeItem) {
             return await getSlackUsers(element);
         }
 
         if (element instanceof SlackChannelsTreeItem) {
             return await getSlackChannels(element);
+        }
+
+        /**
+         * Teams
+         */
+        if (element instanceof TeamsTeamsTreeItem) {
+            return await getTeamsTeams(element);
+        }
+
+        if (element instanceof TeamsUsersTreeItem) {
+            return await getTeamsUsers(element);
+        }
+
+        if (element instanceof TeamsTeamTreeItem) {
+            return await getTeamsChannels(element);
         }
 
         return [];

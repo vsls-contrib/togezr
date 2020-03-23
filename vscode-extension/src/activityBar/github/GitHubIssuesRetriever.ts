@@ -1,6 +1,7 @@
 import { getGithubAPI } from '../../github/githubAPI';
 import { IGitHubAccountRecord } from '../../interfaces/IAccountRecord';
 import { IGithubRepo } from '../../interfaces/IGitHubRepo';
+
 export class GitHubIssuesRetriever {
     // private issuesMap = new Map<string, IGithubIssueRecord>();
     public getIssues = async (
