@@ -1,11 +1,11 @@
 import fetch from 'node-fetch';
-import { IAccountRecord } from '../interfaces/IAccountRecord';
+import { ITeamsAccountRecord } from '../interfaces/IAccountRecord';
 import { ITeamsChannel } from '../interfaces/ITeamsChannel';
 import { ITeamsUser } from '../interfaces/ITeamsUser';
 import { ITeamsTeam } from './teamsTeamsRepository';
 
 export class TeamsAPI {
-    constructor(private account: IAccountRecord) {}
+    constructor(private account: ITeamsAccountRecord) {}
 
     public getUserJoinedTeams = async () => {
         const { token } = this.account;
@@ -57,11 +57,11 @@ export class TeamsAPI {
         return channels;
     };
 
-    public getUsers = async () => {
+    public getUsers = async (count: number) => {
         const { token } = this.account;
 
         const res = await fetch(
-            `https://graph.microsoft.com/v1.0/me/people?$top=50`,
+            `https://graph.microsoft.com/v1.0/me/people?$top=${count}`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -73,6 +73,41 @@ export class TeamsAPI {
         if (!res.ok) {
             throw new Error(
                 `Cannot get users for the account "${this.account.name}".`
+            );
+        }
+
+        const json = await res.json();
+
+        const users = json.value as ITeamsUser[];
+        return users;
+    };
+
+    public sendChannelMessage = async (
+        teamId: string,
+        channelId: string,
+        message: string
+    ) => {
+        const { token } = this.account;
+
+        const res = await fetch(
+            `https://graph.microsoft.com/beta/teams/${teamId}/channels/${channelId}/messages`,
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                },
+                body: message,
+            }
+        );
+
+        if (!res.ok) {
+            const rs = await res.json();
+
+            console.log(rs);
+
+            throw new Error(
+                `Cannot send message to Teams team "${teamId}", channel "${channelId}".`
             );
         }
 

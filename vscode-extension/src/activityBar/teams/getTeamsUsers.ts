@@ -5,11 +5,15 @@ import { TeamsUserTreeItem } from './TeamsUserTreeItem';
 export const getTeamsUsers = async (element: TeamsUsersTreeItem) => {
     const { account } = element;
     const api = new TeamsAPI(account);
-    const users = await api.getUsers();
+    const users = await api.getUsers(100);
 
-    const userTreeItems = users.map((user) => {
-        return new TeamsUserTreeItem(account, user);
-    });
+    const userTreeItems = users
+        .filter((user) => {
+            return !!user.jobTitle;
+        })
+        .map((user) => {
+            return new TeamsUserTreeItem(account, user);
+        });
 
     return userTreeItems;
 };

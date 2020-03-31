@@ -2,79 +2,22 @@ import * as vscode from 'vscode';
 import { GitHubAccountRepoIssueTreeItem } from '../../activityBar/github/GitHubAccountRepoIssueTreeItem';
 import { SlackChannelTreeItem } from '../../activityBar/slack/SlackChannelTreeItem';
 import { SlackUserTreeItem } from '../../activityBar/slack/SlackUserTreeItem';
-import { lsApi, startLSSession } from '../../branchBroadcast/liveshare';
-import { GitHubChannelSession } from '../../channels/GitHubChannelSession';
-import { SlackChannelSession } from '../../channels/SlackChannelSession';
-import { GITHUB_REPO_ISSUE_CHANNEL_TYPE } from '../../constants';
-import { CancellationError } from '../../errors/CancellationError';
-import { TSlackTreeItems } from '../../interfaces/TTreeItems';
-import { askUserForChannel } from './askUserForChannel';
-import { getSlackChannelFromTreeItem } from './getSlackChannelFromTreeItem';
-
-const shareIntoSlackChannel = async (
-    item: TSlackTreeItems,
-    isReadOnlySession: boolean
-) => {
-    const slackChannel = item
-        ? getSlackChannelFromTreeItem(item)
-        : await askUserForChannel();
-
-    if (!slackChannel) {
-        throw new CancellationError('No slack channel found.');
-    }
-
-    const lsAPI = lsApi();
-    const session = new SlackChannelSession(slackChannel, [], lsAPI);
-
-    await startLSSession(isReadOnlySession, session.sessionId);
-    await session.init();
-};
-
-const getGitHubChannelFromTreeItem = (item: GitHubAccountRepoIssueTreeItem) => {
-    if (!(item instanceof GitHubAccountRepoIssueTreeItem)) {
-        throw new Error(`UnknoWN GitHub activity bar item.`);
-    }
-
-    return {
-        type: GITHUB_REPO_ISSUE_CHANNEL_TYPE as typeof GITHUB_REPO_ISSUE_CHANNEL_TYPE,
-        repo: item.repo,
-        issue: item.issue,
-        account: item.account,
-    };
-};
-
-const sleepAsync = (timeout: number) => {
-    return new Promise((res) => {
-        setTimeout(res, timeout);
-    });
-};
-
-const shareIntoGitHubIssueChannel = async (
-    item: GitHubAccountRepoIssueTreeItem,
-    isReadOnlySession: boolean
-) => {
-    const gitHubChannel = getGitHubChannelFromTreeItem(item);
-
-    console.log(gitHubChannel, isReadOnlySession);
-
-    const lsAPI = lsApi();
-    const session = new GitHubChannelSession(gitHubChannel, [], lsAPI);
-    await startLSSession(isReadOnlySession, session.sessionId);
-    await sleepAsync(1000);
-
-    console.log(lsAPI.session);
-    await session.init();
-};
+import { TeamsChannelTreeItem } from '../../activityBar/teams/TeamsChannelTreeItem';
+import { TeamsUserTreeItem } from '../../activityBar/teams/TeamsUserTreeItem';
+import { TSlackTreeItems, TTeamsTreeItems } from '../../interfaces/TTreeItems';
+import { shareIntoGitHubIssueChannel } from './github/shareIntoGitHubIssueChannel';
+import { shareIntoSlackChannel } from './slack/shareIntoSlackChannel';
+import { shareIntoTeamsChannel } from './teams/shareIntoTeamsChannel';
 
 export const shareIntoAccountCommand = async (
-    item?: TSlackTreeItems | GitHubAccountRepoIssueTreeItem
+    item?: TSlackTreeItems | GitHubAccountRepoIssueTreeItem | TTeamsTreeItems
 ) => {
     if (!vscode.workspace.rootPath) {
         throw new Error('Please open a project to share.');
     }
 
     /**
-     * TODO: Add a setting for the session tye defaults
+     * TODO: Add a setting for the session the defaults
      */
     // const READ_ONLY_BUTTON = 'Read-only session';
     // const sessionReadOnlyAnswer = await vscode.window.showQuickPick(
@@ -88,7 +31,6 @@ export const shareIntoAccountCommand = async (
     //     throw new CancellationError('No session type selected.');
     // }
     // const isReadOnlySession = sessionReadOnlyAnswer === READ_ONLY_BUTTON;
-
     const isReadOnlySession = true;
 
     if (
@@ -100,5 +42,12 @@ export const shareIntoAccountCommand = async (
 
     if (item instanceof GitHubAccountRepoIssueTreeItem) {
         return await shareIntoGitHubIssueChannel(item, isReadOnlySession);
+    }
+
+    if (
+        item instanceof TeamsUserTreeItem ||
+        item instanceof TeamsChannelTreeItem
+    ) {
+        return await shareIntoTeamsChannel(item, isReadOnlySession);
     }
 };

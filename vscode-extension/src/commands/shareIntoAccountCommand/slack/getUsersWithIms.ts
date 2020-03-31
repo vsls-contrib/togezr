@@ -1,6 +1,6 @@
-import { ISlackIM } from '../../interfaces/ISlackIm';
-import { ISlackUser } from '../../interfaces/ISlackUser';
-import { ISlackUserWithIM } from '../../interfaces/ISlackUserWithIM';
+import { ISlackIM } from '../../../interfaces/ISlackIm';
+import { ISlackUser } from '../../../interfaces/ISlackUser';
+import { ISlackUserWithIM } from '../../../interfaces/ISlackUserWithIM';
 
 export const getUsersWithIms = (
     users: ISlackUser[],

@@ -8,7 +8,7 @@ export const getTeamsChannels = async (element: TeamsTeamTreeItem) => {
 
     const channels = await api.getTeamChannels(team);
     const channelTreeItems = channels.map((channel) => {
-        return new TeamsChannelTreeItem(team, channel);
+        return new TeamsChannelTreeItem(team, channel, account);
     });
 
     return channelTreeItems;

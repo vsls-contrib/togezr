@@ -10,7 +10,7 @@ export const renderSlackComment = async (
 ): Promise<any[]> => {
     const blocks = [...renderHostHeader(events)];
 
-    // TODO: read from the GitHub channel if possible
+    // TODO: read from the GitHub channel if posible
     // { type: 'divider' },
     // // blocks.push(
     // //     await renderGithubIssueDetails(this.registyData, this.githubConnector)

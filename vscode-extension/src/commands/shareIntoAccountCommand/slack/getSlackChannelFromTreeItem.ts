@@ -1,6 +1,6 @@
-import { SlackChannelTreeItem } from '../../activityBar/slack/SlackChannelTreeItem';
-import { SlackUserTreeItem } from '../../activityBar/slack/SlackUserTreeItem';
-import { TSlackChannel } from '../../interfaces/TSlackChannel';
+import { SlackChannelTreeItem } from '../../../activityBar/slack/SlackChannelTreeItem';
+import { SlackUserTreeItem } from '../../../activityBar/slack/SlackUserTreeItem';
+import { TSlackChannel } from '../../../interfaces/TSlackChannel';
 
 type TShareIntoTreeItem = SlackUserTreeItem | SlackChannelTreeItem;
 type TShareIntoSlackTreeItem = SlackUserTreeItem | SlackChannelTreeItem;

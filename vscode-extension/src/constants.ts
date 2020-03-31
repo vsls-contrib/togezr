@@ -19,3 +19,6 @@ export const SLACK_USER_CHANNEL_TYPE = 'slack-user';
 export const SLACK_CHANNEL_CHANNEL_TYPE = 'slack-channel';
 
 export const GITHUB_REPO_ISSUE_CHANNEL_TYPE = 'github-issue';
+
+export const TEAMS_USER_CHANNEL_TYPE = 'teams-user';
+export const TEAMS_CHANNEL_CHANNEL_TYPE = 'teams-channel';

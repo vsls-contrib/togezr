@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { CancellationError } from '../../errors/CancellationError';
-import { ISlackChannel } from '../../interfaces/ISlackChannel';
+import { CancellationError } from '../../../errors/CancellationError';
+import { ISlackChannel } from '../../../interfaces/ISlackChannel';
 
 export const getSlackChannelChannel = async (
     channels: ISlackChannel[]

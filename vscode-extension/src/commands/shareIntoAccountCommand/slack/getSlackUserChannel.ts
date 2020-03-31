@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { CancellationError } from '../../errors/CancellationError';
-import { ISlackIM } from '../../interfaces/ISlackIm';
-import { ISlackUser } from '../../interfaces/ISlackUser';
-import { ISlackUserWithIM } from '../../interfaces/ISlackUserWithIM';
-import { renderSlackStatus } from '../../utils/renderSlackStatus';
+import { CancellationError } from '../../../errors/CancellationError';
+import { ISlackIM } from '../../../interfaces/ISlackIm';
+import { ISlackUser } from '../../../interfaces/ISlackUser';
+import { ISlackUserWithIM } from '../../../interfaces/ISlackUserWithIM';
+import { renderSlackStatus } from '../../../utils/renderSlackStatus';
 import { getUsersWithIms } from './getUsersWithIms';
 
 export const getSlackUserChannel = async (

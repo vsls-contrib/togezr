@@ -52,6 +52,12 @@ export class ChannelSession {
                 return this.channel.issue.html_url;
             }
 
+            case 'teams-channel': {
+                const { team, channel } = this.channel;
+
+                return `${team.id}_${channel.id}`;
+            }
+
             default: {
                 throw new Error(
                     `Unknown channel session type ${(this.channel as any).type}`

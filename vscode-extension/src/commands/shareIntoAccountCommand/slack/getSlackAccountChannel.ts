@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { accountsKeychain } from '../../accounts/accountsKeychain';
-import { ISlackChannelsWebCallResult } from '../../activityBar/slack/interfaces/ISlackChannelsWebCallResult';
-import { CancellationError } from '../../errors/CancellationError';
+import { accountsKeychain } from '../../../accounts/accountsKeychain';
+import { ISlackChannelsWebCallResult } from '../../../activityBar/slack/interfaces/ISlackChannelsWebCallResult';
+import { CancellationError } from '../../../errors/CancellationError';
 import {
     ISlackImsWebCallResult,
     ISlackUsersWebCallResult,
-} from '../../interfaces/ISlackUserWithIM';
-import { TSlackChannel } from '../../interfaces/TSlackChannel';
-import { getSlackAPI } from '../../slack/slackAPI';
+} from '../../../interfaces/ISlackUserWithIM';
+import { TSlackChannel } from '../../../interfaces/TSlackChannel';
+import { getSlackAPI } from '../../../slack/slackAPI';
 import { getSlackChannelChannel } from './getSlackChannelChannel';
 import { getSlackUserChannel } from './getSlackUserChannel';
 

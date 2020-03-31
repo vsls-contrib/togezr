@@ -1,4 +1,4 @@
-import { getUsersWithIms } from '../../commands/shareIntoAccountCommand/getUsersWithIms';
+import { getUsersWithIms } from '../../commands/shareIntoAccountCommand/slack/getUsersWithIms';
 import { ISlackAccountRecord } from '../../interfaces/IAccountRecord';
 import { ISlackImsWebCallResult } from '../../interfaces/ISlackUserWithIM';
 import { getSlackAPI } from '../../slack/slackAPI';
