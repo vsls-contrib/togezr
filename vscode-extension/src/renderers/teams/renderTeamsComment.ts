@@ -5,7 +5,6 @@ import { ChannelSession } from '../../channels/ChannelSession';
 import { TTeamsChannel } from '../../interfaces/TTeamsChannel';
 import { ISessionEvent } from '../../sessionConnectors/renderer/events';
 import { renderTeamsBody } from './renderTeamsBody';
-import { renderTeamsFooter } from './renderTeamsFooter';
 import { renderTeamsHeader } from './renderTeamsHeader';
 
 export const renderTeamsComment = async (
@@ -15,12 +14,12 @@ export const renderTeamsComment = async (
 ): Promise<{ [key: string]: any }> => {
     const header = await renderTeamsHeader(events);
     const body = await renderTeamsBody(events, channels);
-    const footer = await renderTeamsFooter(events, channels);
+    // const footer = await renderTeamsFooter(events, channels);
 
     return {
         ...header,
         ...body,
-        ...footer,
+        // ...footer,
     };
 
     // const blocks = [...renderHostHeader(events)];

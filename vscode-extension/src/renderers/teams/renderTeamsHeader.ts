@@ -1,18 +1,9 @@
-import {
-    ISessionEvent,
-    ISessionStartEvent,
-} from '../../sessionConnectors/renderer/events';
-import { User } from '../../user';
+import { ISessionEvent } from '../../sessionConnectors/renderer/events';
 
 export const renderTeamsHeader = async (events: ISessionEvent[]) => {
-    const startEvent = events[0] as ISessionStartEvent;
-
-    const host = new User(startEvent.user);
-
     return {
-        '@type': 'MessageCard',
-        '@context': 'https://schema.org/extensions',
-        summary: `${host.displayName} started Live Share session`,
-        title: `${host.displayName} started Live Share session`,
+        $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+        type: 'AdaptiveCard',
+        version: '1.0',
     };
 };

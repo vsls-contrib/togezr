@@ -1,19 +1,14 @@
 import { DEFAULT_GITHUB_AVATAR } from '../../sessionConnectors/constants';
 import { githubAvatarRepository } from '../../sessionConnectors/github/githubAvatarsRepository';
-import {
-    ISessionEvent,
-    ISessionStartEvent,
-    ISessionUserJoinEvent,
-} from '../../sessionConnectors/renderer/events';
+import { ISessionEvent } from '../../sessionConnectors/renderer/events';
+import { getUserEvents } from '../../utils/getUserEvents';
 
 export const renderGuests = async (events: ISessionEvent[]) => {
     if (!events.length) {
         return [];
     }
 
-    const guests = events.filter((e) => {
-        return e.type === 'guest-join' || e.type === 'start-session';
-    }) as (ISessionUserJoinEvent | ISessionStartEvent)[];
+    const guests = getUserEvents(events);
 
     const renderedGuestsPromises: any[] = guests.map(async (guest) => {
         const imageUrl = guest.user.userName

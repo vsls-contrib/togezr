@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import * as vsls from 'vsls';
 import { ITeamsAccountRecord } from '../interfaces/IAccountRecord';
 import { ITeamsChannelChannel } from '../interfaces/ITeamsChannelChannel';
@@ -52,10 +53,31 @@ export class TeamsChannelSession extends ChannelSession {
 
         const { team, channel } = teamsChannel;
 
+        const attachmentId = randomBytes(16).toString('base64');
+
+        const template = {
+            subject: null,
+            body: {
+                contentType: 'html',
+                content: `<attachment id="${attachmentId}"></attachment>`,
+            },
+            attachments: [
+                {
+                    id: `${attachmentId}`,
+                    contentUrl: null,
+
+                    contentType: 'application/vnd.microsoft.card.adaptive',
+                    content: JSON.stringify(commentBody),
+                    name: null,
+                    thumbnailUrl: null,
+                },
+            ],
+        };
+
         const result = await api.sendChannelMessage(
             team.id,
             channel.id,
-            JSON.stringify(commentBody, null, 4)
+            JSON.stringify(template, null, 2)
         );
 
         console.log(result);
