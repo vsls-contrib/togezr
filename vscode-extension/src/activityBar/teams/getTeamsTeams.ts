@@ -6,6 +6,7 @@ export const getTeamsTeams = async (element: TeamsTeamsTreeItem) => {
     const { account } = element;
     const result = [];
     const teams = teamsTeamsRepository.get(account.name);
+
     for (let team of teams) {
         const teamsTeamTreeItem = new TeamsTeamTreeItem(team, account);
         result.push(teamsTeamTreeItem);

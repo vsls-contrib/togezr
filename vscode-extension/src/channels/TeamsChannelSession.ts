@@ -54,6 +54,7 @@ export class TeamsChannelSession extends ChannelSession {
 
         const api = new TeamsAPI(this.channel.account as ITeamsAccountRecord);
 
+        // either User or Channel
         const teamsChannel = this.channel as ITeamsChannelChannel;
         const { team, channel } = teamsChannel;
         const attachmentId = randomBytes(16).toString('base64');

@@ -5,4 +5,5 @@ import { TTeamsUserChannelType } from './TTeamsChannel';
 export interface ITeamsUserChannel extends IChannel {
     type: TTeamsUserChannelType;
     user: ITeamsUser;
+    // team: ITeamsTeam;
 }

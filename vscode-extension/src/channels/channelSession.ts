@@ -59,6 +59,12 @@ export class ChannelSession {
                 return `${team.id}_${channel.id}`;
             }
 
+            case 'teams-user': {
+                const { user } = this.channel;
+
+                return user.id;
+            }
+
             default: {
                 throw new Error(
                     `Unknown channel session type ${(this.channel as any).type}`

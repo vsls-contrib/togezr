@@ -10,10 +10,12 @@ const getChannelFromTeamsTreeitem = (item: TTeamsTreeItems): TTeamsChannel => {
     if (item instanceof TeamsUserTreeItem) {
         return {
             type: 'teams-user',
+            // team: item.team,
             user: item.user,
             account: item.account,
         };
     }
+
     if (item instanceof TeamsChannelTreeItem) {
         return {
             type: 'teams-channel',

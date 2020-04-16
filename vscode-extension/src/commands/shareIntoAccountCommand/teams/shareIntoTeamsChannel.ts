@@ -11,15 +11,14 @@ export const shareIntoTeamsChannel = async (
     if (!item) {
         throw new Error('No teams channel set.');
     }
-    const slackChannel = getTeamsChannelFromTreeItem(item);
-    if (!slackChannel) {
+
+    const teamsChannel = getTeamsChannelFromTreeItem(item);
+    if (!teamsChannel) {
         throw new CancellationError('No slack channel found.');
     }
 
     const lsAPI = lsApi();
-    const session = new TeamsChannelSession(slackChannel, [], lsAPI);
-    // session.deleteExistingRecord();
-
+    const session = new TeamsChannelSession(teamsChannel, [], lsAPI);
     await startLSSession(isReadOnlySession, session.sessionId);
     await session.init();
 };

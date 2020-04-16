@@ -3,7 +3,11 @@ import { ITeamsAccountRecord } from '../../interfaces/IAccountRecord';
 import { ITeamsUser } from '../../interfaces/ITeamsUser';
 import { TreeItemContext } from '../../sessionConnectors/constants';
 export class TeamsUserTreeItem extends TreeItem {
-    constructor(public account: ITeamsAccountRecord, public user: ITeamsUser) {
+    constructor(
+        public account: ITeamsAccountRecord,
+        public user: ITeamsUser
+    ) // public team: ITeamsTeam
+    {
         super(user.displayName);
 
         this.description = user.jobTitle;
@@ -11,6 +15,7 @@ export class TeamsUserTreeItem extends TreeItem {
             ? `${this.label} • ${this.description}`
             : this.label;
 
-        this.contextValue = TreeItemContext.TeamsUserTreeItem;
+        // this.contextValue = TreeItemContext.TeamsUserTreeItem;
+        this.contextValue = TreeItemContext.ShareIntoTreeItem;
     }
 }

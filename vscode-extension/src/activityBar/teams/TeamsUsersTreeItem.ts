@@ -6,6 +6,7 @@ import { getIconPack } from '../../utils/icons';
 export class TeamsUsersTreeItem extends TreeItem {
     constructor(public account: ITeamsAccountRecord) {
         super('Users', TreeItemCollapsibleState.Collapsed);
+
         this.tooltip = 'Teams Users';
         this.contextValue = TreeItemContext.TeamsUsersTreeItem;
         this.iconPath = getIconPack('account-icon.svg');
