@@ -139,23 +139,3 @@ export class TeamsAPI {
         return await res.json();
     };
 }
-
-// const cache = new Map<string, TeamsAPI>();
-
-// export const getGithubAPI = async (accountName: string) => {
-//     const existingApi = cache.get(accountName);
-
-//     if (existingApi) {
-//         return existingApi;
-//     }
-
-//     const account = await accountsKeychain.getAccount(accountName);
-//     if (!account) {
-//         throw new Error(`No account "${accountName}" found.`);
-//     }
-
-//     const webApi = new TeamsAPI(account);
-//     cache.set(accountName, webApi);
-
-//     return webApi;
-// };
