@@ -18,6 +18,8 @@ export const shareIntoTeamsChannel = async (
 
     const lsAPI = lsApi();
     const session = new TeamsChannelSession(slackChannel, [], lsAPI);
+    // session.deleteExistingRecord();
+
     await startLSSession(isReadOnlySession, session.sessionId);
     await session.init();
 };

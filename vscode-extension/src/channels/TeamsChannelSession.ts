@@ -1,15 +1,103 @@
 import { randomBytes } from 'crypto';
 import * as vsls from 'vsls';
+import { emojiForEvent } from '../emoji/eventToEmojiMap';
 import { ITeamsAccountRecord } from '../interfaces/IAccountRecord';
 import { ITeamsChannelChannel } from '../interfaces/ITeamsChannelChannel';
 import { TTeamsChannel } from '../interfaces/TTeamsChannel';
-import { renderTeamsComment } from '../renderers/teams/renderTeamsComment';
-import { ISessionEvent } from '../sessionConnectors/renderer/events';
+import { renderCommentTeams } from '../renderers/teams/renderCommentTeams';
+import {
+    ISessionCommitPushEvent,
+    ISessionEvent,
+    ISessionStartEvent,
+    ISessionUserJoinEvent,
+} from '../sessionConnectors/renderer/events';
 import { TeamsAPI } from '../teams/teamsAPI';
-import { ChannelSession } from './ChannelSession';
+import { User } from '../user';
+import { getCleanCommitMessage } from '../utils/getCleanCommitMessage';
+import { getGuests } from '../utils/getGuests';
+import { ChannelSession, IChannelMementoRecord } from './ChannelSession';
+
+// const renderUser = (event: ISessionUserJoinEvent) => {
+//     const { user } = event;
+//     const ghLink = `<a href="https://github.com/${user.userName}">${user.displayName}</a>`;
+
+//     return ghLink;
+// };
+
+const renderGuestJoinEventReplyTeams = async (event: ISessionUserJoinEvent) => {
+    const user = new User(event.user);
+
+    return {
+        subject: null,
+        body: {
+            contentType: 'html',
+            content: `${emojiForEvent(
+                event
+            )} ${user.getHtmlUserLink()} joined.`,
+        },
+    };
+};
+
+const renderRestartSessionEventReplyTeams = async (
+    event: ISessionStartEvent
+) => {
+    return {
+        subject: null,
+        body: {
+            contentType: 'html',
+            content: `${emojiForEvent(event)} session restarted.`,
+        },
+    };
+};
+
+const renderPushCommitEventReplyTeams = async (
+    event: ISessionCommitPushEvent,
+    events: ISessionEvent[]
+) => {
+    const guests = getGuests(events);
+    const cleanCommitMessage = getCleanCommitMessage(event.commit.message);
+
+    const guestsNamesWithLink = guests
+        .map((guest) => {
+            const user = new User(guest.user);
+            return `${user.getHtmlUserLink()}`;
+        })
+        .join(', ');
+
+    return {
+        subject: null,
+        body: {
+            contentType: 'html',
+            content: `${emojiForEvent(
+                event
+            )} ${guestsNamesWithLink} pushed 1 commit: <a href="${
+                event.repoUrl
+            }/commit/${event.commit.hash}">${cleanCommitMessage}</a>.`,
+        },
+    };
+};
+
+const renderEventReplyTeams = async (
+    event: ISessionEvent,
+    events: ISessionEvent[]
+) => {
+    if (event.type === 'guest-join') {
+        return renderGuestJoinEventReplyTeams(event);
+    }
+
+    if (event.type === 'restart-session') {
+        return renderRestartSessionEventReplyTeams(event);
+    }
+
+    if (event.type === 'commit-push') {
+        return renderPushCommitEventReplyTeams(event, events);
+    }
+
+    throw new Error(`Unknown event ${event.type}.`);
+};
 
 export class TeamsChannelSession extends ChannelSession {
-    // private messageTs?: string;
+    private messageId?: string;
 
     constructor(
         public channel: TTeamsChannel,
@@ -23,7 +111,7 @@ export class TeamsChannelSession extends ChannelSession {
         await super.onEvent(e);
 
         if (e.type !== 'commit-push') {
-            const comment = await renderTeamsComment(
+            const comment = await renderCommentTeams(
                 this.events,
                 this.channel,
                 this.siblingChannels
@@ -41,18 +129,20 @@ export class TeamsChannelSession extends ChannelSession {
             return;
         }
 
-        // await this.addSlackReplyOnComment(e);
+        await this.addTeamsReplyOnComment(e, this.events);
     }
 
     private updateTeamsComment = async (commentBody: {
         [key: string]: any;
     }) => {
+        if (this.messageId) {
+            return;
+        }
+
         const api = new TeamsAPI(this.channel.account as ITeamsAccountRecord);
 
         const teamsChannel = this.channel as ITeamsChannelChannel;
-
         const { team, channel } = teamsChannel;
-
         const attachmentId = randomBytes(16).toString('base64');
 
         const template = {
@@ -80,102 +170,68 @@ export class TeamsChannelSession extends ChannelSession {
             JSON.stringify(template, null, 2)
         );
 
-        console.log(result);
-
-        // const channelId = this.getChannelId();
-
-        // const startSession = this.events[0] as ISessionStartEvent;
-        // const message = {
-        //     channel: channelId,
-        //     text: `${startSession.user.displayName} started Live Share session`,
-        //     blocks: commentBody,
-        //     mrkdwn: true,
-        // };
-
-        // const result = this.messageTs
-        //     ? await api.chat.update({ ...message, ts: this.messageTs })
-        //     : await api.chat.postMessage(message);
-
-        // if (!result.ok) {
-        //     throw new Error('Cannot update Slack comment.');
-        // }
-        // const ts = result.ts as string | undefined;
-        // this.messageTs = this.messageTs || ts;
+        this.messageId = result.id;
     };
 
-    // private addSlackReplyOnComment = async (event: ISessionEvent) => {
-    //     const api = await getSlackAPI(this.channel.account.name);
+    private addTeamsReplyOnComment = async (
+        event: ISessionEvent,
+        events: ISessionEvent[]
+    ) => {
+        const api = new TeamsAPI(this.channel.account as ITeamsAccountRecord);
 
-    //     // do not render session start event
-    //     if (event.type === 'start-session') {
-    //         return;
-    //     }
+        // do not render session start event
+        if (event.type === 'start-session') {
+            return;
+        }
 
-    //     if (!this.messageTs) {
-    //         throw new Error('Send the message first.');
-    //     }
+        if (!this.messageId) {
+            throw new Error('Send the message first.');
+        }
 
-    //     const message = await renderSlackEventReply(event, this.events);
-    //     const result = await api.chat.postMessage({
-    //         channel: this.getChannelId(),
-    //         ...message,
-    //         mrkdwn: true,
-    //         thread_ts: this.messageTs,
-    //     });
+        const teamsChannel = this.channel as ITeamsChannelChannel;
+        const { team, channel } = teamsChannel;
 
-    //     if (!result.ok) {
-    //         throw new Error(
-    //             `Could not post Slack comment reply for the session event "${event.type}"`
-    //         );
-    //     }
-    // };
+        const reply = await renderEventReplyTeams(event, events);
+        await api.addChannelMessageReply(
+            team.id,
+            channel.id,
+            this.messageId,
+            JSON.stringify(reply)
+        );
+    };
 
-    // private getChannelId = () => {
-    //     if (this.channel.type === 'slack-user') {
-    //         return this.channel.user.im.id;
-    //     }
+    public readExistingRecord() {
+        const record = super.readExistingRecord();
+        if (!record) {
+            return null;
+        }
 
-    //     if (this.channel.type === 'slack-channel') {
-    //         return this.channel.channel.id;
-    //     }
+        const { data } = record;
+        if (!data) {
+            return null;
+        }
 
-    //     throw new Error(
-    //         `Unknown channel type "${(this.channel as any).type}".`
-    //     );
-    // };
+        const { messageId } = data;
+        if (typeof messageId !== 'string') {
+            this.deleteExistingRecord();
+            return null;
+        }
 
-    // public readExistingRecord() {
-    //     const record = super.readExistingRecord();
-    //     if (!record) {
-    //         return null;
-    //     }
+        this.messageId = messageId;
 
-    //     const { data } = record;
-    //     if (!data) {
-    //         return null;
-    //     }
+        return record;
+    }
 
-    //     const { ts } = data;
-    //     if (typeof ts !== 'string') {
-    //         this.deleteExistingRecord();
-    //         return null;
-    //     }
+    public onPersistData = (record: IChannelMementoRecord) => {
+        if (!this.messageId) {
+            return record;
+        }
 
-    //     this.messageTs = ts;
-
-    //     return record;
-    // }
-
-    // public onPersistData = (record: IChannelMementoRecord) => {
-    //     if (!this.messageTs) {
-    //         return record;
-    //     }
-
-    //     return {
-    //         ...record,
-    //         data: {
-    //             ts: this.messageTs,
-    //         },
-    //     };
-    // };
+        return {
+            ...record,
+            data: {
+                messageId: this.messageId,
+            },
+        };
+    };
 }

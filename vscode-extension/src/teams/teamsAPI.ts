@@ -86,7 +86,7 @@ export class TeamsAPI {
         teamId: string,
         channelId: string,
         message: string
-    ) => {
+    ): Promise<ITeamsChannelMessageResponse> => {
         const { token } = this.account;
 
         const res = await fetch(
@@ -103,19 +103,40 @@ export class TeamsAPI {
         );
 
         if (!res.ok) {
-            const rs = await res.json();
-
-            console.log(rs);
-
             throw new Error(
                 `Cannot send message to Teams team "${teamId}", channel "${channelId}".`
             );
         }
 
-        const json = await res.json();
+        return await res.json();
+    };
 
-        const users = json.value as ITeamsUser[];
-        return users;
+    public addChannelMessageReply = async (
+        teamId: string,
+        channelId: string,
+        messageId: string,
+        message: string
+    ): Promise<ITeamsChannelMessageResponse> => {
+        const { token } = this.account;
+
+        const res = await fetch(
+            `https://graph.microsoft.com/beta/teams/${teamId}/channels/${channelId}/messages/${messageId}/replies`,
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: message,
+            }
+        );
+
+        if (!res.ok) {
+            throw new Error(`Cannot reply to the Teams message.`);
+        }
+
+        return await res.json();
     };
 }
 

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as vsls from 'vsls';
 import { onCommitPushToRemote } from '../branchBroadcast/git/onCommit';
 import { MINUTE_MS } from '../constants';
+import { CancellationError } from '../errors/CancellationError';
 import { TChannel } from '../interfaces/TChannel';
 import * as memento from '../memento';
 import { ISessionEvent } from '../sessionConnectors/renderer/events';
@@ -125,7 +126,7 @@ export class ChannelSession {
     public init = async () => {
         const { session } = this.vslsAPI;
         if (!session.id) {
-            throw new Error('No LiveShare session found.');
+            throw new CancellationError('No LiveShare session found.');
         }
 
         this.sessionId = session.id;
