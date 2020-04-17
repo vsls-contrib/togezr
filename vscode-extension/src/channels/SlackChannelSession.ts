@@ -24,7 +24,11 @@ export class SlackChannelSession extends ChannelSession {
         await super.onEvent(e);
 
         if (e.type !== 'commit-push') {
-            const comment = await renderSlackComment(this.events, this.channel);
+            const comment = await renderSlackComment(
+                this.events,
+                this.channel,
+                this.siblingChannels
+            );
             await this.updateSlackComment(comment);
         }
 

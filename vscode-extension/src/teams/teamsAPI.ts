@@ -111,6 +111,36 @@ export class TeamsAPI {
         return await res.json();
     };
 
+    public sendUserMessage = async (
+        user: ITeamsUser,
+        message: string
+    ): Promise<ITeamsChannelMessageResponse> => {
+        const { token } = this.account;
+
+        console.log(user.imAddress);
+
+        const res = await fetch(
+            `https://graph.microsoft.com/beta/${user.imAddress}`,
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: message,
+            }
+        );
+
+        // if (!res.ok) {
+        //     throw new Error(
+        //         `Cannot send message to Teams team "${teamId}", channel "${channelId}".`
+        //     );
+        // }
+
+        return await res.json();
+    };
+
     public addChannelMessageReply = async (
         teamId: string,
         channelId: string,

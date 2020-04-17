@@ -1,20 +1,28 @@
+import { ChannelSession } from '../../channels/ChannelSession';
+import { GitHubChannelSession } from '../../channels/GitHubChannelSession';
 import { TSlackChannel } from '../../interfaces/TSlackChannel';
 import { ISessionEvent } from '../../sessionConnectors/renderer/events';
+import { renderGithubIssueDetails } from './renderGithubIssueDetails';
 import { renderFooter } from './renderSlackFooter';
 import { renderGuests } from './renderSlackGuests';
 import { renderHostHeader } from './renderSlackHeader';
 
 export const renderSlackComment = async (
     events: ISessionEvent[],
-    channel: TSlackChannel
+    channel: TSlackChannel,
+    siblingChannels: ChannelSession[]
 ): Promise<any[]> => {
     const blocks = [...renderHostHeader(events)];
 
-    // TODO: read from the GitHub channel if posible
-    // { type: 'divider' },
-    // // blocks.push(
-    // //     await renderGithubIssueDetails(this.registyData, this.githubConnector)
-    // // );
+    const githubIssueChannel = siblingChannels.find((ch) => {
+        return ch.channel.type === 'github-issue';
+    });
+
+    const githubIssueDetails = await renderGithubIssueDetails(
+        githubIssueChannel as GitHubChannelSession
+    );
+
+    blocks.push(...githubIssueDetails);
 
     const guests = await renderGuests(events);
     blocks.push(...guests);

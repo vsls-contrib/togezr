@@ -59,9 +59,16 @@ const getAccountName = async (
 };
 
 export const addAccountCommand = async () => {
-    let type: TAccountType | undefined = KNOWN_ACCOUNT_TYPES[0];
-    if (KNOWN_ACCOUNT_TYPES.length > 1) {
-        type = (await vscode.window.showQuickPick(KNOWN_ACCOUNT_TYPES, {
+    /**
+     * Disable creating the `Teams` account until the better API times.
+     */
+    const list = KNOWN_ACCOUNT_TYPES.filter((item) => {
+        return item !== 'Teams';
+    });
+
+    let type: TAccountType | undefined = list[0];
+    if (list.length > 1) {
+        type = (await vscode.window.showQuickPick(list, {
             placeHolder: 'Select account type',
         })) as TAccountType | undefined;
 

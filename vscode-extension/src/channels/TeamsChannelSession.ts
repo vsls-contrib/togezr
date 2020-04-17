@@ -54,37 +54,74 @@ export class TeamsChannelSession extends ChannelSession {
 
         const api = new TeamsAPI(this.channel.account as ITeamsAccountRecord);
 
-        // either User or Channel
-        const teamsChannel = this.channel as ITeamsChannelChannel;
-        const { team, channel } = teamsChannel;
-        const attachmentId = randomBytes(16).toString('base64');
+        if (this.channel.type === 'teams-channel') {
+            // either User or Channel
+            const teamsChannel = this.channel;
+            const { team, channel } = teamsChannel;
+            const attachmentId = randomBytes(16).toString('base64');
 
-        const template = {
-            subject: null,
-            body: {
-                contentType: 'html',
-                content: `<attachment id="${attachmentId}"></attachment>`,
-            },
-            attachments: [
-                {
-                    id: `${attachmentId}`,
-                    contentUrl: null,
-
-                    contentType: 'application/vnd.microsoft.card.adaptive',
-                    content: JSON.stringify(commentBody),
-                    name: null,
-                    thumbnailUrl: null,
+            const template = {
+                subject: null,
+                body: {
+                    contentType: 'html',
+                    content: `<attachment id="${attachmentId}"></attachment>`,
                 },
-            ],
-        };
+                attachments: [
+                    {
+                        id: `${attachmentId}`,
+                        contentUrl: null,
 
-        const result = await api.sendChannelMessage(
-            team.id,
-            channel.id,
-            JSON.stringify(template, null, 2)
-        );
+                        contentType: 'application/vnd.microsoft.card.adaptive',
+                        content: JSON.stringify(commentBody),
+                        name: null,
+                        thumbnailUrl: null,
+                    },
+                ],
+            };
 
-        this.messageId = result.id;
+            const result = await api.sendChannelMessage(
+                team.id,
+                channel.id,
+                JSON.stringify(template, null, 2)
+            );
+
+            this.messageId = result.id;
+        }
+
+        if (this.channel.type === 'teams-user') {
+            // either User or Channel
+            const teamsChannel = this.channel;
+            const { user } = teamsChannel;
+            const attachmentId = randomBytes(16).toString('base64');
+
+            const template = {
+                subject: null,
+                body: {
+                    contentType: 'html',
+                    content: `<attachment id="${attachmentId}"></attachment>`,
+                },
+                attachments: [
+                    {
+                        id: `${attachmentId}`,
+                        contentUrl: null,
+
+                        contentType: 'application/vnd.microsoft.card.adaptive',
+                        content: JSON.stringify(commentBody),
+                        name: null,
+                        thumbnailUrl: null,
+                    },
+                ],
+            };
+
+            const result = await api.sendUserMessage(
+                user,
+                JSON.stringify(template, null, 2)
+            );
+
+            this.messageId = result.id;
+        }
+
+        throw new Error(`Unknown Teams channel type "${this.channel.type}".`);
     };
 
     private addTeamsReplyOnComment = async (
