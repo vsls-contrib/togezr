@@ -26,13 +26,23 @@ export class GithubCommentRenderer {
         return users;
     }
 
+    private getUsername = (name: string | null) => {
+        if (!name) {
+            return '<unknown>';
+        }
+
+        const userName = name.indexOf('@') !== -1 ? name : `@${name}}`;
+
+        return userName;
+    };
+
     private getGuestsCommitMessage = (
         guests: (ISessionUserJoinEvent | ISessionStartEvent)[]
     ): string => {
         const guestsUsers = guests.map((g, i) => {
             return i === guests.length - 1 && i !== 0
-                ? `and @${g.user.userName}`
-                : `@${g.user.userName}`;
+                ? `and ${this.getUsername(g.user.userName)}`
+                : this.getUsername(g.user.userName);
         });
 
         if (guestsUsers.length === 1) {
@@ -66,9 +76,9 @@ export class GithubCommentRenderer {
             if (g.type === 'start-session') {
                 const { user, sessionId } = g;
 
-                return `🧑‍💻 @${
+                return `🧑‍💻 ${this.getUsername(
                     user.userName
-                } started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) ${renderLiveShareCompactBadge(
+                )} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) ${renderLiveShareCompactBadge(
                     sessionId
                 )}`;
             }

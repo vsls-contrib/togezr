@@ -7,12 +7,12 @@ export const getAccountChildren = async (element: AccountTreeItem) => {
     const { account } = element;
 
     switch (account.type) {
-        case 'Slack': {
-            return await getSlackAccountChildren(account);
-        }
-
         case 'GitHub': {
             return await getGithubAccountChildren(account, element);
+        }
+
+        case 'Slack': {
+            return await getSlackAccountChildren(account);
         }
 
         case 'Teams': {

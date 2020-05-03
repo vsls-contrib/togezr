@@ -76,7 +76,10 @@ export class AccountsKeychain {
 
         const result = await Promise.all(resultPromises);
 
-        return result;
+        // show only GitHub accounts for now
+        return result.filter((acc) => {
+            return acc.type === 'GitHub';
+        });
     };
 
     public getAccountNames = () => {
