@@ -44,6 +44,14 @@ export class AccountsKeychain {
         this.addAccountName(name);
     };
 
+    public updateAccount = async (account: IAccountRecord): Promise<void> => {
+        const { name } = account;
+
+        await keytar.set(this.getAccountKey(name), JSON.stringify(account));
+
+        this.addAccountName(name);
+    };
+
     public deleteAccount = async (name: string): Promise<void> => {
         await keytar.remove(this.getAccountKey(name));
         this.removeAccountName(name);

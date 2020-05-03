@@ -8,7 +8,7 @@ import {
     IGitHubAccountRecord,
     ITeamsAccountRecord,
 } from '../../interfaces/IAccountRecord';
-import { IGithubRepo } from '../../interfaces/IGitHubRepo';
+import { IShortGithubRepo } from '../../interfaces/IGitHubRepo';
 import { TeamsAPI } from '../../teams/teamsAPI';
 import { teamsTeamsRepository } from '../../teams/teamsTeamsRepository';
 
@@ -28,7 +28,7 @@ export const addGitHubAccountEntityCommand = async (
             `Cannot get repos for the GitHub account "${account.name}"`
         );
     }
-    const repos = reposResponse.data as IGithubRepo[];
+    const repos = reposResponse.data as IShortGithubRepo[];
     if (!repos.length) {
         throw new Error(`Zero repos available.`);
     }

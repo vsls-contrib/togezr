@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { accountsKeychain } from '../../accounts/accountsKeychain';
 import { refreshActivityBar } from '../../activityBar/activityBar';
+import { refreshLiveShareTeamsActivityBar } from '../../activityBar/liveShareTeamsActivityPanel';
 import { CancellationError } from '../../errors/CancellationError';
 import { ISlackTeam } from '../../interfaces/ISlackTeam';
 import { ISlackTeamInfoWebCallResult } from '../../interfaces/ISlackUserWithIM';
@@ -58,7 +59,7 @@ const getAccountName = async (
     return inputName;
 };
 
-export const addAccountCommand = async () => {
+const getAccountTypeFromKnown = async () => {
     /**
      * Disable creating the `Teams` account until the better API times.
      */
@@ -66,16 +67,22 @@ export const addAccountCommand = async () => {
         return item !== 'Teams';
     });
 
-    let type: TAccountType | undefined = list[0];
+    let accountType: TAccountType | undefined = list[0];
     if (list.length > 1) {
-        type = (await vscode.window.showQuickPick(list, {
+        accountType = (await vscode.window.showQuickPick(list, {
             placeHolder: 'Select account type',
         })) as TAccountType | undefined;
 
-        if (!type) {
+        if (!accountType) {
             throw new CancellationError();
         }
     }
+
+    return accountType;
+};
+
+export const addAccountCommand = async (accountType?: TAccountType) => {
+    accountType = accountType || (await getAccountTypeFromKnown());
 
     const token = await vscode.window.showInputBox({
         prompt: 'Provide token for this account',
@@ -88,7 +95,7 @@ export const addAccountCommand = async () => {
 
     let slackTeam: ISlackTeam | undefined;
 
-    if (type === 'Slack') {
+    if (accountType === 'Slack') {
         const api = await getSlackAPIByToken(token);
         const teamInfoResponse: ISlackTeamInfoWebCallResult = await api.team.info();
 
@@ -105,10 +112,10 @@ export const addAccountCommand = async () => {
         slackTeam = team;
     }
 
-    const name = await getAccountName(type, slackTeam?.name);
+    const name = await getAccountName(accountType, slackTeam?.name);
 
     const account = {
-        type,
+        type: accountType,
         name,
         token,
         team: slackTeam,
@@ -119,4 +126,5 @@ export const addAccountCommand = async () => {
     vscode.window.showInformationMessage(`Account "${name}" added.`);
 
     refreshActivityBar();
+    refreshLiveShareTeamsActivityBar();
 };

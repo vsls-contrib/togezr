@@ -1,10 +1,10 @@
 import { IChannel } from './IChannel';
-import { IGithubRepo } from './IGitHubRepo';
+import { IShortGithubRepo } from './IGitHubRepo';
 import { IShortGitHubIssue } from './IShortGitHubIssue';
 import { TGitHubChannelType } from './TGitHubChannel';
 
 export interface IGitHubRepoIssueChannel extends IChannel {
     type: TGitHubChannelType;
-    repo: IGithubRepo;
+    repo: IShortGithubRepo;
     issue: IShortGitHubIssue;
 }

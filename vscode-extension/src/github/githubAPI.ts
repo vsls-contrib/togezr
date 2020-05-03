@@ -24,3 +24,20 @@ export const getGithubAPI = async (accountName: string) => {
 
     return webApi;
 };
+
+export const getGithubAPIbyToken = async (token: string) => {
+    const existingApi = cache.get(token);
+
+    if (existingApi) {
+        return existingApi;
+    }
+
+    const webApi = new Octokit({
+        auth: token,
+        userAgent: 'togezr vscode extension v0.1.0',
+    });
+
+    cache.set(token, webApi);
+
+    return webApi;
+};

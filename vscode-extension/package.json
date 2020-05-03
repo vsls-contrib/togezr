@@ -262,6 +262,12 @@
                     "id": "togezr.activitybar",
                     "name": "Togezr"
                 }
+            ],
+            "!liveshare": [
+                {
+                    "id": "togezr.liveshare.teams.contacts",
+                    "name": "Teams"
+                }
             ]
         }
     },

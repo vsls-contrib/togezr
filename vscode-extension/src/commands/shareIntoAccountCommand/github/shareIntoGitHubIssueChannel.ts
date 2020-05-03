@@ -2,6 +2,7 @@ import { GitHubAccountRepoIssueTreeItem } from '../../../activityBar/github/GitH
 import { lsApi, startLSSession } from '../../../branchBroadcast/liveshare';
 import { GitHubChannelSession } from '../../../channels/GitHubChannelSession';
 import { getGitHubChannelFromTreeItem } from './getGitHubChannelFromTreeItem';
+
 export const shareIntoGitHubIssueChannel = async (
     item: GitHubAccountRepoIssueTreeItem,
     isReadOnlySession: boolean

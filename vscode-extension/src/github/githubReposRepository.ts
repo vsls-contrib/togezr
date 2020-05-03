@@ -1,10 +1,10 @@
-import { IGithubRepo } from '../interfaces/IGitHubRepo';
+import { IGithubRepo, IShortGithubRepo } from '../interfaces/IGitHubRepo';
 import * as memento from '../memento';
 
 const GITHUB_REPOS_REPOSITORY_MEMENTO_KEY = `togezr.repos.repository.memento.key`;
 
 export interface IGithubAccountRepo {
-    repo: IGithubRepo;
+    repo: IShortGithubRepo | IGithubRepo;
     accountName: string;
 }
 
@@ -24,7 +24,10 @@ export class GithubReposRepository {
         return [];
     };
 
-    public add = (accountName: string, repo: IGithubRepo): boolean => {
+    public add = (
+        accountName: string,
+        repo: IShortGithubRepo | IGithubRepo
+    ): boolean => {
         const key = this.getKey(accountName);
 
         const records = memento.get<IGithubAccountRepo[]>(key) || [];
@@ -43,7 +46,10 @@ export class GithubReposRepository {
         return true;
     };
 
-    public remove = (accountName: string, repo: IGithubRepo): boolean => {
+    public remove = (
+        accountName: string,
+        repo: IShortGithubRepo | IGithubRepo
+    ): boolean => {
         const key = this.getKey(accountName);
 
         const currentRecords = memento.get<IGithubAccountRepo[]>(key) || [];

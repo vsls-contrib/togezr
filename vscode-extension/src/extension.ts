@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { registerActivityBar } from './activityBar/activityBar';
+import { registerLiveShareTeamsActivityBar } from './activityBar/liveShareTeamsActivityPanel';
 import { registerBranchBroadcastingExperiment } from './branchBroadcast';
 import { startListenToOriginPush } from './branchBroadcast/git/onCommit';
 import { initializeLiveShare } from './branchBroadcast/liveshare';
@@ -9,6 +10,7 @@ import {
     removeAllTemporaryRegistryRecords,
 } from './commands/registerBranch/branchRegistry';
 import { EXTENSION_NAME, setExtensionPath } from './constants';
+import { GithubPRIntegration } from './interfaces/integrations/githubPullRequest/githubPullRequestIntegration';
 import { initializeKeytar } from './keytar';
 import { log } from './logger';
 import { initializeMemento } from './memento';
@@ -18,6 +20,9 @@ export const activate = async (context: vscode.ExtensionContext) => {
         log.setLoggingChannel(
             vscode.window.createOutputChannel(EXTENSION_NAME)
         );
+
+        const githubPRIntegration = new GithubPRIntegration();
+        githubPRIntegration.init();
 
         setExtensionPath(context.extensionPath);
 
@@ -39,6 +44,14 @@ export const activate = async (context: vscode.ExtensionContext) => {
         startListenToOriginPush();
 
         registerActivityBar();
+        registerLiveShareTeamsActivityBar();
+
+        // const cachedToken = await auth.getCachedTeamsToken();
+        // if (!cachedToken) {
+        //     const token = await auth.loginToTeams();
+
+        //     console.log(`** token: `, token);
+        // }
 
         // const connectors = connectorRepository.getConnectors();
         // const githubConnector = connectors.find((c) => {

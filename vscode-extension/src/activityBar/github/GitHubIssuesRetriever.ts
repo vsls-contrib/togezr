@@ -1,12 +1,12 @@
 import { getGithubAPI } from '../../github/githubAPI';
 import { IGitHubAccountRecord } from '../../interfaces/IAccountRecord';
-import { IGithubRepo } from '../../interfaces/IGitHubRepo';
+import { IShortGithubRepo } from '../../interfaces/IGitHubRepo';
 
 export class GitHubIssuesRetriever {
     // private issuesMap = new Map<string, IGithubIssueRecord>();
     public getIssues = async (
         account: IGitHubAccountRecord,
-        repo: IGithubRepo
+        repo: IShortGithubRepo
     ) => {
         const api = await getGithubAPI(account.name);
         const issuesResponse = await api.issues.listForRepo({
