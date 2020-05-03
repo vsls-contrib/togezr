@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { registerActivityBar } from './activityBar/activityBar';
-import { registerLiveShareTeamsActivityBar } from './activityBar/liveShareTeamsActivityPanel';
 import { registerBranchBroadcastingExperiment } from './branchBroadcast';
 import { startListenToOriginPush } from './branchBroadcast/git/onCommit';
 import { initializeLiveShare } from './branchBroadcast/liveshare';
@@ -44,7 +43,7 @@ export const activate = async (context: vscode.ExtensionContext) => {
         startListenToOriginPush();
 
         registerActivityBar();
-        registerLiveShareTeamsActivityBar();
+        // registerLiveShareTeamsActivityBar();
 
         // const cachedToken = await auth.getCachedTeamsToken();
         // if (!cachedToken) {

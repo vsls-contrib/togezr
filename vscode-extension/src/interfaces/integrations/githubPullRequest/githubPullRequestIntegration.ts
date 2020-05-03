@@ -1,7 +1,4 @@
 import * as vscode from 'vscode';
-import { accountsKeychain } from '../../../accounts/accountsKeychain';
-import { auth } from '../../../auth/auth';
-import { getCurrentRepoId } from '../../../branchBroadcast/git';
 import { lsApi, startLSSession } from '../../../branchBroadcast/liveshare';
 import { GitHubChannelSession } from '../../../channels/GitHubChannelSession';
 import { getGithubAPI } from '../../../github/githubAPI';
@@ -9,7 +6,6 @@ import { githubReposRepository } from '../../../github/githubReposRepository';
 import { getIssueRepo } from '../../../sessionConnectors/github/getIssueRepo';
 import { sleepAsync } from '../../../utils/sleepAsync';
 import { IGitHubAccountRecord } from '../../IAccountRecord';
-import { IShortGithubRepo } from '../../IGitHubRepo';
 import { IShortGitHubIssue } from '../../IShortGitHubIssue';
 import { TGitHubChannel } from '../../TGitHubChannel';
 
@@ -20,8 +16,7 @@ export interface IAccount {
     url: string;
 }
 
-// export interface IGithubRepository {
-// }
+// export interface IGithubRepository {}
 
 interface IGHPRGithubIssue {
     id: string;
@@ -61,46 +56,38 @@ export class GithubPRIntegration {
     private account?: IGitHubAccountRecord;
 
     private ensureAccount = async (githubPrIssue?: IGHPRGithubIssue) => {
-        const [token, account] = await Promise.all([
-            auth.getCachedGithubPullRequestToken(),
-            accountsKeychain.getAccount(ACCOUNT_KEY),
-        ]);
-
-        const tokenToSet = token ? token : account?.token;
-
-        if (!tokenToSet) {
-            return;
-        }
-
-        this.account = {
-            type: 'GitHub',
-            name: ACCOUNT_KEY,
-            token: tokenToSet,
-        };
-
-        await accountsKeychain.updateAccount(this.account);
-
-        const repos = githubReposRepository.get(ACCOUNT_KEY);
-        const repo = repos.find((r) => {
-            return r.repo.id === getCurrentRepoId();
-        });
-
-        if (repo || !githubPrIssue) {
-            return;
-        }
-
-        const api = await getGithubAPI(this.account.name);
-        console.log(
-            githubPrIssue.author.login,
-            getIssueRepo(githubPrIssue.html_url)
-        );
-        const repoResponse = await api.repos.get({
-            owner: githubPrIssue.author.login,
-            repo: getIssueRepo(githubPrIssue.html_url),
-        });
-        const repoData = repoResponse.data as IShortGithubRepo;
-
-        githubReposRepository.add(ACCOUNT_KEY, repoData);
+        // const [token, account] = await Promise.all([
+        //     auth.getCachedGithubPullRequestToken(),
+        //     accountsKeychain.getAccount(ACCOUNT_KEY),
+        // ]);
+        // const tokenToSet = token ? token : account?.token;
+        // if (!tokenToSet) {
+        //     return;
+        // }
+        // this.account = {
+        //     type: 'GitHub',
+        //     name: ACCOUNT_KEY,
+        //     token: tokenToSet,
+        // };
+        // await accountsKeychain.updateAccount(this.account);
+        // const repos = githubReposRepository.get(ACCOUNT_KEY);
+        // const repo = repos.find((r) => {
+        //     return r.repo.id === getCurrentRepoId();
+        // });
+        // if (repo || !githubPrIssue) {
+        //     return;
+        // }
+        // const api = await getGithubAPI(this.account.name);
+        // console.log(
+        //     githubPrIssue.author.login,
+        //     getIssueRepo(githubPrIssue.html_url)
+        // );
+        // const repoResponse = await api.repos.get({
+        //     owner: githubPrIssue.author.login,
+        //     repo: getIssueRepo(githubPrIssue.html_url),
+        // });
+        // const repoData = repoResponse.data as IShortGithubRepo;
+        // githubReposRepository.add(ACCOUNT_KEY, repoData);
     };
 
     public init = async () => {

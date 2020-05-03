@@ -11,7 +11,10 @@ declare module 'vscode' {
     export interface AuthenticationSession {
         id: string;
         getAccessToken(): Thenable<string>;
-        accountName: string;
+        account: {
+            displayName: string;
+            id: string;
+        };
         scopes: string[];
     }
 
@@ -98,14 +101,12 @@ declare module 'vscode' {
         export const providerIds: string[];
 
         /**
-         * An array of the ids of authentication providers.
-         */
-        export const providers: AuthenticationProvider[];
-
-        /**
          * Get existing authentication sessions. Rejects if a provider with providerId is not
          * registered, or if the user does not consent to sharing authentication information with
          * the extension.
+         * @param providerId The id of the provider to use
+         * @param scopes A list of scopes representing the permissions requested. These are dependent on the authentication
+         * provider
          */
         export function getSessions(
             providerId: string,
@@ -116,11 +117,25 @@ declare module 'vscode' {
          * Prompt a user to login to create a new authenticaiton session. Rejects if a provider with
          * providerId is not registered, or if the user does not consent to sharing authentication
          * information with the extension.
+         * @param providerId The id of the provider to use
+         * @param scopes A list of scopes representing the permissions requested. These are dependent on the authentication
+         * provider
          */
         export function login(
             providerId: string,
             scopes: string[]
         ): Thenable<AuthenticationSession>;
+
+        /**
+         * Logout of a specific session.
+         * @param providerId The id of the provider to use
+         * @param sessionId The session id to remove
+         * provider
+         */
+        export function logout(
+            providerId: string,
+            sessionId: string
+        ): Thenable<void>;
 
         /**
          * An [event](#Event) which fires when the array of sessions has changed, or data
