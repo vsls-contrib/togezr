@@ -1,5 +1,5 @@
 import { WebAPICallResult } from '@slack/web-api';
-import { ISlackIM } from './ISlackIm';
+import { ISlackIM } from './ISlackIM';
 import { ISlackTeam } from './ISlackTeam';
 import { ISlackUser } from './ISlackUser';
 

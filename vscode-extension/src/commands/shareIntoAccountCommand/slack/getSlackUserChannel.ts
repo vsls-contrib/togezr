@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { CancellationError } from '../../../errors/CancellationError';
-import { ISlackIM } from '../../../interfaces/ISlackIm';
+import { ISlackIM } from '../../../interfaces/ISlackIM';
 import { ISlackUser } from '../../../interfaces/ISlackUser';
 import { ISlackUserWithIM } from '../../../interfaces/ISlackUserWithIM';
 import { renderSlackStatus } from '../../../utils/renderSlackStatus';

@@ -4,12 +4,8 @@ import { registerBranchBroadcastingExperiment } from './branchBroadcast';
 import { startListenToOriginPush } from './branchBroadcast/git/onCommit';
 import { initializeLiveShare } from './branchBroadcast/liveshare';
 import { registerCommands } from './commands';
-import {
-    removeAllRunningRegistryRecords,
-    removeAllTemporaryRegistryRecords,
-} from './commands/registerBranch/branchRegistry';
+import { removeAllRunningRegistryRecords, removeAllTemporaryRegistryRecords } from './commands/registerBranch/branchRegistry';
 import { EXTENSION_NAME, setExtensionPath } from './constants';
-import { GithubPRIntegration } from './interfaces/integrations/githubPullRequest/githubPullRequestIntegration';
 import { initializeKeytar } from './keytar';
 import { log } from './logger';
 import { initializeMemento } from './memento';
@@ -20,8 +16,8 @@ export const activate = async (context: vscode.ExtensionContext) => {
             vscode.window.createOutputChannel(EXTENSION_NAME)
         );
 
-        const githubPRIntegration = new GithubPRIntegration();
-        githubPRIntegration.init();
+        // const githubPRIntegration = new GithubPRIntegration();
+        // githubPRIntegration.init();
 
         setExtensionPath(context.extensionPath);
 
@@ -73,4 +69,4 @@ export const activate = async (context: vscode.ExtensionContext) => {
     }
 };
 
-export const deactivate = async () => {};
+export const deactivate = async () => { };

@@ -1,22 +1,8 @@
 import * as path from 'path';
-import {
-    Disposable,
-    Event,
-    EventEmitter,
-    TreeDataProvider,
-    TreeItem,
-    TreeItemCollapsibleState,
-    window,
-} from 'vscode';
+import { Disposable, Event, EventEmitter, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window } from 'vscode';
 import { accountsKeychain } from '../accounts/accountsKeychain';
-import {
-    getRegistryRecords,
-    IRegistryData,
-} from '../commands/registerBranch/branchRegistry';
-import {
-    connectorRepository,
-    TConnectors,
-} from '../connectorRepository/connectorRepository';
+import { IRegistryData } from '../commands/registerBranch/branchRegistry';
+import { connectorRepository, TConnectors } from '../connectorRepository/connectorRepository';
 import { EXTENSION_NAME_LOWERCASE } from '../constants';
 import { IConnectorData } from '../interfaces/IConnectorData';
 import { IGitHubIssue } from '../interfaces/IGitHubIssue';
@@ -40,20 +26,20 @@ import { TeamsTeamsTreeItem } from './teams/TeamsTeamsTreeItem';
 import { TeamsTeamTreeItem } from './teams/TeamsTeamTreeItem';
 import { TeamsUsersTreeItem } from './teams/TeamsUsersTreeItem';
 
-const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
-    'Currently running',
-    TreeItemCollapsibleState.Expanded
-);
+// const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
+//     'Currently running',
+//     TreeItemCollapsibleState.Expanded
+// );
 
-const BRANCH_CONNECTIONS_ITEM = new TreeItem(
-    'Branch connections',
-    TreeItemCollapsibleState.Collapsed
-);
+// const BRANCH_CONNECTIONS_ITEM = new TreeItem(
+//     'Branch connections',
+//     TreeItemCollapsibleState.Collapsed
+// );
 
-const CONNECTORS_ITEM = new TreeItem(
-    'Connectors',
-    TreeItemCollapsibleState.Collapsed
-);
+// const CONNECTORS_ITEM = new TreeItem(
+//     'Connectors',
+//     TreeItemCollapsibleState.Collapsed
+// );
 
 const ACCOUNTS_ITEM = new TreeItem(
     'Accounts',
@@ -244,11 +230,11 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         ._onDidChangeTreeData.event;
 
     constructor() {
-        RUNNING_BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack(
-            'currently-running-icon.svg'
-        );
-        BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
-        CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
+        // RUNNING_BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack(
+        //     'currently-running-icon.svg'
+        // );
+        // BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
+        // CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
 
         ACCOUNTS_ITEM.contextValue = 'togezr.accounts.header';
 
@@ -266,13 +252,13 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
     }
 
     public getChildren = async (element?: TreeItem): Promise<TreeItem[]> => {
-        const branchConnections = getRegistryRecords();
+        // const branchConnections = getRegistryRecords();
 
-        const runningItem = Object.entries(branchConnections).find(
-            ([name, registryData]) => {
-                return registryData.isRunning;
-            }
-        );
+        // const runningItem = Object.entries(branchConnections).find(
+        //     ([name, registryData]) => {
+        //         return registryData.isRunning;
+        //     }
+        // );
 
         if (!element) {
             const accounts = accountsKeychain.getAccountNames();
@@ -281,60 +267,60 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             resetSlackAccountCache();
 
             const items = [
-                BRANCH_CONNECTIONS_ITEM,
-                CONNECTORS_ITEM,
+                // BRANCH_CONNECTIONS_ITEM,
+                // CONNECTORS_ITEM,
                 ACCOUNTS_ITEM,
             ];
 
-            if (runningItem) {
-                items.unshift(RUNNING_BRANCH_CONNECTIONS_ITEM);
-            }
+            // if (runningItem) {
+            //     items.unshift(RUNNING_BRANCH_CONNECTIONS_ITEM);
+            // }
 
             return items;
         }
 
-        if (element === RUNNING_BRANCH_CONNECTIONS_ITEM) {
-            if (!runningItem) {
-                throw new Error(
-                    'Rendering running items but no running item found.'
-                );
-            }
+        // if (element === RUNNING_BRANCH_CONNECTIONS_ITEM) {
+        //     if (!runningItem) {
+        //         throw new Error(
+        //             'Rendering running items but no running item found.'
+        //         );
+        //     }
 
-            return [
-                new BranchConnectionTreeItem(
-                    runningItem[1],
-                    TreeItemCollapsibleState.Collapsed
-                ),
-            ];
-        }
+        //     return [
+        //         new BranchConnectionTreeItem(
+        //             runningItem[1],
+        //             TreeItemCollapsibleState.Collapsed
+        //         ),
+        //     ];
+        // }
 
-        if (element === BRANCH_CONNECTIONS_ITEM) {
-            const branchConnections = getRegistryRecords();
-            const items = Object.entries(branchConnections).map(
-                ([name, registryData]) => {
-                    const item = new BranchConnectionTreeItem(
-                        registryData,
-                        TreeItemCollapsibleState.Collapsed
-                    );
+        // if (element === BRANCH_CONNECTIONS_ITEM) {
+        //     const branchConnections = getRegistryRecords();
+        //     const items = Object.entries(branchConnections).map(
+        //         ([name, registryData]) => {
+        //             const item = new BranchConnectionTreeItem(
+        //                 registryData,
+        //                 TreeItemCollapsibleState.Collapsed
+        //             );
 
-                    return item;
-                }
-            );
+        //             return item;
+        //         }
+        //     );
 
-            return items;
-        }
+        //     return items;
+        // }
 
-        if (element === CONNECTORS_ITEM) {
-            const connectors = connectorRepository.getConnectors();
+        // if (element === CONNECTORS_ITEM) {
+        //     const connectors = connectorRepository.getConnectors();
 
-            const items = connectors.map((connector) => {
-                const item = new ConnectorTreeItem(connector);
+        //     const items = connectors.map((connector) => {
+        //         const item = new ConnectorTreeItem(connector);
 
-                return item;
-            });
+        //         return item;
+        //     });
 
-            return items;
-        }
+        //     return items;
+        // }
 
         if (element === ACCOUNTS_ITEM) {
             const accounts = await accountsKeychain.getAllAccounts();
@@ -348,44 +334,44 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             return items;
         }
 
-        if (element instanceof BranchConnectionTreeItem) {
-            if (!element.registryData) {
-                throw new Error(
-                    'No registryData set on BranchConnectionTreeItem.'
-                );
-            }
-            const items = element.registryData.connectorsData.map(
-                (connector) => {
-                    if (connector.type === 'GitHub') {
-                        const item = new BranchGithubConnectionConnectorTreeItem(
-                            connector
-                        );
+        // if (element instanceof BranchConnectionTreeItem) {
+        //     if (!element.registryData) {
+        //         throw new Error(
+        //             'No registryData set on BranchConnectionTreeItem.'
+        //         );
+        //     }
+        //     const items = element.registryData.connectorsData.map(
+        //         (connector) => {
+        //             if (connector.type === 'GitHub') {
+        //                 const item = new BranchGithubConnectionConnectorTreeItem(
+        //                     connector
+        //                 );
 
-                        return item;
-                    }
+        //                 return item;
+        //             }
 
-                    if (connector.type === 'Slack') {
-                        const item = new BranchSlackConnectionConnectorTreeItem(
-                            connector
-                        );
+        //             if (connector.type === 'Slack') {
+        //                 const item = new BranchSlackConnectionConnectorTreeItem(
+        //                     connector
+        //                 );
 
-                        return item;
-                    }
+        //                 return item;
+        //             }
 
-                    if (connector.type === 'Teams') {
-                        const item = new BranchTeamsConnectionConnectorTreeItem(
-                            connector
-                        );
+        //             if (connector.type === 'Teams') {
+        //                 const item = new BranchTeamsConnectionConnectorTreeItem(
+        //                     connector
+        //                 );
 
-                        return item;
-                    }
+        //                 return item;
+        //             }
 
-                    throw new Error('Unknown connector type.');
-                }
-            );
+        //             throw new Error('Unknown connector type.');
+        //         }
+        //     );
 
-            return items;
-        }
+        //     return items;
+        // }
 
         /**
          * GitHub

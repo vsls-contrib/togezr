@@ -1,4 +1,4 @@
-import { ISlackIM } from '../../../interfaces/ISlackIm';
+import { ISlackIM } from '../../../interfaces/ISlackIM';
 import { ISlackUser } from '../../../interfaces/ISlackUser';
 import { ISlackUserWithIM } from '../../../interfaces/ISlackUserWithIM';
 

@@ -267,11 +267,6 @@ declare module 'vscode' {
          * @return A uri that can be used on the client machine.
          */
         export function asExternalUri(target: Uri): Thenable<Uri>;
-
-        /**
-         * The custom uri scheme the editor registers to in the operating system.
-         */
-        export const uriScheme: string;
     }
 
     export interface AppUriOptions {
@@ -1396,7 +1391,7 @@ declare module 'vscode' {
     /**
      * Folding context (for future use)
      */
-    export interface FoldingContext {}
+    export interface FoldingContext { }
 
     export namespace debug {
         export function registerDebugAdapterProvider(

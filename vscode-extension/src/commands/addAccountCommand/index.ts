@@ -5,10 +5,7 @@ import { refreshLiveShareTeamsActivityBar } from '../../activityBar/liveShareTea
 import { CancellationError } from '../../errors/CancellationError';
 import { ISlackTeam } from '../../interfaces/ISlackTeam';
 import { ISlackTeamInfoWebCallResult } from '../../interfaces/ISlackUserWithIM';
-import {
-    KNOWN_ACCOUNT_TYPES,
-    TAccountType,
-} from '../../interfaces/TAccountType';
+import { KNOWN_ACCOUNT_TYPES, TAccountType } from '../../interfaces/TAccountType';
 import { getSlackAPIByToken } from '../../slack/slackAPI';
 
 const findNewAccountName = async (
