@@ -123,7 +123,7 @@ export const registerLiveShareTeamsActivityBar = () => {
 export const refreshLiveShareTeamsActivityBar = () => {
     if (!treeDataProvider) {
         throw new Error(
-            'ActivityBar is not initialized, call `registerActivityBar` first.'
+            'ActivityBar is not initialized, call `refreshLiveShareTeamsActivityBar` first.'
         );
     }
 

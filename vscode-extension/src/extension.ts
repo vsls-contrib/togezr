@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 import { registerActivityBar } from './activityBar/activityBar';
-import { registerBranchBroadcastingExperiment } from './branchBroadcast';
-import { startListenToOriginPush } from './branchBroadcast/git/onCommit';
 import { initializeLiveShare } from './branchBroadcast/liveshare';
 import { registerCommands } from './commands';
-import { removeAllRunningRegistryRecords, removeAllTemporaryRegistryRecords } from './commands/registerBranch/branchRegistry';
+import {
+    removeAllRunningRegistryRecords,
+    removeAllTemporaryRegistryRecords,
+} from './commands/registerBranch/branchRegistry';
 import { EXTENSION_NAME, setExtensionPath } from './constants';
 import { initializeKeytar } from './keytar';
 import { log } from './logger';
@@ -34,9 +35,9 @@ export const activate = async (context: vscode.ExtensionContext) => {
         // await checkGitHubAuthToken();
 
         await initializeLiveShare();
-        await registerBranchBroadcastingExperiment();
 
-        startListenToOriginPush();
+        // await registerBranchBroadcastingExperiment();
+        // startListenToOriginPush();
 
         registerActivityBar();
         // registerLiveShareTeamsActivityBar();
@@ -69,4 +70,4 @@ export const activate = async (context: vscode.ExtensionContext) => {
     }
 };
 
-export const deactivate = async () => { };
+export const deactivate = async () => {};

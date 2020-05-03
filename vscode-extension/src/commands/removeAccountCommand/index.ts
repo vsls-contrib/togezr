@@ -23,7 +23,7 @@ export const removeAccountCommand = async (item?: AccountTreeItem) => {
             throw new CancellationError();
         }
 
-        accountsKeychain.deleteAccount(account.name);
+        await accountsKeychain.deleteAccount(account.name);
         refreshActivityBar();
         return;
     }
@@ -56,6 +56,6 @@ export const removeAccountCommand = async (item?: AccountTreeItem) => {
         throw new CancellationError();
     }
 
-    accountsKeychain.deleteAccount(answer.label);
+    await accountsKeychain.deleteAccount(answer.label);
     refreshActivityBar();
 };

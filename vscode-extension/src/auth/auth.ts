@@ -45,16 +45,19 @@ export class Auth {
     public loginWithGithub = async (): Promise<string | null> => {
         await this.initEventEmitter.event;
 
-        const token = await authentication.login('github', GITHUB_SCOPES);
+        try {
+            const token = await authentication.login('github', GITHUB_SCOPES);
 
-        return await token.getAccessToken();
+            return await token.getAccessToken();
+        } catch (e) {
+            return null;
+        }
     };
 
     public getChacedTokenOrLoginGithub = async (): Promise<string | null> => {
         await this.initEventEmitter.event;
 
         const token = await this.getCachedGithubToken();
-
         if (typeof token === 'string' && token.trim()) {
             return token;
         }

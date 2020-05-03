@@ -1,8 +1,19 @@
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, TreeDataProvider, TreeItem, TreeItemCollapsibleState, window } from 'vscode';
+import {
+    Disposable,
+    Event,
+    EventEmitter,
+    TreeDataProvider,
+    TreeItem,
+    TreeItemCollapsibleState,
+    window,
+} from 'vscode';
 import { accountsKeychain } from '../accounts/accountsKeychain';
 import { IRegistryData } from '../commands/registerBranch/branchRegistry';
-import { connectorRepository, TConnectors } from '../connectorRepository/connectorRepository';
+import {
+    connectorRepository,
+    TConnectors,
+} from '../connectorRepository/connectorRepository';
 import { EXTENSION_NAME_LOWERCASE } from '../constants';
 import { IConnectorData } from '../interfaces/IConnectorData';
 import { IGitHubIssue } from '../interfaces/IGitHubIssue';
@@ -373,13 +384,13 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         //     return items;
         // }
 
-        /**
-         * GitHub
-         */
-
         if (element instanceof AccountTreeItem) {
             return await getAccountChildren(element);
         }
+
+        /**
+         * GitHub
+         */
 
         if (element instanceof GitHubAccountRepoTreeItem) {
             return await getGitHubRepoIssues(element);
