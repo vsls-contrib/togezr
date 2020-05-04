@@ -41,7 +41,10 @@ const extensionFileMapName = 'extension.js.map';
 copyFileSync(extensionFileName, outDir, releaseDir);
 copyFileSync(extensionFileMapName, outDir, releaseDir);
 copyFileSync('package.json', rootDir, outDir);
+
 copyFileSync('LICENSE.md', rootDir, outDir);
+copyFileSync('README.md', rootDir, outDir);
+copyFileSync('CHANGELOG.md', rootDir, outDir);
 
 const ignoreFiles = [extensionFileName, extensionFileMapName];
 
