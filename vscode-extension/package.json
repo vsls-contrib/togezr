@@ -3,7 +3,7 @@
     "displayName": "Togezr",
     "description": "Better together_",
     "publisher": "vsls-contrib",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "icon": "images/icon.png",
     "repository": {
         "type": "git",
