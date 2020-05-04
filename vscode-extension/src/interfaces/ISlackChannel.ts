@@ -12,11 +12,23 @@ interface ISlackChannelPurpose {
 
 export interface ISlackChannel {
     id: string;
-    is_member: boolean;
     name: string;
+    name_normalized: string;
     topic: ISlackChannelTopic;
     purpose: ISlackChannelPurpose;
     num_members: number;
+    created: number;
+    creator: string;
+    is_member: boolean;
+    is_archived: boolean;
+    is_channel: boolean;
+    is_general: boolean;
+    is_mpim: boolean;
+    is_org_shared: boolean;
+    is_private: boolean;
+    is_shared: boolean;
+    members: string[];
+    unlinked: number;
     //     "id": "CT29MGU2D",
     //     "name": "liveshare-integration",
     //     "is_channel": true,

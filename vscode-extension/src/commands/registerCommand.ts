@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { AccountTreeItem } from '../activityBar/accounts/AccountTreeItem';
+import { GitHubAccountRepoTreeItem } from '../activityBar/github/GitHubAccountRepoTreeItem';
 import { createCommand } from './createCommand';
 import { IRegisterBranchOptions } from './registerBranch';
 
@@ -9,10 +11,16 @@ export const CommandId = {
     connectBranch: 'togezr.connectBranch',
     disconnectBranch: 'togezr.disconnectBranch',
     shareInto: 'togezr.shareInto',
+    shareIntoAccount: 'togezr.shareIntoAccount',
     stopRunningSession: 'togezr.stopRunningSession',
     startBranchConnectionSession: 'togezr.startBranchConnectionSession',
     openInBrowser: 'togezr.openInBrowser',
     openConnectorInBrowser: 'togezr.openConnectorInBrowser',
+    addAccount: 'togezr.addAccount',
+    removeAccount: 'togezr.removeAccount',
+    openAccountInBrowser: 'togezr.openAccountInBrowser',
+    addAccountEntity: 'togezr.addAccountEntity',
+    removeGitHubAccountRepo: 'togezr.removeGitHubAccountRepo',
 } as const;
 
 export async function registerCommand(
@@ -51,9 +59,32 @@ export async function registerCommand(
     name: typeof CommandId.openConnectorInBrowser,
     command: () => Promise<unknown>
 ): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.addAccount,
+    command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.removeAccount,
+    command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.shareIntoAccount,
+    command: () => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.openAccountInBrowser,
+    command: (treeItem: any) => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.addAccountEntity,
+    command: (account: AccountTreeItem) => Promise<unknown>
+): Promise<void>;
+export async function registerCommand(
+    name: typeof CommandId.removeGitHubAccountRepo,
+    command: (account: GitHubAccountRepoTreeItem) => Promise<unknown>
+): Promise<void>;
 export async function registerCommand(name: any, command: any) {
     const wrappedCommand = createCommand(command);
-
     // push to context
     vscode.commands.registerCommand(name, wrappedCommand);
 }

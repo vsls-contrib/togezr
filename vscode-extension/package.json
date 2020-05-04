@@ -60,6 +60,15 @@
                 "category": "Togezr"
             },
             {
+                "command": "togezr.shareIntoAccount",
+                "title": "Share with",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/play-icon.svg",
+                    "light": "images/light/play-icon.svg"
+                }
+            },
+            {
                 "command": "togezr.setAutoPlay",
                 "title": "Set branch autoplay",
                 "category": "Togezr",
@@ -105,12 +114,57 @@
                 }
             },
             {
+                "command": "togezr.openAccountInBrowser",
+                "title": "Open in browser",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/open-icon.svg",
+                    "light": "images/light/open-icon.svg"
+                }
+            },
+            {
                 "command": "togezr.openConnectorInBrowser",
                 "title": "Open connector in browser",
                 "category": "Togezr",
                 "icon": {
                     "dark": "images/dark/open-icon.svg",
                     "light": "images/light/open-icon.svg"
+                }
+            },
+            {
+                "command": "togezr.addAccount",
+                "title": "Add account",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/add-icon.svg",
+                    "light": "images/light/add-icon.svg"
+                }
+            },
+            {
+                "command": "togezr.removeAccount",
+                "title": "Remove account",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/cross-icon.svg",
+                    "light": "images/light/cross-icon.svg"
+                }
+            },
+            {
+                "command": "togezr.addAccountEntity",
+                "title": "Add repo",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/add-icon.svg",
+                    "light": "images/light/add-icon.svg"
+                }
+            },
+            {
+                "command": "togezr.removeGitHubAccountRepo",
+                "title": "Remove repo",
+                "category": "Togezr",
+                "icon": {
+                    "dark": "images/dark/cross-icon.svg",
+                    "light": "images/light/cross-icon.svg"
                 }
             }
         ],
@@ -142,8 +196,38 @@
                     "group": "inline@1"
                 },
                 {
+                    "command": "togezr.openAccountInBrowser",
+                    "when": "viewItem == togezr.channel.tree.item || viewItem == togezr.channel.tree.item.openable || viewItem == togezr.account.github.repo",
+                    "group": "inline@1"
+                },
+                {
                     "command": "togezr.openConnectorInBrowser",
                     "when": "viewItem == togezr.connector.openable",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.addAccount",
+                    "when": "viewItem == togezr.accounts.header",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.removeAccount",
+                    "when": "viewItem =~ /togezr\\.account\\.(github|slack|teams)$/",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.shareIntoAccount",
+                    "when": "viewItem == togezr.channel.tree.item",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.addAccountEntity",
+                    "when": "viewItem == togezr.account.github",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "togezr.removeGitHubAccountRepo",
+                    "when": "viewItem == togezr.account.github.repo",
                     "group": "inline@1"
                 }
             ],
@@ -154,6 +238,10 @@
                 },
                 {
                     "command": "togezr.startBranchConnectionSession",
+                    "when": "false"
+                },
+                {
+                    "command": "togezr.addAccountEntity",
                     "when": "false"
                 }
             ]
@@ -188,6 +276,7 @@
         "test": "yarn compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
+        "@types/emoji-js": "^3.4.0",
         "@types/keytar": "^4.4.2",
         "@types/node": "^8.10.25",
         "@types/node-fetch": "^2.5.4",
@@ -201,7 +290,10 @@
         "webpack-merge": "^4.2.2"
     },
     "dependencies": {
+        "@octokit/rest": "^17.1.1",
+        "@slack/web-api": "^5.8.0",
         "@types/uuid": "^3.4.7",
+        "emoji-js": "^3.5.0",
         "git-user-name": "^2.0.0",
         "node-fetch": "^2.6.0",
         "pretty-ms": "^5.1.0",

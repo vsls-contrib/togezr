@@ -6,8 +6,44 @@ interface IGithubRepoPermissions {
     pull: boolean;
 }
 
+export interface IShortGitHubUser {
+    id: string | number;
+    login: string;
+    // name: string;
+    // bio: string;
+    // company: string;
+    // type: 'User' | 'Organization';
+    // public_repos: number;
+    // public_gists: number;
+    // avatar_url: string;
+    // email: string;
+    // location: string;
+    // hireable: boolean;
+    // followers: number;
+    // following: number;
+}
+
+export interface IShortGithubRepo {
+    id: string | number;
+    default_branch: string;
+    name: string;
+    full_name: string;
+    private: boolean;
+    fork: boolean;
+    html_url: string;
+    description: string;
+    open_issues: number;
+    forks: number;
+    watchers: number;
+    permissions: IGithubRepoPermissions;
+    owner: IShortGitHubUser;
+    updated_at: string;
+    pushed_at: string;
+    stargazers_count: number;
+}
+
 export interface IGithubRepo {
-    id: string;
+    id: string | number;
     default_branch: string;
     name: string;
     full_name: string;
@@ -22,6 +58,7 @@ export interface IGithubRepo {
     owner: IGitHubUser;
     updated_at: string;
     pushed_at: string;
+    stargazers_count: number;
     // "id": 108537191,
     // "node_id": "MDEwOlJlcG9zaXRvcnkxMDg1MzcxOTE=",
     // "name": "EntityFramework.Docs.pl-pl",

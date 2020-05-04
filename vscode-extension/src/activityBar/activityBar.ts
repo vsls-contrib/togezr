@@ -3,17 +3,13 @@ import {
     Disposable,
     Event,
     EventEmitter,
-    ProviderResult,
     TreeDataProvider,
     TreeItem,
     TreeItemCollapsibleState,
     window,
 } from 'vscode';
-// import { connectorRepository } from 'src/connectorRepository/connectorRepository';
-import {
-    getRegistryRecords,
-    IRegistryData,
-} from '../commands/registerBranch/branchRegistry';
+import { accountsKeychain } from '../accounts/accountsKeychain';
+import { IRegistryData } from '../commands/registerBranch/branchRegistry';
 import {
     connectorRepository,
     TConnectors,
@@ -24,19 +20,40 @@ import { IGitHubIssue } from '../interfaces/IGitHubIssue';
 import { ISlackChannel } from '../interfaces/ISlackChannel';
 import { getIconPack } from '../utils/icons';
 import { isCurrentBranchInRegistryData } from '../utils/isCurrentBranchInRegistryData';
+import { AccountTreeItem } from './accounts/AccountTreeItem';
+import { getAccountChildren } from './accounts/getAccountChildren';
+import { getGitHubRepoIssues } from './github/getGitHubRepoIssues';
+import { GitHubAccountRepoTreeItem } from './github/GitHubAccountRepoTreeItem';
+import { getSlackChannels } from './slack/getSlackChannels';
+import { getSlackUsers } from './slack/getSlackUsers';
+import { resetSlackAccountCache } from './slack/slackAccountCache';
+import { SlackChannelsTreeItem } from './slack/SlackChannelsTreeItem';
+import { slackUserStatusRepository } from './slack/slackUserStatusRepository';
+import { SlackUsersTreeItem } from './slack/SlackUsersTreeItem';
+import { getTeamsChannels } from './teams/getTeamsChannels';
+import { getTeamsTeams } from './teams/getTeamsTeams';
+import { getTeamsUsers } from './teams/getTeamsUsers';
+import { TeamsTeamsTreeItem } from './teams/TeamsTeamsTreeItem';
+import { TeamsTeamTreeItem } from './teams/TeamsTeamTreeItem';
+import { TeamsUsersTreeItem } from './teams/TeamsUsersTreeItem';
 
-const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
-    'Currently running',
-    TreeItemCollapsibleState.Expanded
-);
+// const RUNNING_BRANCH_CONNECTIONS_ITEM = new TreeItem(
+//     'Currently running',
+//     TreeItemCollapsibleState.Expanded
+// );
 
-const BRANCH_CONNECTIONS_ITEM = new TreeItem(
-    'Branch connections',
-    TreeItemCollapsibleState.Expanded
-);
+// const BRANCH_CONNECTIONS_ITEM = new TreeItem(
+//     'Branch connections',
+//     TreeItemCollapsibleState.Collapsed
+// );
 
-const CONNECTORS_ITEM = new TreeItem(
-    'Connectors',
+// const CONNECTORS_ITEM = new TreeItem(
+//     'Connectors',
+//     TreeItemCollapsibleState.Collapsed
+// );
+
+const ACCOUNTS_ITEM = new TreeItem(
+    'Accounts',
     TreeItemCollapsibleState.Expanded
 );
 
@@ -200,15 +217,15 @@ export class ConnectorTreeItem extends TreeItem {
 
     private getConnectorIconName(connector: TConnectors) {
         if (connector.type === 'GitHub') {
-            return 'github-connector-icon.svg';
+            return 'github-icon.svg';
         }
 
         if (connector.type === 'Slack') {
-            return 'slack-connector-icon.svg';
+            return 'slack-icon.svg';
         }
 
         if (connector.type === 'Teams') {
-            return 'teams-connector-icon.svg';
+            return 'teams-icon.svg';
         }
 
         throw new Error(
@@ -216,7 +233,6 @@ export class ConnectorTreeItem extends TreeItem {
         );
     }
 }
-
 export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
     private _disposables: Disposable[] = [];
 
@@ -225,72 +241,103 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
         ._onDidChangeTreeData.event;
 
     constructor() {
-        RUNNING_BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack(
-            'currently-running-icon.svg'
-        );
-        BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
-        CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
+        // RUNNING_BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack(
+        //     'currently-running-icon.svg'
+        // );
+        // BRANCH_CONNECTIONS_ITEM.iconPath = getIconPack('branch-icon.svg');
+        // CONNECTORS_ITEM.iconPath = getIconPack('connector-icon.svg');
+
+        ACCOUNTS_ITEM.contextValue = 'togezr.accounts.header';
+
+        slackUserStatusRepository.onUserStatus(() => {
+            this._onDidChangeTreeData.fire();
+        });
+
+        setInterval(async () => {
+            await slackUserStatusRepository.refreshStatuses();
+        }, 5000);
     }
 
     public refresh() {
         this._onDidChangeTreeData.fire();
     }
 
-    public getChildren(element?: TreeItem): ProviderResult<TreeItem[]> {
-        const branchConnections = getRegistryRecords();
+    public getChildren = async (element?: TreeItem): Promise<TreeItem[]> => {
+        // const branchConnections = getRegistryRecords();
 
-        const runningItem = Object.entries(branchConnections).find(
-            ([name, registryData]) => {
-                return registryData.isRunning;
-            }
-        );
+        // const runningItem = Object.entries(branchConnections).find(
+        //     ([name, registryData]) => {
+        //         return registryData.isRunning;
+        //     }
+        // );
 
         if (!element) {
-            const items = [BRANCH_CONNECTIONS_ITEM, CONNECTORS_ITEM];
+            const accounts = accountsKeychain.getAccountNames();
+            ACCOUNTS_ITEM.label = `Accounts (${accounts.length})`;
 
-            if (runningItem) {
-                items.unshift(RUNNING_BRANCH_CONNECTIONS_ITEM);
-            }
+            resetSlackAccountCache();
 
-            return items;
-        }
-
-        if (element === RUNNING_BRANCH_CONNECTIONS_ITEM) {
-            if (!runningItem) {
-                throw new Error(
-                    'Rendering running items but no running item found.'
-                );
-            }
-
-            return [
-                new BranchConnectionTreeItem(
-                    runningItem[1],
-                    TreeItemCollapsibleState.Expanded
-                ),
+            const items = [
+                // BRANCH_CONNECTIONS_ITEM,
+                // CONNECTORS_ITEM,
+                ACCOUNTS_ITEM,
             ];
-        }
 
-        if (element === BRANCH_CONNECTIONS_ITEM) {
-            const branchConnections = getRegistryRecords();
-            const items = Object.entries(branchConnections).map(
-                ([name, registryData]) => {
-                    const item = new BranchConnectionTreeItem(
-                        registryData,
-                        TreeItemCollapsibleState.Collapsed
-                    );
-
-                    return item;
-                }
-            );
+            // if (runningItem) {
+            //     items.unshift(RUNNING_BRANCH_CONNECTIONS_ITEM);
+            // }
 
             return items;
         }
 
-        if (element === CONNECTORS_ITEM) {
-            const connectors = connectorRepository.getConnectors();
+        // if (element === RUNNING_BRANCH_CONNECTIONS_ITEM) {
+        //     if (!runningItem) {
+        //         throw new Error(
+        //             'Rendering running items but no running item found.'
+        //         );
+        //     }
 
-            const items = connectors.map((connector) => {
-                const item = new ConnectorTreeItem(connector);
+        //     return [
+        //         new BranchConnectionTreeItem(
+        //             runningItem[1],
+        //             TreeItemCollapsibleState.Collapsed
+        //         ),
+        //     ];
+        // }
+
+        // if (element === BRANCH_CONNECTIONS_ITEM) {
+        //     const branchConnections = getRegistryRecords();
+        //     const items = Object.entries(branchConnections).map(
+        //         ([name, registryData]) => {
+        //             const item = new BranchConnectionTreeItem(
+        //                 registryData,
+        //                 TreeItemCollapsibleState.Collapsed
+        //             );
+
+        //             return item;
+        //         }
+        //     );
+
+        //     return items;
+        // }
+
+        // if (element === CONNECTORS_ITEM) {
+        //     const connectors = connectorRepository.getConnectors();
+
+        //     const items = connectors.map((connector) => {
+        //         const item = new ConnectorTreeItem(connector);
+
+        //         return item;
+        //     });
+
+        //     return items;
+        // }
+
+        if (element === ACCOUNTS_ITEM) {
+            const accounts = await accountsKeychain.getAllAccounts();
+
+            const items = accounts.map((account) => {
+                const item = new AccountTreeItem(account);
 
                 return item;
             });
@@ -298,47 +345,86 @@ export class ActivityBar implements TreeDataProvider<TreeItem>, Disposable {
             return items;
         }
 
-        if (element instanceof BranchConnectionTreeItem) {
-            if (!element.registryData) {
-                throw new Error(
-                    'No registryData set on BranchConnectionTreeItem.'
-                );
-            }
-            const items = element.registryData.connectorsData.map(
-                (connector) => {
-                    if (connector.type === 'GitHub') {
-                        const item = new BranchGithubConnectionConnectorTreeItem(
-                            connector
-                        );
+        // if (element instanceof BranchConnectionTreeItem) {
+        //     if (!element.registryData) {
+        //         throw new Error(
+        //             'No registryData set on BranchConnectionTreeItem.'
+        //         );
+        //     }
+        //     const items = element.registryData.connectorsData.map(
+        //         (connector) => {
+        //             if (connector.type === 'GitHub') {
+        //                 const item = new BranchGithubConnectionConnectorTreeItem(
+        //                     connector
+        //                 );
 
-                        return item;
-                    }
+        //                 return item;
+        //             }
 
-                    if (connector.type === 'Slack') {
-                        const item = new BranchSlackConnectionConnectorTreeItem(
-                            connector
-                        );
+        //             if (connector.type === 'Slack') {
+        //                 const item = new BranchSlackConnectionConnectorTreeItem(
+        //                     connector
+        //                 );
 
-                        return item;
-                    }
+        //                 return item;
+        //             }
 
-                    if (connector.type === 'Teams') {
-                        const item = new BranchTeamsConnectionConnectorTreeItem(
-                            connector
-                        );
+        //             if (connector.type === 'Teams') {
+        //                 const item = new BranchTeamsConnectionConnectorTreeItem(
+        //                     connector
+        //                 );
 
-                        return item;
-                    }
+        //                 return item;
+        //             }
 
-                    throw new Error('Unknown connector type.');
-                }
-            );
+        //             throw new Error('Unknown connector type.');
+        //         }
+        //     );
 
-            return items;
+        //     return items;
+        // }
+
+        if (element instanceof AccountTreeItem) {
+            return await getAccountChildren(element);
+        }
+
+        /**
+         * GitHub
+         */
+
+        if (element instanceof GitHubAccountRepoTreeItem) {
+            return await getGitHubRepoIssues(element);
+        }
+
+        /**
+         * Slack
+         */
+
+        if (element instanceof SlackUsersTreeItem) {
+            return await getSlackUsers(element);
+        }
+
+        if (element instanceof SlackChannelsTreeItem) {
+            return await getSlackChannels(element);
+        }
+
+        /**
+         * Teams
+         */
+        if (element instanceof TeamsTeamsTreeItem) {
+            return await getTeamsTeams(element);
+        }
+
+        if (element instanceof TeamsUsersTreeItem) {
+            return await getTeamsUsers(element);
+        }
+
+        if (element instanceof TeamsTeamTreeItem) {
+            return await getTeamsChannels(element);
         }
 
         return [];
-    }
+    };
 
     public getTreeItem(node: TreeItem): TreeItem {
         return node;

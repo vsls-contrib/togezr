@@ -1,3 +1,4 @@
+import { IShortGitHubUser } from './IGitHubRepo';
 import { IGitHubUser } from './IGitHubUser';
 
 export interface IGitHubIssue {
@@ -105,10 +106,22 @@ export interface IGitHubIssue {
     title: string;
     body: string;
     number: number;
-    id: string;
+    id: string | number;
     url: string;
     state: 'open' | 'closed';
     locked: boolean;
     html_url: string;
     user: IGitHubUser;
+}
+
+export interface IShortGitHubIssue {
+    title: string;
+    body: string;
+    number: number;
+    id: string | number;
+    url: string;
+    state: 'open' | 'closed';
+    locked: boolean;
+    html_url: string;
+    user: IShortGitHubUser;
 }

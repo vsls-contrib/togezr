@@ -1,5 +1,6 @@
 const time = require('pretty-ms');
 
+import { emojiForEvent } from '../../emoji/eventToEmojiMap';
 import { clampString } from '../../utils/clampString';
 import { getCleanCommitMessage } from '../../utils/getCleanCommitMessage';
 import { ISSUE_SESSION_DETAILS_HEADER } from '../constants';
@@ -12,8 +13,6 @@ import {
 import { renderLiveShareCompactBadge } from './renderLiveShareCompactBadge';
 
 export class GithubCommentRenderer {
-    constructor() {}
-
     private async renderAllSessionUsers(
         guests: (ISessionUserJoinEvent | ISessionStartEvent)[]
     ) {
@@ -23,18 +22,34 @@ export class GithubCommentRenderer {
                 sessionCount: -1,
             };
         });
+
+        // dont render the lone host
+        if (gustsWithSessions.length < 2) {
+            return '';
+        }
+
         const users = await renderGuestsGithub(gustsWithSessions);
 
         return users;
     }
+
+    private getUsername = (name: string | null) => {
+        if (!name) {
+            return '<unknown>';
+        }
+
+        const userName = name.indexOf('@') !== -1 ? name : `@${name}`;
+
+        return userName;
+    };
 
     private getGuestsCommitMessage = (
         guests: (ISessionUserJoinEvent | ISessionStartEvent)[]
     ): string => {
         const guestsUsers = guests.map((g, i) => {
             return i === guests.length - 1 && i !== 0
-                ? `and @${g.user.userName}`
-                : `@${g.user.userName}`;
+                ? `and ${this.getUsername(g.user.userName)}`
+                : this.getUsername(g.user.userName);
         });
 
         if (guestsUsers.length === 1) {
@@ -68,9 +83,9 @@ export class GithubCommentRenderer {
             if (g.type === 'start-session') {
                 const { user, sessionId } = g;
 
-                return `🧑‍💻 @${
+                return `${this.getUsername(
                     user.userName
-                } started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) ${renderLiveShareCompactBadge(
+                )} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) ${renderLiveShareCompactBadge(
                     sessionId
                 )}`;
             }
@@ -78,18 +93,24 @@ export class GithubCommentRenderer {
             if (g.type === 'restart-session') {
                 const { sessionId } = g;
 
-                return `- 💫 [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) restarted. (+${prettyTimeDelta})`;
+                return `- ${emojiForEvent(
+                    g
+                )} [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) restarted. (+${prettyTimeDelta})`;
             }
 
             if (g.type === 'guest-join') {
-                return `- 🤝 @${g.user.userName} joined the session. (+${prettyTimeDelta})`;
+                return `- @${
+                    g.user.userName
+                } joined the session. (+${prettyTimeDelta}) ${emojiForEvent(
+                    g
+                )}`;
             }
 
             /**
              * Don't render the end event since the GitHub bot should take care of it.
              */
             // if (g.type === 'end-session') {
-            //     return `- 🤗 Session ended. (+${prettyTimeDelta})`;
+            //     return `- Session ended. (+${prettyTimeDelta}) ${emojiForEvent(g)}`;
             // }
 
             if (g.type === 'commit-push') {
@@ -102,12 +123,20 @@ export class GithubCommentRenderer {
         });
 
         const guestsHeader = await this.renderAllSessionUsers(guests);
-        const eventsString = [
+
+        const guestsWithSeparator = [
             guestsHeader,
             ISSUE_SESSION_DETAILS_HEADER,
-            renderedEvents.join('\n'),
-        ].join('\n');
+        ];
 
-        return eventsString;
+        const eventsString = [renderedEvents.join('\n')];
+
+        if (guestsHeader) {
+            eventsString.unshift(...guestsWithSeparator);
+        }
+
+        return eventsString.join('\n');
     };
 }
+
+export const githubCommentRenderer = new GithubCommentRenderer();

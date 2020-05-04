@@ -3,6 +3,7 @@ const time = require('pretty-ms');
 import * as path from 'path';
 import { IRegistryData } from '../../commands/registerBranch/branchRegistry';
 import { IGitHubConnector } from '../../connectorRepository/connectorRepository';
+import { emojiForEvent } from '../../emoji/eventToEmojiMap';
 import { ISlackChannel } from '../../interfaces/ISlackChannel';
 import { User } from '../../user';
 import { cleanupGithubIssueDescription } from '../../utils/cleanupGithubIssueDescription';
@@ -296,7 +297,9 @@ const renderSessionEndEvent = async (
                 elements: [
                     {
                         type: 'mrkdwn',
-                        text: `🤗 Session ended. (${time(timeDelta)})`,
+                        text: `Session ended. (${time(
+                            timeDelta
+                        )}) ${emojiForEvent(event)}`,
                     },
                 ],
             },

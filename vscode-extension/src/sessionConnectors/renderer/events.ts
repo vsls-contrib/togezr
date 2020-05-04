@@ -33,7 +33,7 @@ export interface ISessionCommitPushEvent extends ISessionEventBase {
 }
 
 export type ISessionEvent =
+    | ISessionStartEvent
     | ISessionUserJoinEvent
     | ISessionCommitPushEvent
-    | ISessionStartEvent
     | ISessionEndEvent;
