@@ -31,7 +31,7 @@ export const shareIntoAccountCommand = async (
     //     throw new CancellationError('No session type selected.');
     // }
     // const isReadOnlySession = sessionReadOnlyAnswer === READ_ONLY_BUTTON;
-    const isReadOnlySession = true;
+    const isReadOnlySession = false;
 
     if (
         item instanceof SlackChannelTreeItem ||

@@ -1,5 +1,6 @@
 const time = require('pretty-ms');
 
+import { emojiForEvent } from '../../emoji/eventToEmojiMap';
 import { clampString } from '../../utils/clampString';
 import { getCleanCommitMessage } from '../../utils/getCleanCommitMessage';
 import { ISSUE_SESSION_DETAILS_HEADER } from '../constants';
@@ -21,6 +22,12 @@ export class GithubCommentRenderer {
                 sessionCount: -1,
             };
         });
+
+        // dont render the lone host
+        if (gustsWithSessions.length < 2) {
+            return '';
+        }
+
         const users = await renderGuestsGithub(gustsWithSessions);
 
         return users;
@@ -31,7 +38,7 @@ export class GithubCommentRenderer {
             return '<unknown>';
         }
 
-        const userName = name.indexOf('@') !== -1 ? name : `@${name}}`;
+        const userName = name.indexOf('@') !== -1 ? name : `@${name}`;
 
         return userName;
     };
@@ -76,7 +83,7 @@ export class GithubCommentRenderer {
             if (g.type === 'start-session') {
                 const { user, sessionId } = g;
 
-                return `🧑‍💻 ${this.getUsername(
+                return `${this.getUsername(
                     user.userName
                 )} started [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) ${renderLiveShareCompactBadge(
                     sessionId
@@ -86,18 +93,24 @@ export class GithubCommentRenderer {
             if (g.type === 'restart-session') {
                 const { sessionId } = g;
 
-                return `- 💫 [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) restarted. (+${prettyTimeDelta})`;
+                return `- ${emojiForEvent(
+                    g
+                )} [Live Share session](https://prod.liveshare.vsengsaas.visualstudio.com/join?${sessionId}) restarted. (+${prettyTimeDelta})`;
             }
 
             if (g.type === 'guest-join') {
-                return `- 🤝 @${g.user.userName} joined the session. (+${prettyTimeDelta})`;
+                return `- @${
+                    g.user.userName
+                } joined the session. (+${prettyTimeDelta}) ${emojiForEvent(
+                    g
+                )}`;
             }
 
             /**
              * Don't render the end event since the GitHub bot should take care of it.
              */
             // if (g.type === 'end-session') {
-            //     return `- 🤗 Session ended. (+${prettyTimeDelta})`;
+            //     return `- Session ended. (+${prettyTimeDelta}) ${emojiForEvent(g)}`;
             // }
 
             if (g.type === 'commit-push') {
@@ -110,13 +123,19 @@ export class GithubCommentRenderer {
         });
 
         const guestsHeader = await this.renderAllSessionUsers(guests);
-        const eventsString = [
+
+        const guestsWithSeparator = [
             guestsHeader,
             ISSUE_SESSION_DETAILS_HEADER,
-            renderedEvents.join('\n'),
-        ].join('\n');
+        ];
 
-        return eventsString;
+        const eventsString = [renderedEvents.join('\n')];
+
+        if (guestsHeader) {
+            eventsString.unshift(...guestsWithSeparator);
+        }
+
+        return eventsString.join('\n');
     };
 }
 

@@ -11,5 +11,6 @@ export const getGitHubChannelFromTreeItem = (
         repo: item.repo,
         issue: item.issue,
         account: item.account,
+        id: `${item.repo.id}_${item.issue.id}_${item.account.name}`,
     };
 };

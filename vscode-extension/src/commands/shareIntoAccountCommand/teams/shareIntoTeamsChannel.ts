@@ -20,5 +20,6 @@ export const shareIntoTeamsChannel = async (
     const lsAPI = lsApi();
     const session = new TeamsChannelSession(teamsChannel, [], lsAPI);
     await startLSSession(isReadOnlySession, session.sessionId);
+
     await session.init();
 };

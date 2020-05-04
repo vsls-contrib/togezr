@@ -10,6 +10,7 @@ export const shareIntoGitHubIssueChannel = async (
     const gitHubChannel = getGitHubChannelFromTreeItem(item);
     const lsAPI = lsApi();
     const session = new GitHubChannelSession(gitHubChannel, [], lsAPI);
+
     await startLSSession(isReadOnlySession, session.sessionId);
     await session.init();
 };

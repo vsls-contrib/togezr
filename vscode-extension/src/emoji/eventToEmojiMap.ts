@@ -6,7 +6,7 @@ export const emojiForEvent = (e: ISessionEvent) => {
     }
 
     if (e.type === 'restart-session') {
-        return '💫';
+        return '⟳';
     }
 
     if (e.type === 'commit-push') {

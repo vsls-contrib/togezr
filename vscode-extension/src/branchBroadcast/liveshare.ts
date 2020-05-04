@@ -135,7 +135,7 @@ export const startLSSession = async (
         access,
     });
 
-    return sharedSessionUrl?.path;
+    return sharedSessionUrl?.query;
 };
 
 export const lsApi = () => {

@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import * as vsls from 'vsls';
+import { refreshActivityBar } from '../activityBar/activityBar';
 import { onCommitPushToRemote } from '../branchBroadcast/git/onCommit';
 import { MINUTE_MS } from '../constants';
 import { CancellationError } from '../errors/CancellationError';
-import { TChannel } from '../interfaces/TChannel';
+import { TChannel, TChannelType } from '../interfaces/TChannel';
 import * as memento from '../memento';
 import { ISessionEvent } from '../sessionConnectors/renderer/events';
+import { runningSessionsRegistry } from './RunningSessionsRegistry';
 
 const HEARTBEAT_INTERVAL = 1000;
 const CHANNEL_SESSION_PREFIX = 'togezr.channel.session';
@@ -38,6 +40,8 @@ export class ChannelSession {
     private id: string;
 
     private mementoRecordExpirationThreshold: number = 3 * MINUTE_MS;
+
+    public type: TChannelType | 'generic' = 'generic';
 
     private getMementoId = () => {
         switch (this.channel.type) {
@@ -204,6 +208,13 @@ export class ChannelSession {
             this.persistData,
             HEARTBEAT_INTERVAL
         );
+
+        runningSessionsRegistry.add({
+            channel: this.channel,
+            sessionId: this.sessionId,
+        });
+
+        refreshActivityBar();
     };
 
     public async onEvent(e: ISessionEvent) {
@@ -245,6 +256,15 @@ export class ChannelSession {
 
     public dispose = async () => {
         this.isDisposed = true;
+
+        runningSessionsRegistry.remove({
+            channel: this.channel,
+            sessionId: this.sessionId!,
+        });
+
+        refreshActivityBar();
+
+        delete this.sessionId;
 
         if (this.heartbeatInterval) {
             clearInterval(this.heartbeatInterval);

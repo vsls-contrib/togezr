@@ -160,7 +160,8 @@ export class GithubPRIntegration {
 
         const lsAPI = lsApi();
         const session = new GitHubChannelSession(gitHubChannel, [], lsAPI);
-        await startLSSession(true, session.sessionId);
+        await startLSSession(false, session.sessionId);
+
         await session.init();
     };
 

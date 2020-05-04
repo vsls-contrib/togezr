@@ -1,4 +1,5 @@
 const time = require('pretty-ms');
+import { emojiForEvent } from '../../emoji/eventToEmojiMap';
 import {
     ISessionEndEvent,
     ISessionEvent,
@@ -19,7 +20,9 @@ export const renderSessionEndEventReply = async (
                 elements: [
                     {
                         type: 'mrkdwn',
-                        text: `🤗 Session ended. (${time(timeDelta)})`,
+                        text: `Session ended. (${time(
+                            timeDelta
+                        )}) ${emojiForEvent(event)} `,
                     },
                 ],
             },

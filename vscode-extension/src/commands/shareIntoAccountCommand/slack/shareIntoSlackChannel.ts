@@ -19,5 +19,6 @@ export const shareIntoSlackChannel = async (
     const lsAPI = lsApi();
     const session = new SlackChannelSession(slackChannel, [], lsAPI);
     await startLSSession(isReadOnlySession, session.sessionId);
+
     await session.init();
 };

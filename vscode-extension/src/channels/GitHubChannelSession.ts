@@ -1,5 +1,6 @@
 import * as vsls from 'vsls';
 import { getGithubAPI } from '../github/githubAPI';
+import { TChannelType } from '../interfaces/TChannel';
 import { TGitHubChannel } from '../interfaces/TGitHubChannel';
 import { renderGitHubComment } from '../renderers/github/renderGitHubComment';
 import { ISessionEvent } from '../sessionConnectors/renderer/events';
@@ -39,6 +40,8 @@ declare type IssuesCreateCommentResponse = {
 
 export class GitHubChannelSession extends ChannelSession {
     private commentId?: number;
+
+    public type: TChannelType | 'generic' = 'github-issue';
 
     constructor(
         public channel: TGitHubChannel,
@@ -101,6 +104,7 @@ export class GitHubChannelSession extends ChannelSession {
 
     public readExistingRecord() {
         const record = super.readExistingRecord();
+
         if (!record) {
             return null;
         }
