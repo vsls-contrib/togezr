@@ -1,3 +1,9 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### 0.1.1 (2020-05-04)
+
 ## v0.0.15 (12/08/2019)
 
 - Added support for opening image files in a Gist.

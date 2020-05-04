@@ -3,7 +3,7 @@
     "displayName": "Togezr",
     "description": "Better together_",
     "publisher": "vsls-contrib",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "icon": "images/icon.png",
     "repository": {
         "type": "git",
@@ -24,7 +24,7 @@
         "*"
     ],
     "main": "./out/prod/extension.js",
-    "types": "./serc/types.d.ts",
+    "types": "./out/types/extension.d.ts",
     "contributes": {
         "commands": [
             {
@@ -267,22 +267,25 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "yarn build:webpack",
         "update-vsls-version": "node ./scripts/update-vsls-version.js",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "build:webpack": "yarn update-vsls-version && webpack --config ./webpack/webpack.node.config.js",
         "watch:webpack": "yarn update-vsls-version && webpack --watch --progress --config ./webpack/webpack.node.config.js",
         "postinstall": "yarn update-vsls-version && node ./node_modules/vscode/bin/install",
-        "test": "yarn compile && node ./node_modules/vscode/bin/test"
+        "test": "yarn compile && node ./node_modules/vscode/bin/test",
+        "build-extension": "node ./scripts/copy-release-files.js",
+        "release-extension-dry": "yarn build:webpack && node ./scripts/copy-files.js && cd ./out/prod && vsce package --yarn",
+        "release-extension": "standard-version && release-extension-dry"
     },
     "devDependencies": {
         "@types/emoji-js": "^3.4.0",
         "@types/keytar": "^4.4.2",
         "@types/node": "^8.10.25",
         "@types/node-fetch": "^2.5.4",
-        "copy-webpack-plugin": "^5.0.5",
-        "nerdbank-gitversioning": "^3.1.91",
+        "fs-extra": "^9.0.0",
+        "husky": "^4.2.5",
+        "standard-version": "^7.1.0",
         "ts-loader": "^6.2.1",
         "tslint": "^5.8.0",
         "typescript": "^3.1.4",
