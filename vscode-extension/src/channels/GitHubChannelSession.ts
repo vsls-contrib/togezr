@@ -1,4 +1,3 @@
-import * as vsls from 'vsls';
 import { getGithubAPI } from '../github/githubAPI';
 import { TChannelType } from '../interfaces/TChannel';
 import { TGitHubChannel } from '../interfaces/TGitHubChannel';
@@ -46,9 +45,9 @@ export class GitHubChannelSession extends ChannelSession {
     constructor(
         public channel: TGitHubChannel,
         public siblingChannels: ChannelSession[],
-        public vslsAPI: vsls.LiveShare
+        public sessionId?: string
     ) {
-        super(channel, siblingChannels, vslsAPI);
+        super(channel, siblingChannels, sessionId);
     }
 
     public async onEvent(e: ISessionEvent) {

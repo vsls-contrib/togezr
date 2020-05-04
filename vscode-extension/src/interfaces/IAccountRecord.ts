@@ -15,6 +15,7 @@ export interface IAccountRecord {
     type: TAccountType;
     name: string;
     token: string;
+    isHidden?: boolean;
 }
 
 export interface ISlackAccountRecord extends IAccountRecord {

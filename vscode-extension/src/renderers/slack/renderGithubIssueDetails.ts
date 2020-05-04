@@ -1,35 +1,25 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { getCurrentBranch, getCurrentRepo } from '../../branchBroadcast/git';
 import { GitHubChannelSession } from '../../channels/GitHubChannelSession';
 import { githubAvatarRepository } from '../../sessionConnectors/github/githubAvatarsRepository';
 import { cleanupGithubIssueDescription } from '../../utils/cleanupGithubIssueDescription';
+import { getLocalRepoInfo } from './getLocalRepoInfo';
 import { SLACK_DIVIDER } from './slackDivider';
 
-interface IRepoInfo {
-    name: string;
+export interface IRepoInfo {
+    repoName: string;
     description?: string;
     branchName?: string;
 }
-const getLocalRepoInfo = (): IRepoInfo | undefined => {
-    const repo = getCurrentRepo();
-    if (!repo) {
-        return;
-    }
-    const branch = getCurrentBranch();
-    return {
-        name: path.basename(repo.rootUri.fsPath),
-        branchName: branch ? branch.name : void 0,
-    };
-};
+
 const getLocalWorkspaceInfo = (): IRepoInfo | undefined => {
     const { rootPath } = vscode.workspace;
     if (!rootPath) {
         return;
     }
-    const name = path.basename(rootPath);
+    const repoName = path.basename(rootPath);
     return {
-        name,
+        repoName,
     };
 };
 const renderRepoInfoDetails = (repoInfo: IRepoInfo) => {
@@ -42,7 +32,7 @@ const renderRepoInfoDetails = (repoInfo: IRepoInfo) => {
             type: 'section',
             text: {
                 type: 'mrkdwn',
-                text: `Project: ${repoInfo.name}${branchSuffix}`,
+                text: `Project: ${repoInfo.repoName}${branchSuffix}`,
             },
         },
         SLACK_DIVIDER,

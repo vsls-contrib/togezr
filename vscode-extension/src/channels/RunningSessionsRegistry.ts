@@ -7,11 +7,9 @@ const SESSIONS_KEY = 'RUNNING_SESSIONS_REGISTRY';
 interface IRunningChannelSession {
     sessionId: string;
     channel: TChannel;
-    // session: ChannelSession;
-    // branchName?: string;
-    // repoName?: string;
 }
 
+// move to map, since single LS session can have multiple sessions running
 class RunningSessionsRegistry {
     public add = (sessionToSet: IRunningChannelSession) => {
         const currentSessions = this.getSessions();

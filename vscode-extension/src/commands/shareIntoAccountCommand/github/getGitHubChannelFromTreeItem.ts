@@ -6,6 +6,7 @@ export const getGitHubChannelFromTreeItem = (
     if (!(item instanceof GitHubAccountRepoIssueTreeItem)) {
         throw new Error(`UnknoWN GitHub activity bar item.`);
     }
+
     return {
         type: GITHUB_REPO_ISSUE_CHANNEL_TYPE as typeof GITHUB_REPO_ISSUE_CHANNEL_TYPE,
         repo: item.repo,

@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { registerActivityBar } from './activityBar/activityBar';
+import { API } from './api/api';
 import { startListenToOriginPush } from './branchBroadcast/git/onCommit';
 import { initializeLiveShare } from './branchBroadcast/liveshare';
+import { branchAutoShareRunner } from './channels/BranchAutoShareRunner';
 import { registerCommands } from './commands';
 import {
     removeAllRunningRegistryRecords,
@@ -41,6 +43,10 @@ export const activate = async (context: vscode.ExtensionContext) => {
         startListenToOriginPush();
 
         registerActivityBar();
+        branchAutoShareRunner.init();
+
+        return new API();
+
         // registerLiveShareTeamsActivityBar();
 
         // const cachedToken = await auth.getCachedTeamsToken();
@@ -49,7 +55,6 @@ export const activate = async (context: vscode.ExtensionContext) => {
 
         //     console.log(`** token: `, token);
         // }
-
         // const connectors = connectorRepository.getConnectors();
         // const githubConnector = connectors.find((c) => {
         //     return c.type === 'GitHub';

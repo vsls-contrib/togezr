@@ -44,6 +44,11 @@ export class AccountsKeychain {
         this.addAccountName(name);
     };
 
+    public ensureAccount = async (account: IAccountRecord): Promise<void> => {
+        await this.deleteAccount(account.name);
+        await this.addAccount(account);
+    };
+
     public updateAccount = async (account: IAccountRecord): Promise<void> => {
         const { name } = account;
 

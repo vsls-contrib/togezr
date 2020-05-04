@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as vsls from 'vsls';
 import { refreshActivityBar } from '../activityBar/activityBar';
 import { onCommitPushToRemote } from '../branchBroadcast/git/onCommit';
+import { lsApi } from '../branchBroadcast/liveshare';
 import { MINUTE_MS } from '../constants';
 import { CancellationError } from '../errors/CancellationError';
 import { TChannel, TChannelType } from '../interfaces/TChannel';
@@ -30,8 +31,6 @@ const userPlaceholder = {
 
 export class ChannelSession {
     public events: ISessionEvent[] = [];
-
-    public sessionId?: string;
 
     public isDisposed: boolean = false;
 
@@ -80,7 +79,7 @@ export class ChannelSession {
     constructor(
         public channel: TChannel,
         public siblingChannels: ChannelSession[],
-        public vslsAPI: vsls.LiveShare
+        public sessionId?: string
     ) {
         const { account, type } = this.channel;
         if (!account) {
@@ -124,7 +123,10 @@ export class ChannelSession {
         }
 
         this.events = record.events;
-        this.sessionId = record.sessionId;
+
+        if (!this.sessionId) {
+            this.sessionId = record.sessionId;
+        }
 
         return record;
     }
@@ -134,7 +136,9 @@ export class ChannelSession {
     };
 
     public init = async () => {
-        const { session } = this.vslsAPI;
+        const vslsApi = await lsApi();
+
+        const { session } = vslsApi;
         if (!session.id) {
             throw new CancellationError('No LiveShare session found.');
         }
@@ -155,7 +159,7 @@ export class ChannelSession {
             timestamp: Date.now(),
         });
 
-        this.vslsAPI.onDidChangeSession(async (e: vsls.SessionChangeEvent) => {
+        vslsApi.onDidChangeSession(async (e: vsls.SessionChangeEvent) => {
             if (!e.session.id) {
                 this.onEvent({
                     type: 'end-session',
@@ -167,7 +171,7 @@ export class ChannelSession {
             }
         });
 
-        this.vslsAPI.onDidChangePeers(async (e: vsls.PeersChangeEvent) => {
+        vslsApi.onDidChangePeers(async (e: vsls.PeersChangeEvent) => {
             if (this.isDisposed) {
                 return;
             }

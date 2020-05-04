@@ -1,4 +1,4 @@
-import { lsApi, startLSSession } from '../../../branchBroadcast/liveshare';
+import { startLSSession } from '../../../branchBroadcast/liveshare';
 import { TeamsChannelSession } from '../../../channels/TeamsChannelSession';
 import { CancellationError } from '../../../errors/CancellationError';
 import { TTeamsTreeItems } from '../../../interfaces/TTreeItems';
@@ -17,8 +17,7 @@ export const shareIntoTeamsChannel = async (
         throw new CancellationError('No slack channel found.');
     }
 
-    const lsAPI = lsApi();
-    const session = new TeamsChannelSession(teamsChannel, [], lsAPI);
+    const session = new TeamsChannelSession(teamsChannel, []);
     await startLSSession(isReadOnlySession, session.sessionId);
 
     await session.init();

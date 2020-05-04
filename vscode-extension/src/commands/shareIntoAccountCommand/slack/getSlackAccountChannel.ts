@@ -63,6 +63,7 @@ export const getSlackAccountChannel = async (
             type: 'slack-user',
             user: userForChannel,
             account,
+            id: `slack_${userForChannel.team_id}_ ${userForChannel.id}`,
         };
     }
     if (answer === CHANNELS_LABEL) {
@@ -77,6 +78,7 @@ export const getSlackAccountChannel = async (
             type: 'slack-channel',
             channel: selectedChannel,
             account,
+            id: `slack_channel_${selectedChannel.id}`,
         };
     }
 };

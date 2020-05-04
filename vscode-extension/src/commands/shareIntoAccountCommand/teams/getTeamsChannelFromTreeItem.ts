@@ -13,6 +13,7 @@ const getChannelFromTeamsTreeitem = (item: TTeamsTreeItems): TTeamsChannel => {
             // team: item.team,
             user: item.user,
             account: item.account,
+            id: `teams_user_${item.user.id}`,
         };
     }
 
@@ -22,6 +23,7 @@ const getChannelFromTeamsTreeitem = (item: TTeamsTreeItems): TTeamsChannel => {
             channel: item.channel,
             team: item.team,
             account: item.account,
+            id: `teams_channel_${item.team.id}_${item.channel.id}`,
         };
     }
 
