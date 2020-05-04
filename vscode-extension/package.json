@@ -275,9 +275,10 @@
         "postinstall": "yarn update-vsls-version && node ./node_modules/vscode/bin/install",
         "test": "yarn compile && node ./node_modules/vscode/bin/test",
         "build-extension": "node ./scripts/copy-release-files.js",
-        "release-extension-dry": "yarn build:webpack && node ./scripts/copy-files.js && cd ./out/prod && vsce package --yarn",
-        "release-extension": "standard-version && release-extension-dry",
-        "a": "standard-version"
+        "build-all": "yarn build:webpack && node ./scripts/copy-files.js",
+        "module-pack": "yarn build-all && cd ./out/prod && yarn pack",
+        "module-publish": "standard-version && yarn build-all && yarn publish && yarn extension-pack",
+        "extension-pack": "yarn build-all && cd ./out/prod && vsce package --yarn"
     },
     "devDependencies": {
         "@types/emoji-js": "^3.4.0",

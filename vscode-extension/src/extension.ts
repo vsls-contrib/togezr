@@ -77,3 +77,7 @@ export const activate = async (context: vscode.ExtensionContext) => {
 };
 
 export const deactivate = async () => {};
+
+// export types
+export { IApiV1 } from './interfaces/IApiV1';
+export { ITogezrAPI } from './interfaces/ITogezrAPI';
