@@ -13,6 +13,7 @@ const getChannelFromSlackTreeitem = (
             type: 'slack-user',
             user: item.user,
             account: item.account,
+            id: `slack_${item.user.team_id}_${item.user.id}`,
         };
     }
     if (item instanceof SlackChannelTreeItem) {
@@ -20,6 +21,7 @@ const getChannelFromSlackTreeitem = (
             type: 'slack-channel',
             channel: item.channel,
             account: item.account,
+            id: `slack_${item.channel.id}`,
         };
     }
 

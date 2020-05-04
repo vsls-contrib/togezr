@@ -24,28 +24,32 @@ export const startListenToOriginPush = () => {
             return;
         }
 
-        const origin = await repo.getBranch(`origin/${currentBranch.name}`);
+        try {
+            const origin = await repo.getBranch(`origin/${currentBranch.name}`);
 
-        if (!origin) {
-            return;
+            if (!origin) {
+                return;
+            }
+
+            const currentState = origin.commit === currentBranch.commit;
+            if (
+                prevState === false &&
+                currentState === true &&
+                currentBranch.commit! !== prevOriginCommit
+            ) {
+                const commit = await repo.getCommit(origin.commit!);
+
+                onCommitEmitter.fire([
+                    commit,
+                    repo.state.remotes[0].pushUrl!.replace(/\/?\.git/gim, ''),
+                ]);
+            }
+
+            prevState = currentState;
+            prevOriginCommit = origin.commit;
+        } catch {
+            // no-op
         }
-
-        const currentState = origin.commit === currentBranch.commit;
-        if (
-            prevState === false &&
-            currentState === true &&
-            currentBranch.commit! !== prevOriginCommit
-        ) {
-            const commit = await repo.getCommit(origin.commit!);
-
-            onCommitEmitter.fire([
-                commit,
-                repo.state.remotes[0].pushUrl!.replace(/\/?\.git/gim, ''),
-            ]);
-        }
-
-        prevState = currentState;
-        prevOriginCommit = origin.commit;
     }, POLL_INTERVAL);
 };
 

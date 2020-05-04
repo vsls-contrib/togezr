@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { lsApi, startLSSession } from '../../../branchBroadcast/liveshare';
+import { startLSSession } from '../../../branchBroadcast/liveshare';
 import { GitHubChannelSession } from '../../../channels/GitHubChannelSession';
 import { getGithubAPI } from '../../../github/githubAPI';
 import { githubReposRepository } from '../../../github/githubReposRepository';
@@ -156,10 +156,10 @@ export class GithubPRIntegration {
             repo: repo.repo,
             issue,
             account: this.account,
+            id: `github_issue_${repo.repo.id}_${issue.id}`,
         };
 
-        const lsAPI = lsApi();
-        const session = new GitHubChannelSession(gitHubChannel, [], lsAPI);
+        const session = new GitHubChannelSession(gitHubChannel, []);
         await startLSSession(false, session.sessionId);
 
         await session.init();

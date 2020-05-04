@@ -1,5 +1,4 @@
 import { randomBytes } from 'crypto';
-import * as vsls from 'vsls';
 import { ITeamsAccountRecord } from '../interfaces/IAccountRecord';
 import { ITeamsChannelChannel } from '../interfaces/ITeamsChannelChannel';
 import { TTeamsChannel } from '../interfaces/TTeamsChannel';
@@ -15,9 +14,9 @@ export class TeamsChannelSession extends ChannelSession {
     constructor(
         public channel: TTeamsChannel,
         public siblingChannels: ChannelSession[],
-        public vslsAPI: vsls.LiveShare
+        public sessionId?: string
     ) {
-        super(channel, siblingChannels, vslsAPI);
+        super(channel, siblingChannels, sessionId);
     }
 
     public async onEvent(e: ISessionEvent) {

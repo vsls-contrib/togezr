@@ -1,4 +1,3 @@
-import * as vsls from 'vsls';
 import { TSlackChannel } from '../interfaces/TSlackChannel';
 import { renderSlackComment } from '../renderers/slack/renderSlackComment';
 import { renderSlackEventReply } from '../renderers/slack/renderSlackEventReply';
@@ -15,9 +14,9 @@ export class SlackChannelSession extends ChannelSession {
     constructor(
         public channel: TSlackChannel,
         public siblingChannels: ChannelSession[],
-        public vslsAPI: vsls.LiveShare
+        public sessionId?: string
     ) {
-        super(channel, siblingChannels, vslsAPI);
+        super(channel, siblingChannels, sessionId);
     }
 
     public async onEvent(e: ISessionEvent) {

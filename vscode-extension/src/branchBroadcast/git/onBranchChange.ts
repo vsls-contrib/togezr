@@ -1,16 +1,16 @@
 import { EventEmitter } from 'vscode';
 import { getCurrentBranch } from '.';
+import {
+    TBranchChangeArguments,
+    TBranchNameType,
+} from '../../interfaces/TBranchNameType';
 
 const POLL_INTERVAL = 3000;
 
-type branchNameType = string | undefined;
+let prevBranchName: TBranchNameType;
+let currentBranchName: TBranchNameType;
 
-let prevBranchName: branchNameType;
-let currentBranchName: branchNameType;
-
-const onBranchChangeEmitter = new EventEmitter<
-    [branchNameType, branchNameType]
->();
+const onBranchChangeEmitter = new EventEmitter<TBranchChangeArguments>();
 export const onBranchChange = onBranchChangeEmitter.event;
 
 const branchListenerInterval = setInterval(async () => {
