@@ -3,7 +3,7 @@
     "displayName": "Togezr",
     "description": "Better together_",
     "publisher": "vsls-contrib",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "icon": "images/icon.png",
     "repository": {
         "type": "git",
@@ -276,7 +276,8 @@
         "test": "yarn compile && node ./node_modules/vscode/bin/test",
         "build-extension": "node ./scripts/copy-release-files.js",
         "release-extension-dry": "yarn build:webpack && node ./scripts/copy-files.js && cd ./out/prod && vsce package --yarn",
-        "release-extension": "standard-version && release-extension-dry"
+        "release-extension": "standard-version && release-extension-dry",
+        "a": "standard-version"
     },
     "devDependencies": {
         "@types/emoji-js": "^3.4.0",
