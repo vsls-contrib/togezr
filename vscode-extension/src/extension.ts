@@ -55,7 +55,6 @@ export const activate = async (context: vscode.ExtensionContext) => {
 
         //     console.log(`** token: `, token);
         // }
-
         // const connectors = connectorRepository.getConnectors();
         // const githubConnector = connectors.find((c) => {
         //     return c.type === 'GitHub';
